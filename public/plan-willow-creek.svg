@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="Mock Oregon excavation site plan">
+  <rect width="1200" height="900" fill="#f8f7f2"/>
+  <style>
+    .label{font-family:Arial,Helvetica,sans-serif;font-size:18px;fill:#1f2933}
+    .small{font-family:Arial,Helvetica,sans-serif;font-size:13px;fill:#1f2933}
+    .tiny{font-family:Arial,Helvetica,sans-serif;font-size:11px;fill:#1f2933}
+    .phase{font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold}
+    .prop{fill:none;stroke:#111827;stroke-width:4}
+    .grid{stroke:#d0d5dd;stroke-width:1}
+    .drive{fill:#d9dde3;stroke:#6b7280;stroke-width:2}
+    .building{fill:#d8c7a3;stroke:#8a6f3d;stroke-width:3}
+    .storm{stroke:#1f78b4;stroke-width:5;fill:none}
+    .san{stroke:#7b3294;stroke-width:5;fill:none;stroke-dasharray:12 8}
+    .water{stroke:#0f9d58;stroke-width:5;fill:none}
+    .dry{stroke:#f59e0b;stroke-width:5;fill:none;stroke-dasharray:4 6}
+    .esc{stroke:#9f7aea;stroke-width:4;fill:none;stroke-dasharray:8 8}
+    .flat{fill:#b6e3c6;stroke:#287d3c;stroke-width:2}
+  </style>
+  <text x="60" y="48" class="label" font-weight="bold">Willow Creek Retail Center - Mock Oregon Excavation Plan</text>
+  <text x="60" y="72" class="small">Local grid: southwest property corner N0.0 E0.0. Coordinates are in feet and intended for tenths-based mobile field display.</text>
+  <g transform="translate(80,110)">
+    <rect class="prop" x="0" y="0" width="820" height="620"/>
+    <text x="730" y="-16" class="small">North frontage / public ROW</text>
+    <line class="grid" x1="0" y1="124" x2="820" y2="124"/>
+    <line class="grid" x1="0" y1="248" x2="820" y2="248"/>
+    <line class="grid" x1="0" y1="372" x2="820" y2="372"/>
+    <line class="grid" x1="0" y1="496" x2="820" y2="496"/>
+    <line class="grid" x1="164" y1="0" x2="164" y2="620"/>
+    <line class="grid" x1="328" y1="0" x2="328" y2="620"/>
+    <line class="grid" x1="492" y1="0" x2="492" y2="620"/>
+    <line class="grid" x1="656" y1="0" x2="656" y2="620"/>
+
+    <path class="drive" d="M70 10 H180 V120 H360 V90 H650 V570 H100 V450 H520 V370 H90 Z"/>
+    <rect class="building" x="248" y="247" width="324" height="106"/>
+    <text x="330" y="306" class="label">Retail Pad FFE 100.00</text>
+    <rect class="building" x="516" y="472" width="86" height="62"/>
+    <text x="510" y="552" class="small">Coffee Pad</text>
+    <rect class="flat" x="248" y="225" width="324" height="22"/>
+    <text x="318" y="241" class="tiny">sidewalk/flatwork prep</text>
+
+    <path class="esc" d="M10 600 H805 V20"/>
+    <text x="590" y="608" class="phase" fill="#7e22ce">ESC perimeter</text>
+    <rect x="120" y="-16" width="80" height="34" fill="#c8ccd3" stroke="#6b7280"/>
+    <text x="112" y="-24" class="tiny">construction entrance</text>
+    <rect x="690" y="120" width="90" height="60" fill="#e9d5ff" stroke="#7e22ce"/>
+    <text x="700" y="154" class="tiny">SP-1 topsoil</text>
+    <rect x="680" y="505" width="90" height="60" fill="#fed7aa" stroke="#c2410c"/>
+    <text x="688" y="538" class="tiny">SP-2 fill</text>
+
+    <path class="storm" d="M428 20 V95 V160 V225"/>
+    <path class="storm" d="M428 225 L396 260 L324 296 L216 330"/>
+    <path class="storm" d="M428 160 L500 202 L644 256"/>
+    <path class="storm" d="M428 225 H396 H428 H460"/>
+    <circle cx="428" cy="20" r="12" fill="#1f78b4"/>
+    <circle cx="428" cy="95" r="12" fill="#1f78b4"/>
+    <circle cx="428" cy="160" r="12" fill="#1f78b4"/>
+    <circle cx="396" cy="225" r="14" fill="#93c5fd" stroke="#1f78b4" stroke-width="3"/>
+    <circle cx="428" cy="225" r="14" fill="#93c5fd" stroke="#1f78b4" stroke-width="3"/>
+    <circle cx="460" cy="225" r="14" fill="#93c5fd" stroke="#1f78b4" stroke-width="3"/>
+    <text x="470" y="230" class="tiny">DW-1/2/3 deep</text>
+    <circle cx="220" cy="28" r="10" fill="#1f78b4"/>
+    <circle cx="376" cy="56" r="10" fill="#1f78b4"/>
+    <circle cx="216" cy="198" r="10" fill="#1f78b4"/>
+    <circle cx="324" cy="272" r="10" fill="#1f78b4"/>
+    <circle cx="500" cy="332" r="10" fill="#1f78b4"/>
+    <circle cx="644" cy="408" r="10" fill="#1f78b4"/>
+    <text x="438" y="82" class="tiny">storm trunk to pretreatment</text>
+
+    <path class="san" d="M116 34 L140 154 L184 298"/>
+    <circle cx="116" cy="34" r="12" fill="#7b3294"/>
+    <circle cx="140" cy="154" r="12" fill="#7b3294"/>
+    <circle cx="184" cy="298" r="12" fill="#7b3294"/>
+    <path class="san" d="M184 298 L300 320 M184 298 L420 320 M184 298 L564 500"/>
+    <text x="26" y="166" class="tiny">sanitary deep profile</text>
+
+    <path class="water" d="M148 0 V96 V388 L664 460"/>
+    <circle cx="148" cy="22" r="10" fill="#0f9d58"/>
+    <circle cx="148" cy="96" r="10" fill="#0f9d58"/>
+    <circle cx="664" cy="460" r="10" fill="#0f9d58"/>
+    <text x="155" y="410" class="tiny">water/fire service</text>
+
+    <path class="dry" d="M712 0 V56 V206 L652 334 V406"/>
+    <rect x="700" y="44" width="24" height="24" fill="#f59e0b"/>
+    <rect x="700" y="194" width="24" height="24" fill="#f59e0b"/>
+    <rect x="640" y="322" width="24" height="24" fill="#f59e0b"/>
+    <rect x="640" y="394" width="24" height="24" fill="#f59e0b"/>
+    <text x="724" y="210" class="tiny">joint trench / vaults</text>
+
+    <circle cx="344" cy="84" r="8" fill="#111827"/>
+    <circle cx="536" cy="204" r="8" fill="#111827"/>
+    <circle cx="372" cy="348" r="8" fill="#111827"/>
+    <text x="390" y="350" class="tiny">light pole bases</text>
+  </g>
+  <g transform="translate(950,130)">
+    <text x="0" y="0" class="label" font-weight="bold">Layer Legend</text>
+    <line x1="0" y1="38" x2="60" y2="38" class="storm"/><text x="75" y="44" class="small">Storm / drywell</text>
+    <line x1="0" y1="78" x2="60" y2="78" class="san"/><text x="75" y="84" class="small">Sanitary</text>
+    <line x1="0" y1="118" x2="60" y2="118" class="water"/><text x="75" y="124" class="small">Water / fire</text>
+    <line x1="0" y1="158" x2="60" y2="158" class="dry"/><text x="75" y="164" class="small">Dry utilities</text>
+    <line x1="0" y1="198" x2="60" y2="198" class="esc"/><text x="75" y="204" class="small">Erosion control</text>
+    <rect x="0" y="230" width="58" height="26" class="building"/><text x="75" y="249" class="small">Building pads</text>
+    <rect x="0" y="274" width="58" height="26" class="drive"/><text x="75" y="293" class="small">Pavement/subgrade</text>
+  </g>
+  <text x="80" y="790" class="small">Note: schematic drawing for app planning only. Coordinates and structures are defined in the Markdown and CSV schedules.</text>
+</svg>

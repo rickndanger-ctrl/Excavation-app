@@ -17,29 +17,137 @@ export type UtilityLine = {
   points: Point[];
 };
 
+export type SafetyFlag =
+  | 'none'
+  | 'egress_4ft_plus'
+  | 'deep_5ft_plus'
+  | 'utility_conflict';
+
+/** Structured dimensions block used for pipes, structures, and flatwork. */
+export type ObjectDimensions = {
+  diameter?: string;        // structure or pipe diameter
+  pipeSize?: string;        // nominal pipe size (e.g. "8-in")
+  width?: string;
+  depth?: string;
+  length?: string;
+  structureType?: string;   // e.g. "48-in precast", "36-in HDPE riser"
+  wallThickness?: string;
+  sdr?: string;             // SDR rating for HDPE/PVC
+};
+
+/** Material specifications block. */
+export type ObjectMaterials = {
+  primary?: string;         // main pipe/structure material (e.g. "SDR-35 PVC")
+  pipe?: string;
+  fitting?: string;
+  bedding?: string;         // e.g. "3/4-in pea gravel, min 6 in below pipe"
+  backfill?: string;        // e.g. "Imported select fill, 95% compaction"
+  concrete?: string;        // e.g. "3000 PSI, Class A"
+  compaction?: string;      // e.g. "95% modified Proctor"
+  geotextile?: string;
+  tracer?: string;          // tracer wire spec
+};
+
+/** Upstream / downstream connections and lateral tie-ins. */
+export type ObjectConnections = {
+  upstream?: string[];      // object IDs
+  downstream?: string[];
+  laterals?: string[];
+  crossings?: string[];     // utility conflict IDs
+};
+
+/** Ordered field workflow steps shown in the Workflow tab. */
+export type ObjectWorkflow = {
+  preTask?: string[];
+  layout?: string[];
+  excavation?: string[];
+  installation?: string[];
+  backfill?: string[];
+  testing?: string[];
+  inspection?: string[];
+  asBuilt?: string[];
+};
+
+/** Single checklist item — field crews check these off at install / inspection. */
+export type ChecklistItem = {
+  id: string;
+  label: string;
+  phase?: 'install' | 'backfill' | 'inspect' | 'as-built';
+};
+
 export type BlueprintObject = {
   id: string;
   type:
     | 'manhole'
     | 'catch_basin'
     | 'curb'
+    | 'sidewalk'
+    | 'grade_break'
+    | 'parking_lot'
     | 'building_pad'
     | 'elevation'
     | 'property_corner'
     | 'slope_marker'
     | 'fdc'
-    | 'vault';
+    | 'vault'
+    | 'drywell'
+    | 'cleanout'
+    | 'hydrant'
+    | 'gate_valve'
+    | 'meter'
+    | 'fire_service'
+    | 'light_pole'
+    | 'stockpile'
+    | 'control_point'
+    | 'ada_ramp'
+    | 'construction_entrance';
   layerId: string;
   x: number;
   y: number;
   label: string;
   phase?: string;
+
+  // ── Basic elevations / geometry ──────────────────────────────────────────
   elevation?: string;
-  depth?: string;
+  rimElevation?: string;
+  invertElevation?: string;   // single invert (use invertIn/invertOut for structures)
+  invertIn?: string;          // invert of incoming pipe
+  invertOut?: string;         // invert of outgoing pipe
+  dropAcross?: string;        // elevation drop across structure (e.g. "0.10 ft")
+  depth?: string;             // trench or structure depth
+  pipeSlope?: string;         // slope of departing pipe
+  length?: string;            // pipe run length
+
+  // ── Flatwork / pavement ───────────────────────────────────────────────────
+  finishedGrade?: string;
+  topElevation?: string;
+  curbReveal?: string;
+  subgradeElev?: string;
+  rockThickness?: string;
+  concreteThickness?: string;
+  width?: string;
+  gradeBreakType?: 'high_point' | 'low_point' | 'change';
+
+  // ── Extended field data ───────────────────────────────────────────────────
+  system?: string;            // 'storm' | 'sanitary' | 'water' | 'fire' | 'dry-util' | 'flatwork'
+  dimensions?: ObjectDimensions;
+  materials?: ObjectMaterials;
+  connections?: ObjectConnections;
+  warnings?: string[];        // plain-language hazard strings
+  checklist?: ChecklistItem[];
+  inspectionItems?: string[];
+  fieldWorkflow?: ObjectWorkflow;
+  detailRefs?: string[];      // IDs in standardDetails data
+  relatedObjectIds?: string[]; // IDs of connected objects
+  locationGuidance?: string;  // "How to find it" plain-language note
+
+  // ── Misc ──────────────────────────────────────────────────────────────────
   slope?: string;
   nearbyRef?: string;
   blueprintSheet?: string;
   notes?: string;
+  safetyFlag?: SafetyFlag;
+  workerLabel?: string;
 };
 
 export type ControlPoint = {

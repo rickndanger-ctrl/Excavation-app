@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { defaultSelectedObjectId } from '../data/sampleJobsite';
+import { defaultSelectedObjectId } from '../data/sampleWillowCreek';
 import { ForemanNotes } from '../components/ForemanNotes';
-import { GpsWarningBanner } from '../components/GpsWarningBanner';
 import { LeftSidebar } from '../components/LeftSidebar';
 import { ObjectDetailsPanel } from '../components/ObjectDetailsPanel';
 import { PlanCanvas } from '../components/PlanCanvas';
-import { ProjectManager } from '../components/ProjectManager';
+import { PlanUploadPanel } from '../components/PlanUploadPanel';
 import { RockCalculator } from '../components/RockCalculator';
-import { StatusBar } from '../components/StatusBar';
-import { TopBar } from '../components/TopBar';
 import { useAuth } from '../hooks/useAuth';
 import { useGps } from '../hooks/useGps';
 import { useJobsitePackage } from '../hooks/useJobsitePackage';
@@ -19,36 +16,42 @@ import { OVERVIEW_PHASE_ID, type ControlPoint } from '../types/jobsite';
 import { buildCalibration } from '../utils/calibration';
 import { bearingLabel, distanceFeet } from '../utils/distance';
 import { getCalibrationPoints, saveCalibrationPoints } from '../utils/storage';
+import { Layers, Navigation, Search, X } from 'lucide-react';
 
 export function FieldMapPage() {
   const auth = useAuth();
   const projects = useProjects();
   const { offlineReady, downloading, downloadPlans, activePackage } = useJobsitePackage();
+  const calcRef = useRef<HTMLElement>(null);
 
-  // When a Supabase project is active, use its name; also swap the plan image if an uploaded sheet is selected
-  const displayPackage = useMemo(() => {
-    if (projects.activeProject) {
-      return {
-        ...activePackage,
-        projectName: projects.activeProject.name,
-        plan: projects.activeSheet?.public_url
-          ? { ...activePackage.plan, imageUrl: projects.activeSheet.public_url }
-          : activePackage.plan,
-      };
-    }
-    return activePackage;
-  }, [activePackage, projects.activeProject, projects.activeSheet]);
+  const displayPackage = activePackage;
   const { visibility, toggleLayer, isVisible } = useLayerVisibility(displayPackage.layers);
   const { setStatus, getStatus } = useObjectStatus();
   const [selectedObjectId, setSelectedObjectId] = useState(defaultSelectedObjectId);
   const [recenterToken, setRecenterToken] = useState(0);
-  const calculatorRef = useRef<HTMLElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showSidebarUpload, setShowSidebarUpload] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Filter objects by search query (ID or label)
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return displayPackage.objects
+      .filter((o) =>
+        o.id.toLowerCase().includes(q) ||
+        o.label.toLowerCase().includes(q) ||
+        (o.workerLabel ?? '').toLowerCase().includes(q)
+      )
+      .slice(0, 8);
+  }, [searchQuery, displayPackage.objects]);
 
   const [activePhaseId, setActivePhaseId] = useState(
     () => displayPackage.phases[0]?.id ?? OVERVIEW_PHASE_ID,
   );
 
-  // Reset to the first phase if the active package changes (e.g. plans re-downloaded)
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setActivePhaseId(displayPackage.phases[0]?.id ?? OVERVIEW_PHASE_ID);
@@ -119,72 +122,190 @@ export function FieldMapPage() {
     saveCalibrationPoints([]);
   }, []);
 
-  const handleMyLocation = () => setRecenterToken((t) => t + 1);
-
-  const handleQuickCalculator = () => {
-    calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  };
-
   return (
-    <div className="app-shell">
-      <TopBar projectName={displayPackage.projectName} offlineReady={offlineReady} />
-      <GpsWarningBanner />
-      <ProjectManager auth={auth} projects={projects} />
+    <div className="field-app">
 
-      <div className="main-layout">
-        <LeftSidebar
-          phases={displayPackage.phases}
-          activePhaseId={activePhaseId}
-          onSelectPhase={setActivePhaseId}
-          phaseProgress={phaseProgress}
-          layers={displayPackage.layers}
-          visibility={visibility}
-          onToggleLayer={toggleLayer}
-          onDownload={downloadPlans}
-          downloading={downloading}
-          offlineReady={offlineReady}
-          onMyLocation={handleMyLocation}
-          onQuickCalculator={handleQuickCalculator}
-          distanceFt={distanceFt}
-          bearing={bearing}
+      {/* ── Map fills the entire screen ── */}
+      <div className="field-app__map">
+        <PlanCanvas
+          jobsite={displayPackage}
+          userLocation={displayLocation}
+          userHeading={displayHeading}
+          isLayerVisible={isVisible}
+          isPhaseVisible={isPhaseVisible}
+          getObjectStatus={getStatus}
+          selectedObjectId={selectedObjectId}
+          onSelectObject={(id) => {
+            setSelectedObjectId(id);
+            setDrawerOpen(false);
+          }}
+          recenterToken={recenterToken}
         />
+      </div>
 
-        <main className="map-area">
-          <PlanCanvas
-            jobsite={displayPackage}
-            userLocation={displayLocation}
-            userHeading={displayHeading}
-            isLayerVisible={isVisible}
-            isPhaseVisible={isPhaseVisible}
-            getObjectStatus={getStatus}
-            selectedObjectId={selectedObjectId}
-            onSelectObject={setSelectedObjectId}
-            recenterToken={recenterToken}
+      {/* ── Top overlay bar ── */}
+      <header className="field-topbar">
+        <button
+          className="field-topbar__menu"
+          onClick={() => setDrawerOpen((o) => !o)}
+          aria-label="Menu"
+        >
+          <Layers size={20} />
+        </button>
+        <span className="field-topbar__title">{displayPackage.projectName}</span>
+        <button
+          className="field-topbar__search"
+          onClick={() => {
+            setSearchOpen(true);
+            setTimeout(() => searchInputRef.current?.focus(), 80);
+          }}
+          aria-label="Search objects"
+        >
+          <Search size={18} />
+        </button>
+        <button
+          className="field-topbar__locate"
+          onClick={() => setRecenterToken((t) => t + 1)}
+          aria-label="Re-center on my location"
+        >
+          <Navigation size={20} />
+        </button>
+      </header>
+
+      {/* ── Search overlay ── */}
+      {searchOpen && (
+        <div className="search-overlay">
+          <div className="search-overlay__bar">
+            <Search size={16} className="search-overlay__icon" />
+            <input
+              ref={searchInputRef}
+              className="search-overlay__input"
+              placeholder="Search by ID or name… (e.g. SAN-MH-3, CB-1)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery(''); }
+                if (e.key === 'Enter' && searchResults[0]) {
+                  setSelectedObjectId(searchResults[0].id);
+                  setSearchOpen(false);
+                  setSearchQuery('');
+                }
+              }}
+            />
+            <button
+              className="search-overlay__close"
+              onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+              aria-label="Close search"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          {searchResults.length > 0 && (
+            <ul className="search-results">
+              {searchResults.map((obj) => {
+                const layer = displayPackage.layers.find((l) => l.id === obj.layerId);
+                return (
+                  <li key={obj.id}>
+                    <button
+                      className="search-result"
+                      onClick={() => {
+                        setSelectedObjectId(obj.id);
+                        setSearchOpen(false);
+                        setSearchQuery('');
+                      }}
+                      type="button"
+                    >
+                      <span
+                        className="search-result__dot"
+                        style={{ backgroundColor: layer?.color ?? '#888' }}
+                      />
+                      <span className="search-result__id">{obj.id}</span>
+                      <span className="search-result__label">{obj.label.replace(`${obj.id} — `, '')}</span>
+                      {obj.blueprintSheet && (
+                        <span className="search-result__sheet">Sheet {obj.blueprintSheet}</span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {searchQuery.trim() && searchResults.length === 0 && (
+            <p className="search-no-results">No objects match "{searchQuery}"</p>
+          )}
+        </div>
+      )}
+
+      {/* ── GPS accuracy dot ── */}
+      <div className={`field-gps-dot ${gps.active ? (isCalibrated ? 'calibrated' : 'active') : 'inactive'}`} title={isCalibrated ? 'GPS calibrated' : gps.active ? 'GPS active' : 'No GPS'} />
+
+      {/* ── Drawer backdrop + drawer (only rendered when open) ── */}
+      {drawerOpen && (
+        <div className="field-backdrop" onClick={() => setDrawerOpen(false)} />
+      )}
+
+      {drawerOpen && (
+      <aside className="field-drawer open">
+        <div className="field-drawer__header">
+          <span>Layers &amp; Tools</span>
+          <button className="icon-btn" onClick={() => setDrawerOpen(false)} aria-label="Close">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="field-drawer__body">
+          <LeftSidebar
+            phases={displayPackage.phases}
+            activePhaseId={activePhaseId}
+            onSelectPhase={(id) => { setActivePhaseId(id); setDrawerOpen(false); }}
+            phaseProgress={phaseProgress}
+            layers={displayPackage.layers}
+            visibility={visibility}
+            onToggleLayer={toggleLayer}
+            onDownload={downloadPlans}
+            downloading={downloading}
+            offlineReady={offlineReady}
+            onMyLocation={() => { setRecenterToken((t) => t + 1); setDrawerOpen(false); }}
+            onQuickCalculator={() => calcRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            distanceFt={distanceFt}
+            bearing={bearing}
+            isSignedIn={Boolean(auth.user)}
+            hasActiveProject={Boolean(projects.activeProject)}
+            onUploadPlan={() => setShowSidebarUpload(true)}
           />
-        </main>
+          <RockCalculator sectionRef={calcRef} />
+          <ForemanNotes />
+        </div>
+      </aside>
+      )}
 
-        <ObjectDetailsPanel
-          object={selectedObject}
-          distanceFt={distanceFt}
-          status={selectedObject ? getStatus(selectedObject.id) : 'not_started'}
-          onSetStatus={setStatus}
-          calibrationPoints={calibrationPoints}
-          gps={gps}
-          onAddCalibrationPoint={handleAddCalibrationPoint}
-          onClearCalibration={handleClearCalibration}
+      {/* ── Bottom sheet — slides up when a feature is tapped ── */}
+      <div className={`field-sheet${selectedObject ? ' open' : ''}`}>
+        <div className="field-sheet__handle" onClick={() => setSelectedObjectId('')} />
+        <div className="field-sheet__body">
+          <ObjectDetailsPanel
+            object={selectedObject}
+            distanceFt={distanceFt}
+            status={selectedObject ? getStatus(selectedObject.id) : 'not_started'}
+            onSetStatus={setStatus}
+            calibrationPoints={calibrationPoints}
+            gps={gps}
+            onAddCalibrationPoint={handleAddCalibrationPoint}
+            onClearCalibration={handleClearCalibration}
+          />
+        </div>
+      </div>
+
+      {showSidebarUpload && projects.activeProject && (
+        <PlanUploadPanel
+          projectId={projects.activeProject.id}
+          existingSheetCount={projects.sheets.length}
+          onUploaded={(sheet) => {
+            projects.reload();
+            projects.selectSheet(sheet);
+          }}
+          onClose={() => setShowSidebarUpload(false)}
         />
-      </div>
-
-      <div className="bottom-panels">
-        <RockCalculator sectionRef={calculatorRef} />
-        <ForemanNotes />
-      </div>
-
-      <StatusBar
-        gpsAccuracyM={gps.accuracyM}
-        gpsActive={gps.active}
-        calibrated={isCalibrated}
-      />
+      )}
     </div>
   );
 }

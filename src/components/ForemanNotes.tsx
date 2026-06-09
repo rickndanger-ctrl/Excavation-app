@@ -23,12 +23,10 @@ export function ForemanNotes() {
 
   useEffect(() => {
     const stored = getForemanNotes();
-    if (stored.length === 0) {
-      setNotes([SEED_NOTE]);
-      saveForemanNotes([SEED_NOTE]);
-    } else {
-      setNotes(stored);
-    }
+    const initial = stored.length === 0 ? [SEED_NOTE] : stored;
+    if (stored.length === 0) saveForemanNotes(initial);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNotes(initial);
   }, []);
 
   const addNote = () => {
