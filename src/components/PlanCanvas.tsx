@@ -139,8 +139,158 @@ function ObjectIcon({
         <polygon points={hexagonPoints} fill={fill} stroke={stroke} strokeWidth={sw} />
       </>
     );
+  } else if (type === 'drywell') {
+    // double ring — signifies deep excavation
+    const r = selected ? 3.4 : 2.9;
+    icon = (
+      <>
+        {selectionRing}
+        <circle cx={x} cy={y} r={r} fill={fill} stroke={stroke} strokeWidth={sw} />
+        <circle cx={x} cy={y} r={r * 0.5} fill="none" stroke={stroke} strokeWidth={0.6} />
+      </>
+    );
+  } else if (type === 'cleanout') {
+    // small square with center dot
+    const s = selected ? 2.6 : 2.2;
+    icon = (
+      <>
+        {selectionRing}
+        <rect x={x - s} y={y - s} width={s * 2} height={s * 2} fill={fill} stroke={stroke} strokeWidth={sw} />
+        <circle cx={x} cy={y} r={0.6} fill={stroke} />
+      </>
+    );
+  } else if (type === 'hydrant') {
+    // pentagon
+    const r = selected ? 3 : 2.6;
+    const pts = Array.from({ length: 5 }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+      return `${x + r * Math.cos(angle)},${y + r * Math.sin(angle)}`;
+    }).join(' ');
+    icon = (
+      <>
+        {selectionRing}
+        <polygon points={pts} fill={fill} stroke={stroke} strokeWidth={sw} />
+      </>
+    );
+  } else if (type === 'gate_valve') {
+    // rotated square (diamond) with a cross
+    const s = selected ? 2.8 : 2.4;
+    icon = (
+      <>
+        {selectionRing}
+        <polygon
+          points={`${x},${y - s} ${x + s},${y} ${x},${y + s} ${x - s},${y}`}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={sw}
+        />
+        <line x1={x - 1.2} y1={y} x2={x + 1.2} y2={y} stroke={stroke} strokeWidth={0.5} />
+      </>
+    );
+  } else if (type === 'meter' || type === 'fire_service') {
+    // small circle with filled center
+    const r = selected ? 2.8 : 2.4;
+    icon = (
+      <>
+        {selectionRing}
+        <circle cx={x} cy={y} r={r} fill={fill} stroke={stroke} strokeWidth={sw} />
+        <circle cx={x} cy={y} r={r * 0.35} fill={stroke} />
+      </>
+    );
+  } else if (type === 'light_pole') {
+    // star / cross symbol
+    const r = selected ? 2.8 : 2.4;
+    icon = (
+      <>
+        {selectionRing}
+        <circle cx={x} cy={y} r={r} fill={fill} stroke={stroke} strokeWidth={sw} />
+        <line x1={x} y1={y - r} x2={x} y2={y + r} stroke={stroke} strokeWidth={0.5} />
+        <line x1={x - r} y1={y} x2={x + r} y2={y} stroke={stroke} strokeWidth={0.5} />
+      </>
+    );
+  } else if (type === 'stockpile') {
+    // triangle pointing up
+    const s = selected ? 3.5 : 3;
+    icon = (
+      <>
+        {selectionRing}
+        <polygon
+          points={`${x},${y - s} ${x + s},${y + s * 0.6} ${x - s},${y + s * 0.6}`}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={sw}
+        />
+      </>
+    );
+  } else if (type === 'parking_lot') {
+    // P inside a rounded square — pavement zone marker
+    const s = selected ? 3.4 : 2.9;
+    icon = (
+      <>
+        {selectionRing}
+        <rect x={x - s} y={y - s} width={s * 2} height={s * 2} rx={0.8} fill={fill} stroke={stroke} strokeWidth={sw} />
+        <text
+          x={x}
+          y={y + 1.1}
+          textAnchor="middle"
+          fontSize={s * 1.1}
+          fontWeight="bold"
+          fill={stroke}
+          fontFamily="monospace"
+          style={{ pointerEvents: 'none' }}
+        >P</text>
+      </>
+    );
+  } else if (type === 'curb') {
+    // Horizontal bar with two end ticks — symbolizes curb face
+    const s = selected ? 3.4 : 2.8;
+    icon = (
+      <>
+        {selectionRing}
+        <rect x={x - s} y={y - 1.0} width={s * 2} height={2} rx={0.4} fill={fill} stroke={stroke} strokeWidth={sw} />
+        <line x1={x - s} y1={y - 1.8} x2={x - s} y2={y + 1.8} stroke={fill} strokeWidth={1.2} strokeLinecap="round" />
+        <line x1={x + s} y1={y - 1.8} x2={x + s} y2={y + 1.8} stroke={fill} strokeWidth={1.2} strokeLinecap="round" />
+      </>
+    );
+  } else if (type === 'sidewalk') {
+    // Hatched square — represents a concrete slab section
+    const s = selected ? 3.2 : 2.7;
+    icon = (
+      <>
+        {selectionRing}
+        <rect x={x - s} y={y - s} width={s * 2} height={s * 2} fill={fill} stroke={stroke} strokeWidth={sw} />
+        <line x1={x - s} y1={y} x2={x + s} y2={y} stroke={stroke} strokeWidth={0.5} />
+        <line x1={x} y1={y - s} x2={x} y2={y + s} stroke={stroke} strokeWidth={0.5} />
+      </>
+    );
+  } else if (type === 'grade_break') {
+    // Triangle pointing up for high point, down for low point
+    const s = selected ? 3.6 : 3.0;
+    const gb = obj as BlueprintObject & { gradeBreakType?: string };
+    const isLow = gb.gradeBreakType === 'low_point';
+    icon = (
+      <>
+        {selectionRing}
+        {isLow
+          ? <polygon points={`${x},${y + s} ${x + s},${y - s * 0.6} ${x - s},${y - s * 0.6}`} fill={fill} stroke={stroke} strokeWidth={sw} />
+          : <polygon points={`${x},${y - s} ${x + s},${y + s * 0.6} ${x - s},${y + s * 0.6}`} fill={fill} stroke={stroke} strokeWidth={sw} />
+        }
+        <line x1={x - 1.2} y1={y} x2={x + 1.2} y2={y} stroke={stroke} strokeWidth={0.6} />
+      </>
+    );
+  } else if (type === 'control_point' || type === 'ada_ramp' || type === 'construction_entrance') {
+    // X mark
+    const s = 2.6;
+    icon = (
+      <>
+        {selectionRing}
+        <line x1={x - s} y1={y - s} x2={x + s} y2={y + s} stroke={fill} strokeWidth={1.5} strokeLinecap="round" />
+        <line x1={x + s} y1={y - s} x2={x - s} y2={y + s} stroke={fill} strokeWidth={1.5} strokeLinecap="round" />
+        <circle cx={x} cy={y} r={1} fill={fill} />
+      </>
+    );
   } else {
-    // elevation and others
+    // elevation and others — plain circle
     icon = (
       <>
         {selectionRing}
@@ -184,8 +334,8 @@ export function PlanCanvas({
   recenterToken,
 }: PlanCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(3.2);
-  const [offset, setOffset] = useState({ x: 40, y: 20 });
+  const [scale, setScale] = useState(0.9);
+  const [offset, setOffset] = useState({ x: 20, y: 20 });
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
 
@@ -206,12 +356,24 @@ export function PlanCanvas({
     const container = containerRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
-    setScale(3.5);
+    // Zoom to 1.5× so field markers are clearly visible but context is still readable
+    const s = Math.max(1.0, Math.min(rect.width / plan.widthFt, rect.height / plan.heightFt) * 1.5); // plan is destructured above
+    setScale(s);
     setOffset({
-      x: rect.width / 2 - userLocation.x * 3.5,
-      y: rect.height / 2 - userLocation.y * 3.5,
+      x: rect.width / 2 - userLocation.x * s,
+      y: rect.height / 2 - userLocation.y * s,
     });
-  }, [userLocation]);
+  }, [userLocation, plan.widthFt, plan.heightFt]);
+
+  // Fit-to-viewport on first mount
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const s = Math.min(rect.width / plan.widthFt, rect.height / plan.heightFt) * 0.95;
+    setScale(Math.max(0.3, s));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally run once
 
   useEffect(() => {
     if (recenterToken > 0) recenterOnUser();
@@ -379,7 +541,8 @@ export function PlanCanvas({
             height={plan.heightFt}
           >
             {utilities.map((line) => {
-              if (!isLayerVisible(line.layerId) || !isPhaseVisible(line.phase)) return null;
+              if (!isLayerVisible(line.layerId)) return null;
+              const inPhase = isPhaseVisible(line.phase);
               const layer = jobsite.layers.find((l) => l.id === line.layerId);
               const pts = line.points.map((p) => `${p.x},${p.y}`).join(' ');
               const isClosed =
@@ -388,7 +551,7 @@ export function PlanCanvas({
                 line.points[0].y === line.points[line.points.length - 1].y;
 
               return (
-                <g key={line.id}>
+                <g key={line.id} opacity={inPhase ? 1 : 0.2}>
                   {isClosed ? (
                     <polygon
                       points={pts}
@@ -448,21 +611,25 @@ export function PlanCanvas({
             )}
 
             {objects.map((obj) => {
-              if (!isLayerVisible(obj.layerId) || !isPhaseVisible(obj.phase)) return null;
+              if (!isLayerVisible(obj.layerId)) return null;
+              const inPhase = isPhaseVisible(obj.phase);
               const layer = jobsite.layers.find((l) => l.id === obj.layerId);
               const selected = obj.id === selectedObjectId;
+              // dim out-of-phase objects rather than hiding them
+              const opacity = inPhase ? 1 : 0.22;
               return (
-                <ObjectIcon
-                  key={obj.id}
-                  obj={obj}
-                  selected={selected}
-                  color={layer?.color ?? '#5f6368'}
-                  status={getObjectStatus(obj.id)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectObject(obj.id);
-                  }}
-                />
+                <g key={obj.id} opacity={opacity} style={{ pointerEvents: inPhase ? 'auto' : 'none' }}>
+                  <ObjectIcon
+                    obj={obj}
+                    selected={selected}
+                    color={layer?.color ?? '#5f6368'}
+                    status={getObjectStatus(obj.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectObject(obj.id);
+                    }}
+                  />
+                </g>
               );
             })}
 

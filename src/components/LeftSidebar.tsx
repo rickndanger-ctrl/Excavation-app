@@ -1,4 +1,4 @@
-import { Calculator, CloudDownload, Crosshair } from 'lucide-react';
+import { Calculator, CloudDownload, Crosshair, Upload } from 'lucide-react';
 import { OVERVIEW_PHASE_ID, type ExcavationLayer, type JobsitePhase } from '../types/jobsite';
 import { formatFeet } from '../utils/distance';
 
@@ -17,6 +17,9 @@ type LeftSidebarProps = {
   onQuickCalculator: () => void;
   distanceFt: number | null;
   bearing: string | null;
+  isSignedIn: boolean;
+  hasActiveProject: boolean;
+  onUploadPlan: () => void;
 };
 
 export function LeftSidebar({
@@ -34,6 +37,9 @@ export function LeftSidebar({
   onQuickCalculator,
   distanceFt,
   bearing,
+  isSignedIn,
+  hasActiveProject,
+  onUploadPlan,
 }: LeftSidebarProps) {
   const activePhase = phases.find((p) => p.id === activePhaseId);
   const isOverview = activePhaseId === OVERVIEW_PHASE_ID;
@@ -116,6 +122,19 @@ export function LeftSidebar({
           <Calculator size={16} />
           Quick Calculator
         </button>
+
+        {isSignedIn && hasActiveProject ? (
+          <button type="button" className="btn btn--secondary" onClick={onUploadPlan}>
+            <Upload size={16} />
+            Upload Plan PDF
+          </button>
+        ) : (
+          <p className="sidebar-upload-hint">
+            {!isSignedIn
+              ? 'Sign in (person icon ↑) to upload plan PDFs.'
+              : 'Select a project above to upload plans.'}
+          </p>
+        )}
       </section>
 
       <div className="distance-footer">
