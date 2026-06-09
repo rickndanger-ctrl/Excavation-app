@@ -1,4 +1,4 @@
-import { ChevronDown, FolderOpen, LogOut, Plus, Upload, User } from 'lucide-react';
+import { ChevronDown, FolderOpen, LogIn, LogOut, Plus, Upload, User } from 'lucide-react';
 import { useState } from 'react';
 import type { AuthState } from '../hooks/useAuth';
 import type { ProjectsState } from '../hooks/useProjects';
@@ -159,7 +159,6 @@ export function ProjectManager({ auth, projects }: Props) {
               type="button"
               className="btn btn--sm btn--outline"
               onClick={() => setShowUpload(true)}
-              title="Upload plan sheets"
             >
               <Upload size={13} /> Upload
             </button>
@@ -169,20 +168,24 @@ export function ProjectManager({ auth, projects }: Props) {
             auth.user ? (
               <button
                 type="button"
-                className="btn btn--sm btn--ghost"
+                className="btn btn--sm btn--signed-in"
                 onClick={() => auth.signOut()}
-                title={`Signed in as ${auth.user.email}`}
+                title="Click to sign out"
               >
-                <LogOut size={13} />
+                <User size={13} />
+                <span className="btn-auth-label">
+                  {auth.user.email ? auth.user.email.split('@')[0] : 'Signed In'}
+                </span>
+                <LogOut size={11} className="btn-signout-icon" />
               </button>
             ) : (
               <button
                 type="button"
-                className="btn btn--sm btn--ghost"
+                className="btn btn--sm btn--sign-in"
                 onClick={() => setShowAuth(true)}
-                title="Sign in to upload plans"
               >
-                <User size={13} />
+                <LogIn size={13} />
+                Sign In
               </button>
             )
           )}

@@ -1,10 +1,10 @@
-import { Upload, X } from 'lucide-react';
+import { FileText, Upload, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { uploadSheet } from '../lib/supabase';
 import type { PlanSheet } from '../lib/supabase';
 
 const SHEET_TYPES = ['Site Plan', 'Grading Plan', 'Utility Plan', 'Landscape Plan', 'Civil Details', 'Survey', 'Other'];
-const ACCEPTED = '.png,.jpg,.jpeg,.webp';
+const ACCEPTED = '.png,.jpg,.jpeg,.webp,.pdf';
 
 type Props = {
   projectId: string;
@@ -18,6 +18,7 @@ type FileEntry = {
   name: string;
   sheetType: string;
   preview: string;
+  isPdf: boolean;
 };
 
 export function PlanUploadPanel({ projectId, existingSheetCount, onUploaded, onClose }: Props) {
@@ -25,16 +26,18 @@ export function PlanUploadPanel({ projectId, existingSheetCount, onUploaded, onC
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pdfUploaded, setPdfUploaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const addFiles = (files: FileList | null) => {
     if (!files) return;
     const next: FileEntry[] = [];
     for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) continue;
-      const preview = URL.createObjectURL(file);
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      if (!file.type.startsWith('image/') && !isPdf) continue;
+      const preview = isPdf ? '' : URL.createObjectURL(file);
       const name = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-      next.push({ file, name, sheetType: 'Site Plan', preview });
+      next.push({ file, name, sheetType: 'Site Plan', preview, isPdf });
     }
     setEntries((prev) => [...prev, ...next]);
   };
@@ -59,6 +62,8 @@ export function PlanUploadPanel({ projectId, existingSheetCount, onUploaded, onC
     if (entries.length === 0) return;
     setUploading(true);
     setError(null);
+    setPdfUploaded(false);
+    const hasPdfs = entries.some((e) => e.isPdf);
     try {
       for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
@@ -74,9 +79,15 @@ export function PlanUploadPanel({ projectId, existingSheetCount, onUploaded, onC
       }
       setProgress(null);
       setEntries([]);
-      onClose();
+      if (hasPdfs) {
+        setPdfUploaded(true);
+      } else {
+        onClose();
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload failed');
+      const msg = e instanceof Error ? e.message : 'Upload failed';
+      console.error('[PlanUploadPanel] upload error:', msg, e);
+      setError(msg);
       setProgress(null);
     } finally {
       setUploading(false);
@@ -95,7 +106,7 @@ export function PlanUploadPanel({ projectId, existingSheetCount, onUploaded, onC
           </button>
         </div>
 
-        <p className="modal__subtitle">PNG and JPG images accepted. PDF → export each page as a PNG first.</p>
+        <p className="modal__subtitle">PNG, JPG, and PDF accepted. One file at a time or multiple.</p>
 
         {/* Drop zone */}
         <div
@@ -116,12 +127,30 @@ export function PlanUploadPanel({ projectId, existingSheetCount, onUploaded, onC
           />
         </div>
 
+        {/* PDF upload success notice */}
+        {pdfUploaded && (
+          <div className="upload-pdf-notice">
+            <FileText size={18} />
+            <div>
+              <strong>PDF saved to Supabase.</strong>
+              <span> In-canvas rendering is coming next. The sheet is saved and will appear in your project list.</span>
+            </div>
+          </div>
+        )}
+
         {/* File list */}
         {entries.length > 0 && (
           <div className="upload-list">
             {entries.map((entry, i) => (
-              <div key={entry.preview} className="upload-item">
-                <img src={entry.preview} alt="preview" className="upload-item__thumb" />
+              <div key={entry.isPdf ? entry.file.name + i : entry.preview} className="upload-item">
+                {entry.isPdf ? (
+                  <div className="upload-item__pdf-thumb">
+                    <FileText size={24} />
+                    <span>.pdf</span>
+                  </div>
+                ) : (
+                  <img src={entry.preview} alt="preview" className="upload-item__thumb" />
+                )}
                 <div className="upload-item__fields">
                   <input
                     type="text"
@@ -145,6 +174,7 @@ export function PlanUploadPanel({ projectId, existingSheetCount, onUploaded, onC
                 </button>
               </div>
             ))}
+
           </div>
         )}
 
@@ -152,17 +182,25 @@ export function PlanUploadPanel({ projectId, existingSheetCount, onUploaded, onC
         {progress && <p className="upload-progress">{progress}</p>}
 
         <div className="modal__actions">
-          <button type="button" className="btn btn--ghost" onClick={onClose} disabled={uploading}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={handleUpload}
-            disabled={uploading || entries.length === 0}
-          >
-            {uploading ? 'Uploading…' : `Upload ${entries.length > 0 ? entries.length : ''} Sheet${entries.length !== 1 ? 's' : ''}`}
-          </button>
+          {pdfUploaded ? (
+            <button type="button" className="btn btn--primary" onClick={onClose}>
+              Done
+            </button>
+          ) : (
+            <>
+              <button type="button" className="btn btn--ghost" onClick={onClose} disabled={uploading}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={handleUpload}
+                disabled={uploading || entries.length === 0}
+              >
+                {uploading ? 'Uploading…' : `Upload ${entries.length > 0 ? entries.length : ''} Sheet${entries.length !== 1 ? 's' : ''}`}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
