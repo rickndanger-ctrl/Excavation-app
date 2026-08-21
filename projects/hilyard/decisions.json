@@ -144,6 +144,47 @@
       "source_ids": [
         "src-project-brief"
       ]
+    },
+    {
+      "id": "decision-sanitary-vertical-basis",
+      "subject": "Minimum fictional vertical basis for the sanitary gravity envelope",
+      "status": "reviewed_assumption",
+      "value": {
+        "provisional_building_ffe_navd88_ft": 445.0,
+        "building_terminal_invert_navd88_ft": 439.7,
+        "reference_surface_method": "low-confidence profile anchored to City GIS manhole rims and extrapolated to the building terminal",
+        "fitness_for_use": "sanitary-envelope-only",
+        "survey_authority": false
+      },
+      "rationale": "The mock gravity system needs an explicit elevation envelope. The provisional FFE and extrapolated surface are deliberately reviewable assumptions; City GIS NAVD88 rims/inverts remain reference-derived and do not create project control.",
+      "source_ids": [
+        "src-eugene-wastewater-gis",
+        "src-design-constraints"
+      ]
+    },
+    {
+      "id": "decision-sanitary-alignment",
+      "subject": "Fictional sanitary service alignment, material, and assumed public connection",
+      "status": "reviewed_assumption",
+      "value": {
+        "terminal_id": "penetration-sanitary",
+        "service_diameter_in": 6,
+        "service_material": "PVC SDR35",
+        "design_slope_percent": 1.0,
+        "minimum_cover_ft": 4.0,
+        "cleanout_id": "sanitary-cleanout-01",
+        "tie_in_id": "sanitary-tie-in-01",
+        "public_source_asset_id": 4589,
+        "tie_in_approval_status": "unknown",
+        "capacity_status": "unknown"
+      },
+      "rationale": "A short westward run to a two-way cleanout and a straight northward run to the crossing main creates maintainable topology without inventing a site manhole. The 6-inch PVC SDR35 and 1.0% slope are reviewed mock defaults from the cited constraint ledger. The connection is a test assumption pending potholing, survey, City approval, and capacity review.",
+      "source_ids": [
+        "src-eugene-wastewater-gis",
+        "src-design-constraints",
+        "src-eugene-pids-2023",
+        "src-eugene-construction-2024-a4"
+      ]
     }
   ]
 }

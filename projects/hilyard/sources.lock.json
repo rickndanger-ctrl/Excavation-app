@@ -164,6 +164,29 @@
       "supports": [
         "state guidance reference; stricter local criteria may control"
       ]
+    },
+    {
+      "id": "src-eugene-wastewater-gis",
+      "title": "City Wastewater GIS extract for public main UNIQUE_ID 4589 and endpoint manholes 13262/2039",
+      "authority": "City of Eugene Geographic Information Services",
+      "provenance_status": "reference-derived",
+      "citation": "/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/projects/hilyard/source-data/city-wastewater-4589.json",
+      "upstream_citations": [
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/Wastewater/MapServer/4/query?where=UNIQUE_ID%3D4589&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/Wastewater/MapServer/2/query?where=STRUCT_1%20IN%20(13262,2039)&outFields=*&returnGeometry=true&outSR=6823&f=geojson"
+      ],
+      "retrieved_date": "2026-08-21",
+      "lock": {
+        "kind": "local_file",
+        "status": "checksum_locked",
+        "sha256": "7f8a018fe6b79821fba0a3cd4a0c55562e9743421c715133e3ce8b739e1685a1"
+      },
+      "supports": [
+        "reference-derived 8-inch public sanitary alignment",
+        "NAVD88 public-main endpoint inverts and manhole rims",
+        "source asset and structure identifiers"
+      ],
+      "authority_note": "Reference-derived only; not project survey control, capacity approval, or connection authorization. Supersede with owner-accepted survey/as-built information."
     }
   ]
 }

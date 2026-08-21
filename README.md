@@ -14,14 +14,14 @@ sections, schedules, detail cards, layered vector GeoPDF, GeoPackage, DXF, and
 the Excavation Field Map adapter will derive from that model. Sheet count is a
 readability outcome, never a fixed acceptance target.
 
-## Foundation commands
-
-No third-party runtime packages are required for this slice.
+## Reproducible commands
 
 ```bash
-PYTHONPATH=src python3 -m unittest discover -s tests -v
-PYTHONPATH=src python3 -m civil_plan_factory doctor
-PYTHONPATH=src python3 -m civil_plan_factory validate \
+python3 -m venv work/venv
+work/venv/bin/python -m pip install -e .
+PYTHONPATH=src work/venv/bin/python -m unittest discover -s tests -v
+PYTHONPATH=src work/venv/bin/python -m civil_plan_factory doctor
+PYTHONPATH=src work/venv/bin/python -m civil_plan_factory validate \
   projects/hilyard/project.json \
   --output-dir outputs/hilyard-foundation
 ```
@@ -35,17 +35,27 @@ model-studio validate projects/hilyard/project.json --output-dir outputs/hilyard
 ```
 
 The `validate` command emits a deterministic semantic package and validation
-report. The current site-layout slice can also be generated with:
+report. The current coordinated site/sanitary slice is generated with:
 
 ```bash
 model-studio build projects/hilyard/project.json \
-  --output-dir outputs/hilyard-site-layout
+  --output-dir outputs/hilyard-sanitary
 ```
 
-This produces one vector site-layout PDF, a true-geometry GeoPackage, the
-semantic Excavation Field Map package, and validation/parity reports from one
-canonical model. It does not create sanitary routing, grading, cut/fill, final
-FFE, or utility capacity claims.
+This produces a three-page, vector-only PDF (composite context, sanitary plan,
+and sanitary profile), a true-geometry GeoPackage, the semantic Excavation
+Field Map package, and validation/parity reports from one canonical model. The
+parity report decodes geometry markers from the actual PDF content stream and
+compares them with geometry read back from the GeoPackage.
+
+The sanitary service is a known-answer fictional design: two 6-inch PVC SDR35
+segments at 1.00% connect the permanent building terminal through a two-way
+cleanout to an explicitly assumed connection on City GIS public main
+`UNIQUE_ID 4589`. City GIS alignment, rims, and inverts are reference-derived;
+the building FFE, extrapolated surface, service inverts, and tie are reviewed
+assumptions. Project survey, final grading, capacity, tie-in approval, and
+utility-owner acceptance remain unresolved. No storm, water, fire, dry-utility,
+full-grading, or cut/fill design is included.
 
 The four City GIS taxlots are explicitly reference-derived and not survey
 authority. They are the first geometry to replace when a real boundary survey
@@ -75,15 +85,17 @@ The next implementation slice begins only after this foundation is committed:
 2. Add a human-reviewed-assumption fictional apartment footprint and complete
    2D building/pad object inside the usable area, proving clearance from every
    frozen constraint.
-3. Build one full utility at a time, starting with sanitary. Before routing,
+3. Build one full utility at a time, starting with sanitary. This repository now
+   includes the first sanitary known-answer slice. Before routing,
    establish the minimum vertical envelope: reference existing surface,
    reviewed-assumption finished-floor elevation, available public main/manhole
    geometry and inverts, an explicitly assumed connection point, cited cover and
    slope rules, and validation. Then derive sanitary nodes, edges, structures,
    laterals, elevations, slopes, materials, cover, topology, provenance, and
    field details.
-4. From the same passing canonical run, generate a vector PDF plan, GeoPackage,
-   and Excavation Field Map package and reconcile them by asset ID and geometry.
+4. From the same passing canonical run, generate a vector PDF plan/profile,
+   GeoPackage, and Excavation Field Map package and reconcile them by asset ID
+   and actual artifact geometry. This is implemented for the sanitary slice.
 5. Add grading/site preparation, proposed contours, and cut/fill later. Sanitary
    cannot be called valid without its supporting elevation/cover envelope.
 6. Sequence remaining systems by dependency and conflict risk, not convenience.

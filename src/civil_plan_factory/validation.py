@@ -282,4 +282,53 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
     for key in ("points", "lines", "polygons", "surfaces"):
         if key not in features:
             issues.append(_issue("contract.geometry_type_missing", f"features.{key}", "Canonical geometry collection is required"))
+
+    sanitary = next((row for row in model.get("networks", []) if row.get("system") == "sanitary"), None)
+    if sanitary and sanitary.get("edges"):
+        sanitary_edges = {row["id"]: row for row in sanitary["edges"]}
+        for edge_index, edge in enumerate(sanitary["edges"]):
+            detail = edge.get("field_detail", {})
+            path = f"networks.{sanitary['id']}.edges[{edge_index}].field_detail"
+            upstream = detail.get("upstream_invert_ft")
+            downstream = detail.get("downstream_invert_ft")
+            if not (_finite_coordinate(upstream) and _finite_coordinate(downstream)) or upstream <= downstream:
+                issues.append(_issue("sanitary.flow_not_downhill", path, "Gravity edge invert must fall in its downstream direction"))
+            slope = detail.get("slope_percent")
+            minimum_slope = detail.get("minimum_slope_percent")
+            if _finite_coordinate(slope) and _finite_coordinate(minimum_slope) and slope + 1e-9 < minimum_slope:
+                issues.append(_issue("sanitary.slope_below_min", path, "Gravity edge slope is below its cited minimum"))
+            if detail.get("validation_scope") != "reference_context":
+                samples = detail.get("cover_samples_ft", [])
+                minimum_cover = detail.get("minimum_cover_ft")
+                if not samples or not _finite_coordinate(minimum_cover) or min(samples) + 1e-9 < minimum_cover:
+                    issues.append(_issue("sanitary.cover_below_min", path, "Proposed gravity edge violates its minimum cover envelope"))
+        for node_index, node in enumerate(sanitary.get("nodes", [])):
+            detail = node.get("field_detail", {})
+            if detail.get("structure_drop_rule_applies"):
+                drop = detail.get("connection_drop_ft")
+                minimum = detail.get("minimum_drop_ft", 0.1)
+                if not _finite_coordinate(drop) or drop + 1e-9 < minimum:
+                    issues.append(_issue(
+                        "sanitary.structure_drop_invalid",
+                        f"networks.{sanitary['id']}.nodes[{node_index}].field_detail.connection_drop_ft",
+                        "Structure connection drop is below the cited normal minimum",
+                    ))
+                if detail.get("owner_approval_status") != "unknown" or detail.get("capacity_status") != "unknown":
+                    issues.append(_issue(
+                        "sanitary.unresolved_assumption_missing",
+                        f"networks.{sanitary['id']}.nodes[{node_index}].field_detail",
+                        "Assumed tie-in must preserve unknown approval and capacity status",
+                    ))
+        for profile_index, profile in enumerate(model.get("deliverables", {}).get("profiles", [])):
+            if profile.get("id") != "profile-sanitary-service":
+                continue
+            for segment_index, segment in enumerate(profile.get("segments", [])):
+                edge = sanitary_edges.get(segment.get("edge_id"))
+                if edge is None:
+                    issues.append(_issue("profile.model_mismatch", f"deliverables.profiles[{profile_index}].segments[{segment_index}]", "Profile edge is unresolved"))
+                    continue
+                detail = edge.get("field_detail", {})
+                for key in ("length_ft", "upstream_invert_ft", "downstream_invert_ft"):
+                    if not math.isclose(float(segment.get(key, float("nan"))), float(detail.get(key, float("inf"))), abs_tol=1e-6):
+                        issues.append(_issue("profile.model_mismatch", f"deliverables.profiles[{profile_index}].segments[{segment_index}].{key}", "Profile ordinate differs from its canonical network edge"))
     return sorted(issues)

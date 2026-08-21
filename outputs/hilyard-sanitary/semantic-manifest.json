@@ -1,0 +1,1939 @@
+{
+  "areas": [
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186302.989091,
+          98609.991274
+        ],
+        [
+          186237.392951,
+          98609.718703
+        ],
+        [
+          186236.989909,
+          98609.717019
+        ],
+        [
+          186236.979499,
+          98603.791376
+        ],
+        [
+          186236.737402,
+          98463.73314
+        ],
+        [
+          186302.737892,
+          98464.007764
+        ],
+        [
+          186302.989091,
+          98609.991274
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "City GIS reference-scale; not surveyed",
+        "map_target": "taxlot-10900",
+        "map_taxlot": "1803082410900",
+        "owner_attribute": "City of Eugene",
+        "replacement_priority": "supersede_first_when_boundary_survey_arrives",
+        "searchable": true,
+        "survey_authority": false
+      },
+      "id": "taxlot-10900",
+      "label": "Taxlot 18-03-08-24-10900",
+      "layerId": "property",
+      "mapTarget": "taxlot-10900",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "taxlot"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186304.538902,
+          98609.997663
+        ],
+        [
+          186302.989091,
+          98609.991274
+        ],
+        [
+          186302.737892,
+          98464.007764
+        ],
+        [
+          186415.312443,
+          98464.475611
+        ],
+        [
+          186415.321498,
+          98604.55334
+        ],
+        [
+          186415.32241,
+          98610.457672
+        ],
+        [
+          186304.538902,
+          98609.997663
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "City GIS reference-scale; not surveyed",
+        "map_target": "taxlot-11000",
+        "map_taxlot": "1803082411000",
+        "owner_attribute": "City of Eugene",
+        "replacement_priority": "supersede_first_when_boundary_survey_arrives",
+        "searchable": true,
+        "survey_authority": false
+      },
+      "id": "taxlot-11000",
+      "label": "Taxlot 18-03-08-24-11000",
+      "layerId": "property",
+      "mapTarget": "taxlot-11000",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "taxlot"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186415.323411,
+          98621.509356
+        ],
+        [
+          186303.173722,
+          98717.25379
+        ],
+        [
+          186302.989091,
+          98609.991274
+        ],
+        [
+          186304.538902,
+          98609.997663
+        ],
+        [
+          186415.32241,
+          98610.457672
+        ],
+        [
+          186415.323411,
+          98621.509356
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "City GIS reference-scale; not surveyed",
+        "map_target": "taxlot-11200",
+        "map_taxlot": "1803082411200",
+        "owner_attribute": "City of Eugene",
+        "replacement_priority": "supersede_first_when_boundary_survey_arrives",
+        "searchable": true,
+        "survey_authority": false
+      },
+      "id": "taxlot-11200",
+      "label": "Taxlot 18-03-08-24-11200",
+      "layerId": "property",
+      "mapTarget": "taxlot-11200",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "taxlot"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186247.031228,
+          98755.702308
+        ],
+        [
+          186237.241405,
+          98755.660476
+        ],
+        [
+          186236.999954,
+          98615.901314
+        ],
+        [
+          186236.989909,
+          98609.717019
+        ],
+        [
+          186237.392951,
+          98609.718703
+        ],
+        [
+          186302.989091,
+          98609.991274
+        ],
+        [
+          186303.173722,
+          98717.25379
+        ],
+        [
+          186299.418778,
+          98720.458681
+        ],
+        [
+          186282.772537,
+          98733.39054
+        ],
+        [
+          186265.282747,
+          98745.156476
+        ],
+        [
+          186247.031228,
+          98755.702308
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "City GIS reference-scale; not surveyed",
+        "map_target": "taxlot-11400",
+        "map_taxlot": "1803082411400",
+        "owner_attribute": "City of Eugene",
+        "replacement_priority": "supersede_first_when_boundary_survey_arrives",
+        "searchable": true,
+        "survey_authority": false
+      },
+      "id": "taxlot-11400",
+      "label": "Taxlot 18-03-08-24-11400",
+      "layerId": "property",
+      "mapTarget": "taxlot-11400",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "taxlot"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186236.737402,
+          98463.73314
+        ],
+        [
+          186415.312443,
+          98464.475611
+        ],
+        [
+          186415.323411,
+          98621.509356
+        ],
+        [
+          186303.173722,
+          98717.25379
+        ],
+        [
+          186299.418778,
+          98720.458681
+        ],
+        [
+          186282.772537,
+          98733.39054
+        ],
+        [
+          186265.282747,
+          98745.156476
+        ],
+        [
+          186247.031228,
+          98755.702308
+        ],
+        [
+          186237.241405,
+          98755.660476
+        ],
+        [
+          186236.737402,
+          98463.73314
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "reference-scale union; not surveyed",
+        "map_target": "property-site-boundary",
+        "searchable": true,
+        "survey_authority": false,
+        "taxlot_ids": [
+          "taxlot-10900",
+          "taxlot-11000",
+          "taxlot-11200",
+          "taxlot-11400"
+        ]
+      },
+      "id": "property-site-boundary",
+      "label": "Four-taxlot project site boundary",
+      "layerId": "property",
+      "mapTarget": "property-site-boundary",
+      "phase": "existing",
+      "provenance": {
+        "decision_ids": [
+          "decision-reference-geometry"
+        ],
+        "source_ids": [
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "generated"
+      },
+      "searchable": true,
+      "type": "property_limit"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186236.737402,
+          98463.73314
+        ],
+        [
+          186266.737402,
+          98463.857865
+        ],
+        [
+          186267.241405,
+          98755.788684
+        ],
+        [
+          186237.241405,
+          98755.660476
+        ],
+        [
+          186236.737402,
+          98463.73314
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "reference-scale dimensioned derivative; not surveyed",
+        "map_target": "constraint-eweb-west",
+        "nominal_width_ft": 30.0,
+        "searchable": true
+      },
+      "id": "constraint-eweb-west",
+      "label": "EWEB west 30-foot corridor",
+      "layerId": "property",
+      "mapTarget": "constraint-eweb-west",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "utility_easement"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186236.737402,
+          98463.73314
+        ],
+        [
+          186415.312443,
+          98464.475611
+        ],
+        [
+          186415.312443,
+          98479.475611
+        ],
+        [
+          186236.763402,
+          98478.73314
+        ],
+        [
+          186236.737402,
+          98463.73314
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "reference-scale dimensioned derivative; not surveyed",
+        "map_target": "constraint-eweb-south",
+        "nominal_width_ft": 15.0,
+        "searchable": true
+      },
+      "id": "constraint-eweb-south",
+      "label": "EWEB south 15-foot corridor",
+      "layerId": "property",
+      "mapTarget": "constraint-eweb-south",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "utility_easement"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186236.979499,
+          98603.791376
+        ],
+        [
+          186415.321498,
+          98604.55334
+        ],
+        [
+          186415.32241,
+          98616.55334
+        ],
+        [
+          186236.999954,
+          98615.901314
+        ],
+        [
+          186236.979499,
+          98603.791376
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "reference-scale dimensioned derivative; not surveyed",
+        "development_over_easement": "prohibited by site source",
+        "map_target": "constraint-sanitary-easement",
+        "nominal_width_ft": 12.0,
+        "searchable": true
+      },
+      "id": "constraint-sanitary-easement",
+      "label": "12-foot sanitary easement",
+      "layerId": "property",
+      "mapTarget": "constraint-sanitary-easement",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "sanitary_easement"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186393.0,
+          98464.383
+        ],
+        [
+          186415.312443,
+          98464.475611
+        ],
+        [
+          186415.323411,
+          98621.509356
+        ],
+        [
+          186303.173722,
+          98717.25379
+        ],
+        [
+          186292.0,
+          98707.0
+        ],
+        [
+          186393.0,
+          98614.0
+        ],
+        [
+          186393.0,
+          98464.383
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "reference-scale visual digitization; not surveyed",
+        "area_acres_approx": 0.19,
+        "basis": "two feet west of multi-use path to east property line",
+        "map_target": "constraint-row-dedication",
+        "searchable": true
+      },
+      "id": "constraint-row-dedication",
+      "label": "Anticipated east-side ROW dedication",
+      "layerId": "property",
+      "mapTarget": "constraint-row-dedication",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "right_of_way_dedication"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186260.0,
+          98700.0
+        ],
+        [
+          186270.0,
+          98680.0
+        ],
+        [
+          186272.0,
+          98645.0
+        ],
+        [
+          186292.0,
+          98620.0
+        ],
+        [
+          186310.0,
+          98600.0
+        ],
+        [
+          186306.0,
+          98575.0
+        ],
+        [
+          186316.0,
+          98540.0
+        ],
+        [
+          186292.0,
+          98525.0
+        ],
+        [
+          186275.0,
+          98520.0
+        ],
+        [
+          186266.0,
+          98555.0
+        ],
+        [
+          186251.0,
+          98570.0
+        ],
+        [
+          186255.0,
+          98600.0
+        ],
+        [
+          186268.0,
+          98615.0
+        ],
+        [
+          186258.0,
+          98645.0
+        ],
+        [
+          186254.0,
+          98675.0
+        ],
+        [
+          186260.0,
+          98700.0
+        ]
+      ],
+      "fieldDetail": {
+        "accuracy_note": "reference-scale visual digitization from delineation map; not surveyed",
+        "area_acres_model": 0.12775,
+        "area_acres_source_approx": 0.13,
+        "map_target": "constraint-wetland",
+        "permit_status": "requires agency review",
+        "searchable": true
+      },
+      "id": "constraint-wetland",
+      "label": "Approximate 0.13-acre delineated wetland",
+      "layerId": "property",
+      "mapTarget": "constraint-wetland",
+      "phase": "existing",
+      "provenance": {
+        "decision_ids": [
+          "decision-reference-geometry"
+        ],
+        "source_ids": [
+          "src-rfp-appendix"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "wetland_resource_area"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186330.0,
+          98485.0
+        ],
+        [
+          186385.0,
+          98485.0
+        ],
+        [
+          186385.0,
+          98585.0
+        ],
+        [
+          186330.0,
+          98585.0
+        ],
+        [
+          186330.0,
+          98485.0
+        ]
+      ],
+      "fieldDetail": {
+        "area_sf": 5500.0,
+        "dimensions_ft": [
+          55.0,
+          100.0
+        ],
+        "map_target": "pad-apartment-1",
+        "pad_elevation_ft": null,
+        "pad_elevation_status": "unknown",
+        "searchable": true,
+        "unavailable": {
+          "section_materials": "Not selected in this slice.",
+          "subgrade_elevation_ft": "No surveyed surface or final grading design."
+        }
+      },
+      "id": "pad-apartment-1",
+      "label": "Apartment pad - reviewed assumption",
+      "layerId": "site",
+      "mapTarget": "pad-apartment-1",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-footprint"
+        ],
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "type": "building_pad"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186335.0,
+          98490.0
+        ],
+        [
+          186380.0,
+          98490.0
+        ],
+        [
+          186380.0,
+          98580.0
+        ],
+        [
+          186335.0,
+          98580.0
+        ],
+        [
+          186335.0,
+          98490.0
+        ]
+      ],
+      "fieldDetail": {
+        "area_sf": 4050.0,
+        "dimensions_ft": [
+          45.0,
+          90.0
+        ],
+        "ffe_warning": "Provisional gravity-envelope input only; replace after surveyed topography and grading review.",
+        "finished_floor_elevation_decision_id": "decision-sanitary-vertical-basis",
+        "finished_floor_elevation_ft": 445.0,
+        "finished_floor_elevation_provisional": true,
+        "finished_floor_elevation_status": "reviewed_assumption",
+        "map_target": "building-apartment-1",
+        "orientation": "long axis north-south",
+        "searchable": true,
+        "unavailable": {
+          "ffe_basis": "No surveyed existing surface or reviewed grading design.",
+          "final_architecture": "Not designed in this civil test-data slice."
+        }
+      },
+      "id": "building-apartment-1",
+      "label": "Fictional apartment building - reviewed assumption",
+      "layerId": "site",
+      "mapTarget": "building-apartment-1",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-footprint"
+        ],
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "type": "building"
+    }
+  ],
+  "calibrationPoints": [],
+  "canonical_model_version": "civil-plan-factory.project/v0.1.0",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "id": "hilyard-apartment-test",
+  "layers": [
+    {
+      "color": "#6b7280",
+      "defaultVisible": true,
+      "id": "control",
+      "name": "Control"
+    },
+    {
+      "color": "#7c3aed",
+      "defaultVisible": true,
+      "id": "property",
+      "name": "Property / Easements / Resources"
+    },
+    {
+      "color": "#92400e",
+      "defaultVisible": true,
+      "id": "grading",
+      "name": "Grading / Surfaces"
+    },
+    {
+      "color": "#9333ea",
+      "defaultVisible": true,
+      "id": "sanitary",
+      "name": "Sanitary"
+    },
+    {
+      "color": "#1d8fe1",
+      "defaultVisible": true,
+      "id": "storm",
+      "name": "Storm / Roof Drainage"
+    },
+    {
+      "color": "#16a34a",
+      "defaultVisible": true,
+      "id": "water",
+      "name": "Domestic / Fire Water"
+    },
+    {
+      "color": "#f97316",
+      "defaultVisible": true,
+      "id": "dry-utilities",
+      "name": "Gas / Power / Telecom / Lighting"
+    },
+    {
+      "color": "#b45309",
+      "defaultVisible": true,
+      "id": "site",
+      "name": "Buildings / Paving / Flatwork / ADA"
+    },
+    {
+      "color": "#dc2626",
+      "defaultVisible": true,
+      "id": "construction-erosion",
+      "name": "Construction / Erosion Control"
+    }
+  ],
+  "linearFeatures": [
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186236.737402,
+          98463.73314
+        ],
+        [
+          186415.312443,
+          98464.475611
+        ]
+      ],
+      "fieldDetail": {
+        "access_status": "required street basis; driveway geometry not designed",
+        "accuracy_note": "reference-scale; not surveyed",
+        "map_target": "access-edge-east-34th",
+        "searchable": true
+      },
+      "id": "access-edge-east-34th",
+      "label": "East 34th Avenue frontage - access basis",
+      "layerId": "property",
+      "mapTarget": "access-edge-east-34th",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "street_access_edge"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186415.312443,
+          98464.475611
+        ],
+        [
+          186415.323411,
+          98621.509356
+        ],
+        [
+          186303.173722,
+          98717.25379
+        ]
+      ],
+      "fieldDetail": {
+        "access_status": "Hilyard driveway prohibited by site basis",
+        "accuracy_note": "reference-scale; not surveyed",
+        "map_target": "street-edge-hilyard",
+        "searchable": true
+      },
+      "id": "street-edge-hilyard",
+      "label": "Hilyard Street property edge - no driveway basis",
+      "layerId": "property",
+      "mapTarget": "street-edge-hilyard",
+      "phase": "existing",
+      "provenance": {
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-eugene-taxlots-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "street_edge"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186335.0,
+          98552.0
+        ],
+        [
+          186327.0,
+          98552.0
+        ]
+      ],
+      "fieldDetail": {
+        "map_target": "sanitary-service-seg-01",
+        "searchable": true
+      },
+      "id": "sanitary-service-seg-01",
+      "label": "SS-1 building terminal to CO-1",
+      "layerId": "sanitary",
+      "mapTarget": "sanitary-service-seg-01",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-sanitary-alignment",
+          "decision-sanitary-vertical-basis"
+        ],
+        "source_ids": [
+          "src-design-constraints"
+        ],
+        "status": "generated"
+      },
+      "searchable": true,
+      "type": "sanitary_service"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186327.0,
+          98552.0
+        ],
+        [
+          186327.0,
+          98609.054501
+        ]
+      ],
+      "fieldDetail": {
+        "map_target": "sanitary-service-seg-02",
+        "searchable": true
+      },
+      "id": "sanitary-service-seg-02",
+      "label": "SS-2 CO-1 to TI-1",
+      "layerId": "sanitary",
+      "mapTarget": "sanitary-service-seg-02",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-sanitary-alignment",
+          "decision-sanitary-vertical-basis"
+        ],
+        "source_ids": [
+          "src-design-constraints",
+          "src-eugene-wastewater-gis"
+        ],
+        "status": "generated"
+      },
+      "searchable": true,
+      "type": "sanitary_service"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186204.330348,
+          98606.53612
+        ],
+        [
+          186207.563068,
+          98606.602318
+        ],
+        [
+          186230.154838,
+          98607.066105
+        ],
+        [
+          186327.0,
+          98609.054501
+        ]
+      ],
+      "fieldDetail": {
+        "capacity_status": "unknown",
+        "diameter_in": 8,
+        "map_target": "sanitary-public-main-4589-upstream",
+        "material": "FOLDED FORM LINER",
+        "searchable": true,
+        "source_asset_id": 4589,
+        "survey_authority": false
+      },
+      "id": "sanitary-public-main-4589-upstream",
+      "label": "City 8-inch main UNIQUE_ID 4589 - upstream context",
+      "layerId": "sanitary",
+      "mapTarget": "sanitary-public-main-4589-upstream",
+      "phase": "existing",
+      "provenance": {
+        "decision_ids": [],
+        "source_ids": [
+          "src-eugene-wastewater-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "sanitary_main_existing"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186327.0,
+          98609.054501
+        ],
+        [
+          186419.232033,
+          98610.948005
+        ]
+      ],
+      "fieldDetail": {
+        "capacity_status": "unknown",
+        "diameter_in": 8,
+        "map_target": "sanitary-public-main-4589-downstream",
+        "material": "FOLDED FORM LINER",
+        "searchable": true,
+        "source_asset_id": 4589,
+        "survey_authority": false
+      },
+      "id": "sanitary-public-main-4589-downstream",
+      "label": "City 8-inch main UNIQUE_ID 4589 - downstream context",
+      "layerId": "sanitary",
+      "mapTarget": "sanitary-public-main-4589-downstream",
+      "phase": "existing",
+      "provenance": {
+        "decision_ids": [],
+        "source_ids": [
+          "src-eugene-wastewater-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "type": "sanitary_main_existing"
+    }
+  ],
+  "objects": [
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "entry_type": "primary pedestrian",
+        "map_target": "entry-south-primary",
+        "searchable": true,
+        "unavailable": {
+          "ada_compliance": "Not evaluated in this slice.",
+          "elevation_ft": "No final FFE or entry elevation is established."
+        }
+      },
+      "id": "entry-south-primary",
+      "label": "Primary south entry",
+      "layerId": "site",
+      "mapTarget": "entry-south-primary",
+      "networkTerminalId": null,
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "pedestrian",
+      "type": "building_entry",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186357.5,
+      "y": 98490.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "entry_type": "service",
+        "map_target": "entry-east-service",
+        "searchable": true,
+        "unavailable": {
+          "elevation_ft": "No final FFE or entry elevation is established.",
+          "service_layout": "Not designed in this slice."
+        }
+      },
+      "id": "entry-east-service",
+      "label": "East service entry",
+      "layerId": "site",
+      "mapTarget": "entry-east-service",
+      "networkTerminalId": null,
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "service",
+      "type": "building_entry",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186380.0,
+      "y": 98535.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "entry_type": "secondary pedestrian",
+        "map_target": "entry-north-pedestrian",
+        "searchable": true,
+        "unavailable": {
+          "ada_compliance": "Not evaluated in this slice.",
+          "elevation_ft": "No final FFE or entry elevation is established."
+        }
+      },
+      "id": "entry-north-pedestrian",
+      "label": "North pedestrian entry",
+      "layerId": "site",
+      "mapTarget": "entry-north-pedestrian",
+      "networkTerminalId": null,
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "pedestrian",
+      "type": "building_entry",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186357.5,
+      "y": 98580.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "connected_edge_id": "san-edge-service-01",
+        "diameter_in": 6,
+        "invert_ft": 439.7,
+        "invert_status": "reviewed_assumption",
+        "map_target": "penetration-sanitary",
+        "material": "PVC",
+        "permanent_terminal_reference": true,
+        "sdr": 35,
+        "searchable": true,
+        "terminal_only": false,
+        "unavailable": {
+          "capacity": "Public-system capacity has not been established.",
+          "owner_approval": "Building penetration and downstream tie remain unapproved."
+        },
+        "vertical_datum": "NAVD88"
+      },
+      "id": "penetration-sanitary",
+      "label": "Sanitary building terminal - provisional invert",
+      "layerId": "sanitary",
+      "mapTarget": "penetration-sanitary",
+      "networkTerminalId": "penetration-sanitary",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces",
+          "decision-sanitary-alignment",
+          "decision-sanitary-vertical-basis"
+        ],
+        "source_ids": [
+          "src-project-brief",
+          "src-design-constraints"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "sanitary",
+      "type": "wall_penetration",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186335.0,
+      "y": 98552.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "map_target": "penetration-domestic-water",
+        "permanent_terminal_reference": true,
+        "searchable": true,
+        "terminal_only": true,
+        "unavailable": {
+          "elevation_ft": "Unknown.",
+          "size_capacity_route": "Not designed or approved in this slice."
+        }
+      },
+      "id": "penetration-domestic-water",
+      "label": "Future domestic water terminal",
+      "layerId": "water",
+      "mapTarget": "penetration-domestic-water",
+      "networkTerminalId": "penetration-domestic-water",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "domestic_water",
+      "type": "wall_penetration",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186345.0,
+      "y": 98490.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "map_target": "penetration-fire-water",
+        "permanent_terminal_reference": true,
+        "searchable": true,
+        "terminal_only": true,
+        "unavailable": {
+          "elevation_ft": "Unknown.",
+          "fire_flow_size_route": "Not designed or approved in this slice."
+        }
+      },
+      "id": "penetration-fire-water",
+      "label": "Future fire service terminal",
+      "layerId": "water",
+      "mapTarget": "penetration-fire-water",
+      "networkTerminalId": "penetration-fire-water",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "fire_water",
+      "type": "wall_penetration",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186352.0,
+      "y": 98490.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "map_target": "penetration-roof-drainage",
+        "permanent_terminal_reference": true,
+        "searchable": true,
+        "terminal_only": true,
+        "unavailable": {
+          "invert_ft": "Unknown.",
+          "size_route_outfall": "Not designed in this slice."
+        }
+      },
+      "id": "penetration-roof-drainage",
+      "label": "Future roof drainage terminal",
+      "layerId": "storm",
+      "mapTarget": "penetration-roof-drainage",
+      "networkTerminalId": "penetration-roof-drainage",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "roof_drainage",
+      "type": "wall_penetration",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186380.0,
+      "y": 98565.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "map_target": "penetration-electric",
+        "permanent_terminal_reference": true,
+        "searchable": true,
+        "terminal_only": true,
+        "unavailable": {
+          "elevation_ft": "Unknown.",
+          "equipment_capacity_route": "Not designed or EWEB-approved in this slice."
+        }
+      },
+      "id": "penetration-electric",
+      "label": "Future electric terminal",
+      "layerId": "dry-utilities",
+      "mapTarget": "penetration-electric",
+      "networkTerminalId": "penetration-electric",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "electric",
+      "type": "wall_penetration",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186335.0,
+      "y": 98525.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "map_target": "penetration-telecom-fiber",
+        "permanent_terminal_reference": true,
+        "searchable": true,
+        "terminal_only": true,
+        "unavailable": {
+          "conduit_count_route": "Not designed or owner-approved in this slice.",
+          "elevation_ft": "Unknown."
+        }
+      },
+      "id": "penetration-telecom-fiber",
+      "label": "Future EWEB fiber/telecom terminal",
+      "layerId": "dry-utilities",
+      "mapTarget": "penetration-telecom-fiber",
+      "networkTerminalId": "penetration-telecom-fiber",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "telecom_fiber",
+      "type": "wall_penetration",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186335.0,
+      "y": 98515.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "map_target": "penetration-gas",
+        "permanent_terminal_reference": true,
+        "searchable": true,
+        "terminal_only": true,
+        "unavailable": {
+          "elevation_ft": "Unknown.",
+          "provider_size_capacity_route": "Gas availability and design are unknown."
+        }
+      },
+      "id": "penetration-gas",
+      "label": "Future gas terminal",
+      "layerId": "dry-utilities",
+      "mapTarget": "penetration-gas",
+      "networkTerminalId": "penetration-gas",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "gas",
+      "type": "wall_penetration",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186370.0,
+      "y": 98490.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "map_target": "penetration-site-lighting",
+        "permanent_terminal_reference": true,
+        "searchable": true,
+        "terminal_only": true,
+        "unavailable": {
+          "circuit_conduit_route": "Not designed in this slice.",
+          "elevation_ft": "Unknown."
+        }
+      },
+      "id": "penetration-site-lighting",
+      "label": "Future site lighting feed terminal",
+      "layerId": "dry-utilities",
+      "mapTarget": "penetration-site-lighting",
+      "networkTerminalId": "penetration-site-lighting",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-building-interfaces"
+        ],
+        "source_ids": [
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "site_lighting",
+      "type": "wall_penetration",
+      "wallAssociationId": "building-apartment-1",
+      "x": 186380.0,
+      "y": 98510.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "checklist": [
+          "Verify coordinates and grade",
+          "Confirm cleanout configuration",
+          "Record as-built rim and inverts"
+        ],
+        "invert_in_ft": 439.62,
+        "invert_out_ft": 439.62,
+        "map_target": "sanitary-cleanout-01",
+        "owner_approval_status": "unknown",
+        "rim_elevation_ft": 444.18,
+        "searchable": true,
+        "structure_type": "two-way cleanout",
+        "vertical_datum": "NAVD88",
+        "warnings": [
+          "Rim/grade is provisional; verify with surveyed grading."
+        ]
+      },
+      "id": "sanitary-cleanout-01",
+      "label": "CO-1 sanitary cleanout",
+      "layerId": "sanitary",
+      "mapTarget": "sanitary-cleanout-01",
+      "networkTerminalId": null,
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-sanitary-alignment"
+        ],
+        "source_ids": [
+          "src-design-constraints"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "sanitary",
+      "type": "sanitary_cleanout",
+      "wallAssociationId": null,
+      "x": 186327.0,
+      "y": 98552.0
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "capacity_status": "unknown",
+        "checklist": [
+          "Pothole and survey public main",
+          "Obtain City connection approval",
+          "Confirm capacity",
+          "Replace assumed tie coordinates and elevations"
+        ],
+        "connection_drop_ft": 0.9786,
+        "incoming_invert_ft": 439.049455,
+        "map_target": "sanitary-tie-in-01",
+        "owner_approval_status": "unknown",
+        "public_main_invert_ft": 438.070855,
+        "searchable": true,
+        "structure_type": "assumed wye/tap connection node",
+        "vertical_datum": "NAVD88",
+        "warnings": [
+          "Tie location, fitting, invert, capacity, and owner acceptance are unresolved."
+        ]
+      },
+      "id": "sanitary-tie-in-01",
+      "label": "TI-1 assumed connection to City UNIQUE_ID 4589",
+      "layerId": "sanitary",
+      "mapTarget": "sanitary-tie-in-01",
+      "networkTerminalId": null,
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-sanitary-alignment"
+        ],
+        "source_ids": [
+          "src-eugene-wastewater-gis",
+          "src-design-constraints"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": "sanitary",
+      "type": "sanitary_tie_in",
+      "wallAssociationId": null,
+      "x": 186327.0,
+      "y": 98609.054501
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "capacity_status": "unknown",
+        "city_structure_id": 13262,
+        "gis_survey_status": "not_reported",
+        "map_target": "sanitary-public-mh-13262",
+        "outgoing_invert_navd88_ft": 438.87,
+        "replacement_note": "Supersede with owner-accepted survey/as-built data.",
+        "rim_elevation_navd88_ft": 443.87,
+        "searchable": true,
+        "survey_authority": false
+      },
+      "id": "sanitary-public-mh-13262",
+      "label": "Existing City MH STRUCT_1 13262",
+      "layerId": "sanitary",
+      "mapTarget": "sanitary-public-mh-13262",
+      "networkTerminalId": null,
+      "phase": "existing",
+      "provenance": {
+        "decision_ids": [],
+        "source_ids": [
+          "src-eugene-wastewater-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "system": "sanitary",
+      "type": "sanitary_manhole_existing",
+      "wallAssociationId": null,
+      "x": 186204.330348,
+      "y": 98606.53612
+    },
+    {
+      "clickable": true,
+      "fieldDetail": {
+        "capacity_status": "unknown",
+        "city_structure_id": 2039,
+        "gis_survey_status": "Yes",
+        "incoming_invert_navd88_ft": 437.47,
+        "map_target": "sanitary-public-mh-2039",
+        "replacement_note": "GIS survey-status attribute is reference context, not project survey control; supersede with owner-accepted survey/as-built data.",
+        "rim_elevation_navd88_ft": 444.27,
+        "searchable": true,
+        "survey_authority": false
+      },
+      "id": "sanitary-public-mh-2039",
+      "label": "Existing City MH STRUCT_1 2039",
+      "layerId": "sanitary",
+      "mapTarget": "sanitary-public-mh-2039",
+      "networkTerminalId": null,
+      "phase": "existing",
+      "provenance": {
+        "decision_ids": [],
+        "source_ids": [
+          "src-eugene-wastewater-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "system": "sanitary",
+      "type": "sanitary_manhole_existing",
+      "wallAssociationId": null,
+      "x": 186419.232033,
+      "y": 98610.948005
+    }
+  ],
+  "phases": [
+    {
+      "id": "existing",
+      "name": "Existing / source basis",
+      "summary": "Reference-scale existing conditions only."
+    },
+    {
+      "id": "proposed",
+      "name": "Proposed",
+      "summary": "Declared but not designed in this foundation slice."
+    },
+    {
+      "id": "temporary",
+      "name": "Temporary construction",
+      "summary": "Declared but not designed in this foundation slice."
+    }
+  ],
+  "plan": {
+    "availability": "generated_vector_pdf",
+    "coordinateBasis": "EPSG:6823 reference-derived site geometry; not surveyed",
+    "heightFt": 291.97,
+    "imageUrl": "hilyard-site-layout.pdf",
+    "widthFt": 178.59
+  },
+  "projectName": "Hilyard Apartment Civil Plan Test",
+  "provenance": {
+    "decision_ids": [
+      "decision-canonical-crs",
+      "decision-benchmark",
+      "decision-site-design",
+      "decision-utility-tie-ins",
+      "decision-stormwater",
+      "decision-materials",
+      "decision-reference-geometry",
+      "decision-building-footprint",
+      "decision-building-interfaces",
+      "decision-sanitary-vertical-basis",
+      "decision-sanitary-alignment"
+    ],
+    "source_ids": [
+      "src-rfp-appendix",
+      "src-eugene-taxlots-gis",
+      "src-design-constraints",
+      "src-project-brief",
+      "src-eugene-pids-2023",
+      "src-eugene-construction-2024-a4",
+      "src-eugene-swmm-2025",
+      "src-eweb-water",
+      "src-oha-water-sewer",
+      "src-deq-div52-appendix-a",
+      "src-eugene-wastewater-gis"
+    ]
+  },
+  "schema_version": "excavation-field-map.jobsite-package/v0.1.0",
+  "unavailable": [
+    {
+      "provenance_status": "unknown",
+      "reason": "Surveyed boundary, topography, and control are unavailable.",
+      "system": "coordinates_control"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No surveyed terrain or reviewed design surfaces exist.",
+      "system": "surfaces"
+    },
+    {
+      "provenance_status": "reference-derived",
+      "reason": "Nearby system is reported; exact topology, elevations, tie-in, HGL, and capacity are unknown.",
+      "system": "storm"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Pressure, flow, main data, meter, service size, and approved route are unknown.",
+      "system": "domestic_water"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Fire flow, Fire Marshal criteria, service size, and approved route are unknown.",
+      "system": "fire_water"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Gas facilities, tie-in, and owner criteria are unknown.",
+      "system": "gas"
+    },
+    {
+      "provenance_status": "reference-derived",
+      "reason": "EWEB easement basis is known; route, equipment, capacity, and approval are unknown.",
+      "system": "power"
+    },
+    {
+      "provenance_status": "reference-derived",
+      "reason": "EWEB fiber corridor basis is known; non-EWEB telecom and final routes are unknown.",
+      "system": "telecom_fiber"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Lighting design is outside this foundation slice.",
+      "system": "site_lighting"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Building and stormwater designs are not locked.",
+      "system": "roof_drainage"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No civil structures are designed.",
+      "system": "structures"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Existing and proposed surfaces are unavailable.",
+      "system": "grading"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No site design is locked.",
+      "system": "curbs"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No site design is locked.",
+      "system": "sidewalks"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No pavement layout or section is locked.",
+      "system": "paving"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No accessibility geometry or compliance determination exists.",
+      "system": "ada"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Existing surveyed objects and demolition scope are unavailable.",
+      "system": "demolition"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Disturbance limits and construction sequence are not designed.",
+      "system": "construction_erosion"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Research defaults are not final selections.",
+      "system": "materials_specifications"
+    },
+    {
+      "provenance_status": "generated",
+      "reason": "One site-layout plan and interface schedule are generated; profiles, sections, and later system plans remain unavailable. Sheet count is not fixed.",
+      "system": "plans_profiles_sections_schedules"
+    },
+    {
+      "provenance_status": "reviewed_assumption",
+      "reason": "Property, constraint, building, entry, and terminal details are populated; later construction workflows/checklists remain unavailable.",
+      "system": "field_details_workflows_checklists"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Relationship types are declared, but there are no designed objects to connect.",
+      "system": "relationships"
+    }
+  ],
+  "userHeading": null,
+  "userLocation": null,
+  "utilities": [
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186335.0,
+          98552.0
+        ],
+        [
+          186327.0,
+          98552.0
+        ]
+      ],
+      "fieldDetail": {
+        "checklist": [
+          "Verify terminal elevation",
+          "Stake line and grade",
+          "Inspect bedding",
+          "Test service",
+          "Record as-built"
+        ],
+        "cover_samples_ft": [
+          4.1,
+          4.06
+        ],
+        "design_depth_ratio": null,
+        "diameter_in": 6,
+        "downstream_invert_ft": 439.62,
+        "hydraulic_status": "unknown_pending_design_flow",
+        "length_ft": 8.0,
+        "material": "PVC",
+        "materials": {
+          "backfill": "City trench backfill reference; final section unresolved",
+          "bedding": "City trench bedding reference; final detail unresolved",
+          "compaction": "90% minimum reference outside ROW; verify final location/specification"
+        },
+        "minimum_cover_ft": 4.0,
+        "minimum_slope_percent": 1.0,
+        "sdr": 35,
+        "slope_percent": 1.0,
+        "upstream_invert_ft": 439.7,
+        "velocity_fps": null,
+        "warnings": [
+          "Velocity and d/D cannot be verified until design flow/capacity inputs exist.",
+          "Cover is below 5-foot desirable upstream target; shallow-condition review required.",
+          "FFE, surface, and invert are provisional."
+        ]
+      },
+      "fromNodeId": "san-node-building-terminal",
+      "geometryFeatureId": "sanitary-service-seg-01",
+      "id": "san-edge-service-01",
+      "label": "SS-1 building terminal to CO-1",
+      "mapTarget": "san-edge-service-01",
+      "provenance": {
+        "decision_ids": [
+          "decision-sanitary-alignment",
+          "decision-sanitary-vertical-basis"
+        ],
+        "source_ids": [
+          "src-design-constraints"
+        ],
+        "status": "generated"
+      },
+      "searchable": true,
+      "system": "sanitary",
+      "terminalFeatureId": "penetration-sanitary",
+      "toNodeId": "san-node-cleanout-01",
+      "type": "building_service"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186327.0,
+          98552.0
+        ],
+        [
+          186327.0,
+          98609.054501
+        ]
+      ],
+      "fieldDetail": {
+        "checklist": [
+          "Pothole public main",
+          "Confirm approved fitting and invert",
+          "Stake line and grade",
+          "Inspect bedding",
+          "Test service",
+          "Record as-built"
+        ],
+        "cover_samples_ft": [
+          4.06,
+          4.548872
+        ],
+        "design_depth_ratio": null,
+        "diameter_in": 6,
+        "downstream_invert_ft": 439.049455,
+        "hydraulic_status": "unknown_pending_design_flow",
+        "length_ft": 57.054501,
+        "material": "PVC",
+        "materials": {
+          "backfill": "City trench backfill reference; final section unresolved",
+          "bedding": "City trench bedding reference; final detail unresolved",
+          "compaction": "90% minimum reference outside ROW; verify final location/specification"
+        },
+        "minimum_cover_ft": 4.0,
+        "minimum_slope_percent": 1.0,
+        "sdr": 35,
+        "slope_percent": 1.0,
+        "upstream_invert_ft": 439.62,
+        "velocity_fps": null,
+        "warnings": [
+          "Velocity and d/D cannot be verified until design flow/capacity inputs exist.",
+          "Cover is below 5-foot desirable upstream target; shallow-condition review required.",
+          "Tie-in approval and capacity are unknown."
+        ]
+      },
+      "fromNodeId": "san-node-cleanout-01",
+      "geometryFeatureId": "sanitary-service-seg-02",
+      "id": "san-edge-service-02",
+      "label": "SS-2 CO-1 to TI-1",
+      "mapTarget": "san-edge-service-02",
+      "provenance": {
+        "decision_ids": [
+          "decision-sanitary-alignment",
+          "decision-sanitary-vertical-basis"
+        ],
+        "source_ids": [
+          "src-design-constraints",
+          "src-eugene-wastewater-gis"
+        ],
+        "status": "generated"
+      },
+      "searchable": true,
+      "system": "sanitary",
+      "terminalFeatureId": null,
+      "toNodeId": "san-node-tie-in-01",
+      "type": "building_service"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186204.330348,
+          98606.53612
+        ],
+        [
+          186207.563068,
+          98606.602318
+        ],
+        [
+          186230.154838,
+          98607.066105
+        ],
+        [
+          186327.0,
+          98609.054501
+        ]
+      ],
+      "fieldDetail": {
+        "capacity_status": "unknown",
+        "cover_samples_ft": [
+          4.333333,
+          5.360805
+        ],
+        "diameter_in": 8,
+        "downstream_invert_ft": 438.070855,
+        "length_ft": 122.6955,
+        "material": "FOLDED FORM LINER",
+        "minimum_slope_percent": 0.4,
+        "slope_percent": 0.59100002,
+        "upstream_invert_ft": 438.87,
+        "validation_scope": "reference_context",
+        "warnings": [
+          "City GIS reference only; not capacity approval or survey control."
+        ]
+      },
+      "fromNodeId": "san-node-public-upstream",
+      "geometryFeatureId": "sanitary-public-main-4589-upstream",
+      "id": "san-edge-public-upstream",
+      "label": "City 8-inch main UNIQUE_ID 4589 - upstream context",
+      "mapTarget": "san-edge-public-upstream",
+      "provenance": {
+        "decision_ids": [],
+        "source_ids": [
+          "src-eugene-wastewater-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "system": "sanitary",
+      "terminalFeatureId": null,
+      "toNodeId": "san-node-tie-in-01",
+      "type": "existing_public_main"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186327.0,
+          98609.054501
+        ],
+        [
+          186419.232033,
+          98610.948005
+        ]
+      ],
+      "fieldDetail": {
+        "capacity_status": "unknown",
+        "cover_samples_ft": [
+          5.360805,
+          6.133333
+        ],
+        "diameter_in": 8,
+        "downstream_invert_ft": 437.47,
+        "length_ft": 92.2255,
+        "material": "FOLDED FORM LINER",
+        "minimum_slope_percent": 0.4,
+        "slope_percent": 0.59100002,
+        "upstream_invert_ft": 438.070855,
+        "validation_scope": "reference_context",
+        "warnings": [
+          "City GIS reference only; not capacity approval or survey control."
+        ]
+      },
+      "fromNodeId": "san-node-tie-in-01",
+      "geometryFeatureId": "sanitary-public-main-4589-downstream",
+      "id": "san-edge-public-downstream",
+      "label": "City 8-inch main UNIQUE_ID 4589 - downstream context",
+      "mapTarget": "san-edge-public-downstream",
+      "provenance": {
+        "decision_ids": [],
+        "source_ids": [
+          "src-eugene-wastewater-gis"
+        ],
+        "status": "reference-derived"
+      },
+      "searchable": true,
+      "system": "sanitary",
+      "terminalFeatureId": null,
+      "toNodeId": "san-node-public-downstream",
+      "type": "existing_public_main"
+    }
+  ]
+}

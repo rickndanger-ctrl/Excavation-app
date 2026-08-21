@@ -65,6 +65,31 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         }
         for feature in model["features"]["lines"]
     ]
+    feature_by_id = {
+        feature["id"]: feature
+        for group in ("points", "lines", "polygons")
+        for feature in model["features"][group]
+    }
+    sanitary = next((row for row in model.get("networks", []) if row.get("system") == "sanitary"), None)
+    utilities = []
+    for edge in (sanitary or {}).get("edges", []):
+        geometry = feature_by_id[edge["geometry_feature_id"]]
+        utilities.append({
+            "id": edge["id"],
+            "system": "sanitary",
+            "type": edge["edge_type"],
+            "geometryFeatureId": edge["geometry_feature_id"],
+            "coordinates": geometry["coordinates"],
+            "fromNodeId": edge["from_node_id"],
+            "toNodeId": edge["to_node_id"],
+            "terminalFeatureId": edge.get("terminal_feature_id"),
+            "label": geometry["label"],
+            "searchable": True,
+            "clickable": True,
+            "mapTarget": edge["id"],
+            "fieldDetail": edge.get("field_detail", {}),
+            "provenance": edge["provenance"],
+        })
     return {
         "schema_version": "excavation-field-map.jobsite-package/v0.1.0",
         "canonical_model_version": model["schema_version"],
@@ -83,7 +108,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         "objects": points,
         "areas": areas,
         "linearFeatures": linear_features,
-        "utilities": [],
+        "utilities": utilities,
         "userLocation": None,
         "userHeading": None,
         "calibrationPoints": [],

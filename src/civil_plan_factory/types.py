@@ -76,12 +76,10 @@ class ControlPoint(PointFeature):
     gps_coordinate: NotRequired[dict[str, float]]
 
 
-class SurfaceFeature(TypedDict):
+class SurfaceFeature(FeatureBase):
     id: str
-    surface_type: Literal["existing", "proposed", "subgrade", "pavement_layer", "cut_fill"]
     boundary: list[list[float]]
-    elevation_source: dict
-    provenance: Provenance
+    vertical_datum: str
 
 
 class NetworkNode(TypedDict):
@@ -94,6 +92,7 @@ class NetworkNode(TypedDict):
 
 class NetworkEdge(TypedDict):
     id: str
+    edge_type: str
     from_node_id: str
     to_node_id: str
     geometry_feature_id: str | None
@@ -126,8 +125,12 @@ class PlanDefinition(TypedDict):
 
 class ProfileDefinition(TypedDict):
     id: str
-    alignment_id: str
-    asset_ids: list[str]
+    title: str
+    alignment_edge_ids: list[str]
+    vertical_datum: str
+    segments: list[dict]
+    surface_samples: list[dict]
+    provenance: Provenance
 
 
 class SectionDefinition(TypedDict):

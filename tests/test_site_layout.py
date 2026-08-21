@@ -119,8 +119,9 @@ class SiteLayoutModelTests(unittest.TestCase):
                 0.0,
                 constraint_id,
             )
-        self.assertIsNone(building["field_detail"]["finished_floor_elevation_ft"])
-        self.assertEqual("unknown", building["field_detail"]["finished_floor_elevation_status"])
+        self.assertEqual(445.0, building["field_detail"]["finished_floor_elevation_ft"])
+        self.assertEqual("reviewed_assumption", building["field_detail"]["finished_floor_elevation_status"])
+        self.assertTrue(building["field_detail"]["finished_floor_elevation_provisional"])
 
     def test_entries_and_system_penetrations_are_stable_wall_bound_interfaces(self):
         self.assertIn("building-apartment-1", self.polygons)
