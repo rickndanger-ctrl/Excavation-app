@@ -317,10 +317,6 @@ class StudioWorkspace:
         )
         if explicit_classification:
             result_classification = explicit_classification
-        elif current_run and current_run.get("error"):
-            result_classification = "pipeline_defect"
-        elif current_run and current_run.get("publication_readiness") == "ready":
-            result_classification = "passed_verifiable_gates"
         else:
             result_classification = "not_assessed"
         automated_seconds = (
@@ -358,6 +354,9 @@ class StudioWorkspace:
                     "source_count": len(source_evidence),
                     "checksum_locked_count": sum(
                         evidence["lock_status"] == "checksum_locked" for evidence in source_evidence
+                    ),
+                    "locked_source_count": sum(
+                        str(evidence["lock_status"]).endswith("locked") for evidence in source_evidence
                     ),
                     "evidence": source_evidence,
                 },

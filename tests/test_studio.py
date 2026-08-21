@@ -31,6 +31,9 @@ class ModelStudioModuleTests(unittest.TestCase):
         self.assertGreater(hilyard["provenance"]["reviewed_assumption"], 0)
         self.assertGreater(hilyard["provenance"]["unknown"], 0)
         self.assertEqual(DISCLAIMER, hilyard["disclaimer"])
+        observation = hilyard["workflow_observation"]
+        self.assertGreater(observation["inputs"]["locked_source_count"], 0)
+        self.assertEqual("not_assessed", observation["result_classification"])
 
     def test_creates_an_explicitly_incomplete_project_without_inventing_inputs(self):
         with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
