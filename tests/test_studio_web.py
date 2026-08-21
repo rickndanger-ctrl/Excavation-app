@@ -79,6 +79,11 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertIn('id="operator-touch-form"', html)
         self.assertIn('id="evidence-list"', html)
         self.assertIn("/touches", javascript)
+        self.assertNotIn(
+            "event.currentTarget.reset()",
+            javascript,
+            "async form handlers must retain the form before the event currentTarget is cleared",
+        )
         self.assertIn("--danger", stylesheet)
         self.assertIn("[hidden]", stylesheet)
 
