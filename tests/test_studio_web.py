@@ -77,6 +77,15 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertIn("--danger", stylesheet)
         self.assertIn("[hidden]", stylesheet)
 
+    def test_health_endpoint_proves_the_real_workspace_is_ready(self):
+        status, health = self.request("/api/health")
+
+        self.assertEqual(200, status)
+        self.assertEqual("ok", health["status"])
+        self.assertEqual("model-studio", health["service"])
+        self.assertEqual(DISCLAIMER, health["disclaimer"])
+        self.assertEqual(str(self.server.workspace.repository), health["repository"])
+
     def test_project_intake_run_and_review_are_operable_through_http(self):
         _, created = self.request(
             "/api/projects", method="POST", payload={"name": "Oak Street Intake", "slug": "oak-street"}

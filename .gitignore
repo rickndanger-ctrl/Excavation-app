@@ -8,3 +8,4 @@ dist/
 work/
 .model-studio/
 .playwright-cli/
+*.app/

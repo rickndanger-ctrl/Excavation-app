@@ -57,6 +57,17 @@ Open `http://127.0.0.1:8765`. The console provides one fail-closed workflow:
 6. publish a passing run to a content-addressed immutable handoff under
    `.model-studio/published/<project>/<sha256>/`.
 
+For normal macOS use without a terminal, install the one-click launcher once:
+
+```bash
+scripts/install-model-studio-app.sh
+```
+
+Then open **Model Studio** from `~/Applications` or its Desktop shortcut. The
+app reuses a healthy supervised service, otherwise starts the single committed
+pm2 process, waits for `/api/health`, and opens the console. See
+[`docs/macos-launcher.md`](docs/macos-launcher.md) for operation and recovery.
+
 The handoff directory contains `semantic-manifest.json`, the validation and
 parity evidence, the coordinated generated artifacts, and
 `handoff-manifest.json` with checksums and the exact import seam. The current

@@ -116,6 +116,14 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
             return
         parts = [part for part in path.split("/") if part]
         try:
+            if parts == ["api", "health"]:
+                self._send_json(HTTPStatus.OK, {
+                    "status": "ok",
+                    "service": "model-studio",
+                    "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+                    "repository": str(self.server.workspace.repository),
+                })
+                return
             if parts == ["api", "projects"]:
                 self._send_json(HTTPStatus.OK, self.server.workspace.list_projects())
                 return
