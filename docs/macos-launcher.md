@@ -29,13 +29,13 @@ installer, launcher, service script, and pm2 ecosystem are committed.
 
 Double-click **Model Studio** in Applications or on the Desktop. The launcher:
 
-1. requests `http://127.0.0.1:8765/api/health` and verifies both the service
+1. requests `http://127.0.0.1:8777/api/health` and verifies both the service
    name and healthy status;
 2. opens the console immediately when the existing service is healthy;
 3. otherwise starts or reuses the single pm2 app named
    `civil-model-studio` from `ops/model-studio-ecosystem.config.cjs`;
 4. waits up to 30 seconds for a real health response; and
-5. opens `http://127.0.0.1:8765/` in the default browser.
+5. opens `http://127.0.0.1:8777/` in the default browser.
 
 If pm2 is unavailable, the supervisor cannot start, or the endpoint never
 becomes healthy, macOS displays a critical error instead of opening a broken
@@ -45,7 +45,7 @@ page. The launcher does not create a second service with a different name.
 
 ```bash
 pm2 show civil-model-studio
-curl -fsS http://127.0.0.1:8765/api/health
+curl -fsS http://127.0.0.1:8777/api/health
 pm2 logs civil-model-studio --lines 50 --nostream
 ```
 

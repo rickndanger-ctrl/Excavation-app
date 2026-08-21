@@ -47,7 +47,7 @@ class ModelStudioLauncherTests(unittest.TestCase):
             )
 
             self.assertEqual(0, result.returncode, result.stderr)
-            self.assertEqual("open http://127.0.0.1:8765/", trace.read_text().strip())
+            self.assertEqual("open http://127.0.0.1:8777/", trace.read_text().strip())
 
     def test_unhealthy_console_starts_one_named_pm2_app_then_waits_for_health(self):
         self.assertTrue(LAUNCHER.is_file(), "The one-click launcher source must exist")
@@ -81,7 +81,7 @@ class ModelStudioLauncherTests(unittest.TestCase):
             self.assertEqual(2, len(events))
             self.assertTrue(events[0].startswith("pm2 start "))
             self.assertTrue(events[0].endswith(" --only civil-model-studio --update-env"))
-            self.assertEqual("open http://127.0.0.1:8765/", events[1])
+            self.assertEqual("open http://127.0.0.1:8777/", events[1])
 
     def test_startup_failure_shows_a_macos_error_and_never_opens_browser(self):
         self.assertTrue(LAUNCHER.is_file(), "The one-click launcher source must exist")

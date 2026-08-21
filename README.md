@@ -43,7 +43,7 @@ the canonical loader, validator, and builder in this package:
 model-studio serve --repository "$PWD"
 ```
 
-Open `http://127.0.0.1:8765`. The console provides one fail-closed workflow:
+Open `http://127.0.0.1:8777`. The console provides one fail-closed workflow:
 
 1. select an existing project or create an explicitly incomplete intake draft;
 2. add PDF plan sets, which are copied into the project intake folder and

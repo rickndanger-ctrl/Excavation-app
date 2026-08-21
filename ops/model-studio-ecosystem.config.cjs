@@ -14,7 +14,7 @@ module.exports = {
       restart_delay: 1000,
       env: {
         MODEL_STUDIO_HOST: "127.0.0.1",
-        MODEL_STUDIO_PORT: "8765",
+        MODEL_STUDIO_PORT: "8777",
         MODEL_STUDIO_REPOSITORY: repository,
       },
     },
