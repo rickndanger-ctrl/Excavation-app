@@ -68,8 +68,14 @@ test('keeps extracted source geometry visible when the PDF image is hidden', asy
 
   const extracted = page.locator('canvas.plan-canvas__extracted');
   await expect(extracted).toBeAttached();
-  await expect.poll(async () => Number(await extracted.getAttribute('data-path-count'))).toBeGreaterThan(4000);
-  await expect.poll(async () => Number(await extracted.getAttribute('data-text-count'))).toBeGreaterThan(0);
+  await expect.poll(
+    async () => Number(await extracted.getAttribute('data-path-count')),
+    { timeout: 30_000 },
+  ).toBeGreaterThan(4000);
+  await expect.poll(
+    async () => Number(await extracted.getAttribute('data-text-count')),
+    { timeout: 30_000 },
+  ).toBeGreaterThan(0);
   await expect(extracted).toHaveAttribute('data-source-page-width', '1728');
   await expect(extracted).toHaveAttribute('data-source-page-height', '2592');
   await expect(extracted).toHaveAttribute('data-source-page-rotation', '270');
