@@ -442,6 +442,63 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
                         "Capacity and available pressure must remain unknown without accepted hydraulic evidence",
                     ))
 
+    if "dry_utility_basis" in model:
+        dry_terminals = {
+            "power": "penetration-electric",
+            "telecom_fiber": "penetration-telecom-fiber",
+            "gas": "penetration-gas",
+            "site_lighting": "penetration-site-lighting",
+        }
+        for system, terminal_feature_id in dry_terminals.items():
+            network = next((row for row in model.get("networks", []) if row.get("system") == system), None)
+            if network is None:
+                issues.append(_issue("dry.network_missing", "networks", f"Missing dry-utility network: {system}"))
+                continue
+            terminal_node = next(
+                (row for row in network.get("nodes", []) if row.get("geometry_feature_id") == terminal_feature_id),
+                None,
+            )
+            connected = terminal_node is not None and any(
+                terminal_node.get("id") in {edge.get("from_node_id"), edge.get("to_node_id")}
+                for edge in network.get("edges", [])
+            )
+            if not connected:
+                issues.append(_issue(
+                    "dry.terminal_disconnected",
+                    f"networks.{network['id']}",
+                    f"{system} must resolve to its permanent building terminal",
+                ))
+            for edge_index, edge in enumerate(network.get("edges", [])):
+                detail = edge.get("field_detail", {})
+                path = f"networks.{network['id']}.edges[{edge_index}].field_detail"
+                length = detail.get("length_ft")
+                count = detail.get("conduit_or_pipe_count")
+                material = detail.get("material")
+                if not _finite_coordinate(length) or length <= 0 or not _finite_coordinate(count) or count <= 0 or not isinstance(material, str) or not material.strip():
+                    issues.append(_issue(
+                        "dry.installation_data_missing",
+                        path,
+                        "Dry-utility edges require positive length/count and a declared material basis",
+                    ))
+                if detail.get("capacity_status") != "unknown" or detail.get("owner_approval_status") != "unknown":
+                    issues.append(_issue(
+                        "dry.unsupported_capacity_claim",
+                        path,
+                        "Capacity and owner approval must remain unknown without accepted owner design",
+                    ))
+        dry_systems = set(dry_terminals) | {"dry_utilities"}
+        for group in ("lines", "polygons"):
+            for feature_index, feature in enumerate(model.get("features", {}).get(group, [])):
+                if feature.get("system") not in dry_systems or feature.get("phase_id") != "proposed":
+                    continue
+                style = feature.get("field_detail", {}).get("display_style", {})
+                if feature.get("provenance", {}).get("status") != "reviewed_assumption" or style.get("status_badge") != "ASSUMED" or style.get("line_style") != "dashed" or "ASSUMED ROUTE" not in feature.get("label", ""):
+                    issues.append(_issue(
+                        "dry.assumed_route_style_missing",
+                        f"features.{group}[{feature_index}]",
+                        "Assumed dry-utility geometry must remain unmistakably labeled and dashed",
+                    ))
+
     for relationship_id, relationship in model.get("relationships", {}).items():
         if relationship.get("relationship_type") not in {"utility_crossing", "horizontal_clearance"}:
             continue

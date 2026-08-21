@@ -249,6 +249,56 @@
         "nearby public hydrant ELOG ID 92016 without flow-test data"
       ],
       "authority_note": "reference-derived context; not pressure, flow, capacity, or tie authority, not hydrant-test evidence, and not project survey control. Supersede with EWEB-accepted records, design direction, and field survey."
+    },
+    {
+      "id": "src-eweb-electric-trench-2014",
+      "title": "GC5-2.0400 Typical Trench in Planting Strip",
+      "authority": "Eugene Water & Electric Board",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eweb.org/documents/contractor-developer/electric-standards/GC520400.pdf",
+      "effective_date": "2014-05-05",
+      "retrieved_date": "2026-08-21",
+      "lock": {"kind": "url", "status": "checksum_locked", "sha256": "ecf23516d181a8c59c347e888ea41d1e09420d250877fa7c0826a023e3957712"},
+      "supports": [
+        "EWEB owns the electric design and inspection gate",
+        "electric and communication conduit may occupy a coordinated trench section",
+        "owner inspection is required before backfill"
+      ],
+      "authority_note": "Standard geometry does not establish this parcel's point of service, transformer size, conduit count, load capacity, exact route, or approval."
+    },
+    {
+      "id": "src-eweb-electric-service-2020",
+      "title": "EC5-B.1000 Underground Electric Service Conduit and Conductor Requirements",
+      "authority": "Eugene Water & Electric Board",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eweb.org/documents/contractor-developer/electric-standards/EC5B1000.pdf",
+      "effective_date": "2020-07-07",
+      "retrieved_date": "2026-08-21",
+      "lock": {"kind": "url", "status": "checksum_locked", "sha256": "4e5c0cb96c773a1bd93e58c44b3ab31ef589bf420f138e101f4d7e4a6401e98f"},
+      "supports": ["underground electric service conduit requirements", "EWEB engineering approval for deviations and larger or three-phase services"],
+      "authority_note": "The fictional apartment load is unresolved; no conductor, transformer, or service capacity is established."
+    },
+    {
+      "id": "src-nw-natural-builder-guidance-2026",
+      "title": "Services and mains guidelines for builders and developers",
+      "authority": "NW Natural",
+      "provenance_status": "confirmed",
+      "citation": "https://www.nwnatural.com/business/builders-hvac/builder-and-developer-services/services-mains-guidelines",
+      "retrieved_date": "2026-08-21",
+      "lock": {"kind": "url", "status": "checksum_locked", "sha256": "dfb07c043d219cee37194eef07f9b2a3125996481813c112fd11e394ec73ee50"},
+      "supports": ["NW Natural serves Eugene", "builder/developer gas-service coordination", "gas is not assumed to share a trench with wet utilities"],
+      "authority_note": "Does not confirm gas availability, a main at the parcel, service size, meter location, pressure, capacity, route, or approval."
+    },
+    {
+      "id": "src-eugene-telecom-providers-2023",
+      "title": "Currently Registered Eugene Telecommunications and Communications Providers",
+      "authority": "City of Eugene",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eugene-or.gov/DocumentCenter/View/70144/Currently-Registered-Eugene-Telecommunications-and-Communications-Providers-Per-Ordinance-20083",
+      "effective_date": "2023-06-19",
+      "lock": {"kind": "url", "status": "citation_only", "sha256": null},
+      "supports": ["multiple registered wireline providers operate in Eugene"],
+      "authority_note": "The registry does not identify the provider serving this parcel, a facility location, capacity, point of connection, or approved route."
     }
   ]
 }

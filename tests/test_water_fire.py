@@ -162,7 +162,7 @@ class WaterFireBuildTests(unittest.TestCase):
             output = Path(directory)
             from pypdf import PdfReader
             reader = PdfReader(output / "hilyard-site-layout.pdf")
-            self.assertEqual(8, len(reader.pages))
+            self.assertEqual(10, len(reader.pages))
             page_text = [page.extract_text() or "" for page in reader.pages]
             self.assertIn("DOMESTIC WATER / FIRE SERVICE PLAN", page_text[6])
             self.assertIn("WATER / FIRE SEPARATION SCHEDULE / TEST DETAILS", page_text[7])
@@ -179,7 +179,7 @@ class WaterFireBuildTests(unittest.TestCase):
             self.assertEqual([], parity["mismatches"])
             self.assertEqual(0.0, parity["pdf_vs_geopackage"]["maximum_delta_ft"])
 
-            expected_counts = {"canonical_points": 33, "canonical_lines": 23, "canonical_polygons": 13, "canonical_surfaces": 2}
+            expected_counts = {"canonical_points": 42, "canonical_lines": 33, "canonical_polygons": 15, "canonical_surfaces": 2}
             for layer, expected in expected_counts.items():
                 result = subprocess.run([str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(output / "hilyard-site-layout.gpkg"), layer], text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)

@@ -35,16 +35,18 @@ model-studio validate projects/hilyard/project.json --output-dir outputs/hilyard
 ```
 
 The `validate` command emits a deterministic semantic package and validation
-report. The current coordinated site/sanitary/storm/water-fire slice is generated with:
+report. The current coordinated site/sanitary/storm/water-fire/dry-utilities
+slice is generated with:
 
 ```bash
 model-studio build projects/hilyard/project.json \
-  --output-dir outputs/hilyard-water-fire
+  --output-dir outputs/hilyard-dry-utilities
 ```
 
-This produces an eight-page, vector-only PDF (composite context; sanitary plan
+This produces a ten-page, vector-only PDF (composite context; sanitary plan
 and profile; storm/roof plan, profile, and schedule/test details; and
-water/fire plan plus separation/test details), a true-geometry GeoPackage, the
+water/fire plan plus separation/test details; dry-utility/joint-trench plan and
+coordination schedule), a true-geometry GeoPackage, the
 semantic Excavation Field Map package, and
 validation/parity reports from one canonical model. The parity report decodes
 geometry markers from the actual PDF content stream and compares them with
@@ -77,7 +79,17 @@ DR18 fire service connects through an isolation valve and detector double-check
 assembly to the permanent fire terminal, with a 4-inch FDC branch. Exact points
 of connection, available pressure, flow, capacity, hydrant-test results,
 hydraulic adequacy, device selections, tie approval, and agency/Fire Marshal
-acceptance remain explicitly unknown. Dry utilities, full grading, and cut/fill
+acceptance remain explicitly unknown.
+
+The dry-utility slice keeps confirmed utility ownership separate from fictional
+routing. EWEB is the source-backed electric owner and NW Natural the
+source-backed gas utility; the telecom provider at this parcel remains unknown.
+Power and telecom share a reviewed-assumption coordination trench but use
+separate owner enclosures. Gas uses a separate reviewed-assumption route, and
+site lighting remains a distinct building-fed network. Every proposed route is
+explicitly labeled `ASSUMED ROUTE`, carries dashed display styling in the
+semantic model, and preserves unknown points of service, loads, capacities,
+depths, separations, final grades, and owner approvals. Full grading and cut/fill
 remain out of scope.
 
 The four City GIS taxlots are explicitly reference-derived and not survey
@@ -129,7 +141,14 @@ The next implementation slice begins only after this foundation is committed:
    networks distinct, resolves both permanent wall terminals, checks declared
    cover and plan clearances against sanitary/storm, and refuses silent
    pressure, flow, capacity, or approval claims.
-8. Sequence remaining systems by dependency and conflict risk, not convenience.
+8. The dry-utility slice now follows water/fire. It models electric,
+   telecom/fiber, gas, and site-lighting networks, preserves all four permanent
+   terminal connections, represents power/telecom joint-trench coordination
+   without claiming a shared physical vault, and forces every proposed route to
+   remain visibly dashed and labeled as not located.
+9. Grading, site preparation, cut/fill, paving/flatwork, and erosion control are
+   the remaining authored civil layers. Sequence them by dependency and conflict
+   risk, not convenience.
 
 ## Planned closed-loop proof
 

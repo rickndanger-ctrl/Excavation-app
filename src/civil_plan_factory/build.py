@@ -107,7 +107,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     from reportlab.pdfgen import canvas
 
     width, height = landscape(letter)
-    total_pages = 8 if "water_fire_basis" in model else 6
+    total_pages = 10 if "dry_utility_basis" in model else 8 if "water_fire_basis" in model else 6
     drawing_left = 42.0
     drawing_bottom = 72.0
     scale = 72.0 / 50.0
@@ -162,6 +162,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     taxlots = [feature for feature in model["features"]["polygons"] if feature["feature_type"] == "taxlot"]
     constraints = [feature for feature in model["features"]["polygons"] if feature["id"].startswith("constraint-")]
     storm_polygons = [feature for feature in model["features"]["polygons"] if feature.get("system") == "storm"]
+    dry_polygons = [feature for feature in model["features"]["polygons"] if feature.get("system") == "dry_utilities"]
 
     constraint_colors = {
         "constraint-row-dedication": colors.HexColor("#fca5a5"),
@@ -185,6 +186,12 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.setLineWidth(0.8)
         path_ring(pdf, feature["coordinates"], feature_id=feature["id"], fill=1)
         pdf.restoreState()
+
+    # Keep dry-utility geometry in the PDF parity record while reserving its
+    # visible linework for the dedicated discipline sheet.
+    for feature in dry_polygons:
+        mark_geometry(pdf, feature["id"], "Polygon", feature["coordinates"], xy)
+        pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY dry_utilities {feature['id']}")
 
     for surface in model["features"]["surfaces"]:
         pdf.saveState()
@@ -228,7 +235,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
 
     for line in model["features"]["lines"]:
         mark_geometry(pdf, line["id"], "LineString", line["coordinates"], xy)
-        if line.get("system") in {"domestic_water", "fire_water"}:
+        if line.get("system") in {"domestic_water", "fire_water", "power", "telecom_fiber", "gas", "site_lighting", "dry_utilities"}:
             pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY {line['system']} {line['id']}")
             continue
         pdf.setStrokeColor(colors.HexColor("#be123c") if line["id"].startswith("access-") else colors.HexColor("#334155"))
@@ -258,7 +265,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     for index, feature in enumerate(points, 1):
         x, y = xy(feature["coordinates"])
         mark_geometry(pdf, feature["id"], "Point", feature["coordinates"], xy)
-        if feature.get("system") in {"domestic_water", "fire_water"} and feature not in interface_points:
+        if feature.get("system") in {"domestic_water", "fire_water", "power", "telecom_fiber", "gas", "site_lighting"} and feature not in interface_points:
             pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY {feature['system']} {feature['id']}")
             continue
         if feature in interface_points:
@@ -1131,6 +1138,210 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.setFont("Helvetica", 6)
         pdf.drawString(32, 17, f"Sheet MS-08 | Water / fire separation schedule / test details | Not to scale | Page 8 of {total_pages}")
         pdf.drawRightString(width - 32, 17, "No hydraulic, capacity, code-compliance, or agency-approval conclusion")
+        pdf.showPage()
+    if "dry_utility_basis" in model:
+        # Sheet MS-09: dry utilities and joint-trench plan.
+        dry_left, dry_bottom, dry_scale = 42.0, 92.0, 2.2
+        dry_min_x, dry_min_y = 186190.0, 98435.0
+
+        def dry_xy(point):
+            return dry_left + (point[0] - dry_min_x) * dry_scale, dry_bottom + (point[1] - dry_min_y) * dry_scale
+
+        def dry_path(coordinates, *, close=False, fill=0):
+            path = pdf.beginPath()
+            x, y = dry_xy(coordinates[0])
+            x, y = min(max(x, 42), 520), min(max(y, 82), 515)
+            path.moveTo(x, y)
+            for point in coordinates[1:]:
+                x, y = dry_xy(point)
+                x, y = min(max(x, 42), 520), min(max(y, 82), 515)
+                path.lineTo(x, y)
+            if close:
+                path.close()
+            pdf.drawPath(path, fill=fill, stroke=1)
+
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 13)
+        pdf.drawString(32, height - 27, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 15)
+        pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD DRY UTILITIES / JOINT TRENCH PLAN")
+        pdf.setFont("Helvetica", 7)
+        pdf.drawString(32, height - 61, "ALL PROPOSED DRY ROUTES ARE DASHED REVIEWED ASSUMPTIONS - NOT LOCATED UTILITIES OR OWNER-APPROVED DESIGNS")
+
+        pdf.setFillColor(colors.HexColor("#f1f5f9"))
+        pdf.setStrokeColor(colors.HexColor("#64748b"))
+        pdf.setLineWidth(0.8)
+        dry_path(pad["coordinates"], close=True, fill=1)
+        pdf.setFillColor(colors.white)
+        pdf.setStrokeColor(colors.black)
+        pdf.setLineWidth(1.5)
+        dry_path(building["coordinates"], close=True, fill=1)
+
+        for feature in dry_polygons:
+            pdf.setFillColor(colors.HexColor("#ffedd5" if feature["id"] == "dry-shared-trench-corridor-01" else "#fef3c7"))
+            pdf.setStrokeColor(colors.HexColor("#f97316"))
+            pdf.setDash(5, 3)
+            pdf.setLineWidth(1.0)
+            dry_path(feature["coordinates"], close=True, fill=1)
+        pdf.setDash()
+
+        dry_colors = {
+            "power": colors.HexColor("#dc2626"),
+            "telecom_fiber": colors.HexColor("#7c3aed"),
+            "gas": colors.HexColor("#eab308"),
+            "site_lighting": colors.HexColor("#0891b2"),
+            "dry_utilities": colors.HexColor("#f97316"),
+        }
+        dry_lines = [row for row in model["features"]["lines"] if row.get("system") in dry_colors]
+        for feature in dry_lines:
+            pdf.setStrokeColor(dry_colors[feature["system"]])
+            pdf.setDash(7, 4)
+            pdf.setLineWidth(2.4 if feature["system"] != "dry_utilities" else 1.0)
+            dry_path(feature["coordinates"])
+        pdf.setDash()
+
+        dry_points = [row for row in model["features"]["points"] if row.get("system") in {"power", "telecom_fiber", "gas", "site_lighting"}]
+        dry_point_labels = {
+            "electric-poc-assumed-01": ("E-POC*", 5, 2, "left"),
+            "telecom-poc-assumed-01": ("T-POC*", -5, 2, "right"),
+            "electric-vault-01": ("EV-1*", 5, 2, "left"),
+            "telecom-handhole-01": ("THH-1*", -5, 2, "right"),
+            "electric-pull-box-01": ("EPB-1*", -5, 8, "right"),
+            "penetration-electric": ("E-TERM*", 5, 7, "left"),
+            "penetration-telecom-fiber": ("T-TERM*", 5, -10, "left"),
+            "gas-poc-assumed-01": ("G-POC*", 5, 2, "left"),
+            "gas-meter-regulator-01": ("GMR-1*", 5, 2, "left"),
+            "penetration-gas": ("G-TERM*", -5, 7, "right"),
+            "penetration-site-lighting": ("L-TERM*", 5, 2, "left"),
+            "site-light-pole-01": ("LP-1*", 5, 2, "left"),
+            "site-light-pole-02": ("LP-2*", 5, 2, "left"),
+        }
+        for feature in dry_points:
+            x, y = dry_xy(feature["coordinates"])
+            pdf.setFillColor(colors.white)
+            pdf.setStrokeColor(dry_colors[feature["system"]])
+            pdf.setLineWidth(1.2)
+            pdf.circle(x, y, 3.5, fill=1, stroke=1)
+            pdf.setFillColor(colors.black)
+            pdf.setFont("Helvetica-Bold", 4.7)
+            label, dx, dy, alignment = dry_point_labels.get(feature["id"], (feature["id"][:16], 5, 2, "left"))
+            if alignment == "right":
+                pdf.drawRightString(x + dx, y + dy, label)
+            else:
+                pdf.drawString(x + dx, y + dy, label)
+
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(550, 515, "OWNER / PROVENANCE BASIS")
+        pdf.setFont("Helvetica", 6.1)
+        for offset, note in enumerate([
+            "Electric owner: EWEB (confirmed jurisdiction)",
+            "Gas owner: NW Natural (confirmed Eugene service)",
+            "Telecom provider at parcel: UNKNOWN",
+            "Every route/POC/box: REVIEWED ASSUMPTION",
+            "Dashed line = NOT LOCATED / NOT APPROVED",
+            "Power + telecom share a coordination trench",
+            "EV-1 and THH-1 are separate owner enclosures",
+            "Gas uses a separate fictional route",
+            "Site lighting is a separate building-fed branch",
+        ]):
+            pdf.drawString(550, 500 - offset * 12, note)
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(550, 375, "UNRESOLVED DESIGN GATES")
+        pdf.setFont("Helvetica", 6.1)
+        for offset, note in enumerate([
+            "Electric load, voltage, transformer and capacity",
+            "EWEB point of service, duct bank, vault/box design",
+            "Telecom provider, capacity, POC, boxes and bends",
+            "Gas main/location, pressure, capacity, size and meter",
+            "Depths, separations, crossings and final grades",
+            "Lighting circuit, fixtures, controls and photometrics",
+            "Survey/locates, owner designs, permits and acceptance",
+        ]):
+            pdf.drawString(550, 360 - offset * 12, note)
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(550, 250, "FIELD SAFETY HOLD POINTS")
+        pdf.setFont("Helvetica", 6.1)
+        for offset, note in enumerate([
+            "1  Call/coordinate utility locates before excavation",
+            "2  Obtain owner-issued plans and approved service points",
+            "3  Pothole/survey crossings and reconcile vertical data",
+            "4  Inspect conduit/pipe, boxes, tracer and trench open",
+            "5  Capture tests and owner-accepted as-built records",
+        ]):
+            pdf.drawString(550, 235 - offset * 12, note)
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 10)
+        pdf.drawCentredString(width / 2, 31, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica", 6)
+        pdf.drawString(32, 17, f"Sheet MS-09 | Dry utilities / joint trench plan | 1 IN = 32.73 FT | EPSG:6823 | Page 9 of {total_pages}")
+        pdf.drawRightString(width - 32, 17, "Dashed assumed routes only; no utility locate, capacity, owner design, or construction authorization")
+        pdf.showPage()
+
+        # Sheet MS-10: dry-utility schedule and coordination detail.
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 13)
+        pdf.drawString(32, height - 27, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 14)
+        pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD DRY UTILITY SCHEDULE / COORDINATION DETAILS")
+        pdf.setFont("Helvetica", 7)
+        pdf.drawString(32, height - 61, "Stable network IDs, joint-trench relationships, owner gates, field workflow, and explicit unresolved service inputs")
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(35, 515, "DRY UTILITY EDGE SCHEDULE")
+        columns = (35, 205, 315, 360, 410, 465, 585, 675)
+        for x, header in zip(columns, ("EDGE ID", "SYSTEM", "COUNT", "SIZE", "LEN", "MATERIAL", "TRENCH", "STATUS")):
+            pdf.setFont("Helvetica-Bold", 5.4)
+            pdf.drawString(x, 500, header)
+        dry_edges = [edge for network in model["networks"] if network["system"] in {"power", "telecom_fiber", "gas", "site_lighting"} for edge in network["edges"]]
+        pdf.setFont("Helvetica", 4.8)
+        for index, edge in enumerate(dry_edges):
+            detail = edge["field_detail"]
+            material = detail["material"][:22]
+            values = (edge["id"], edge["edge_type"], str(detail["conduit_or_pipe_count"]), f"{detail['conduit_or_pipe_size_in']} IN", f"{detail['length_ft']:.2f}", material, detail["trench_basis"][:18], "ASSUMED")
+            for x, value in zip(columns, values):
+                pdf.drawString(x, 487 - index * 12, value)
+
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(35, 350, "CONCEPTUAL JOINT-TRENCH COORDINATION - NOT A CONSTRUCTION SECTION")
+        pdf.setStrokeColor(colors.HexColor("#92400e"))
+        pdf.setLineWidth(1.2)
+        pdf.line(45, 260, 360, 260)
+        pdf.line(45, 260, 70, 190)
+        pdf.line(360, 260, 335, 190)
+        pdf.line(70, 190, 335, 190)
+        pdf.setFillColor(colors.HexColor("#fee2e2"))
+        pdf.rect(105, 205, 85, 30, fill=1, stroke=1)
+        pdf.setFillColor(colors.HexColor("#ede9fe"))
+        pdf.rect(230, 205, 70, 30, fill=1, stroke=1)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 6)
+        pdf.drawCentredString(147, 218, "EWEB CONDUIT BANK")
+        pdf.drawCentredString(265, 218, "TELECOM CONDUITS")
+        pdf.setFont("Helvetica", 5.8)
+        pdf.drawString(78, 175, "Actual depth, horizontal/vertical separation, warning systems, bedding, and backfill are OWNER-DESIGNED UNKNOWNs.")
+        pdf.drawString(78, 163, "EV-1 and THH-1 are separate enclosures inside a graphic coordination zone; no shared physical vault is claimed.")
+
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(410, 350, "OWNER / REVIEW MATRIX")
+        pdf.setFont("Helvetica", 5.9)
+        for offset, note in enumerate([
+            "EWEB: confirmed electric owner; route/load/design UNKNOWN",
+            "NW Natural: confirmed Eugene gas utility; parcel main/tie UNKNOWN",
+            "Telecom: Eugene providers exist; serving provider UNKNOWN",
+            "Site lighting: private design; electrical/photometric basis UNKNOWN",
+            "All routes: REVIEWED ASSUMPTION / DASHED / NOT LOCATED",
+            "All capacities and owner approvals: UNKNOWN",
+        ]):
+            pdf.drawString(410, 335 - offset * 14, note)
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 10)
+        pdf.drawCentredString(width / 2, 31, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica", 6)
+        pdf.drawString(32, 17, f"Sheet MS-10 | Dry utility schedule / coordination details | Not to scale | Page 10 of {total_pages}")
+        pdf.drawRightString(width - 32, 17, "No locate, capacity, owner-design, code-compliance, or agency-approval conclusion")
         pdf.showPage()
     pdf.save()
     os.replace(raw_path, output_path)

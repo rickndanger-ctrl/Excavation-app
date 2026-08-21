@@ -303,6 +303,46 @@
         "src-eweb-water-gis",
         "src-oha-water-sewer"
       ]
+    },
+    {
+      "id": "decision-dry-joint-trench",
+      "subject": "Fictional electric and telecom joint-trench corridor with separate owner enclosures",
+      "status": "reviewed_assumption",
+      "value": {
+        "shared_systems": ["power", "telecom_fiber"],
+        "corridor_width_ft": 4.0,
+        "enclosure_basis": "separate owner boxes in one coordination zone",
+        "telecom_provider_status": "unknown",
+        "owner_design_approval_status": "unknown"
+      },
+      "rationale": "A coordinated south access corridor exercises shared-trench topology while keeping electric vault and telecom handhole distinct. The route, conduit banks, owner separations, service points, loads, provider, and approvals are test assumptions, not located utilities.",
+      "source_ids": ["src-eweb-electric-trench-2014", "src-eweb-electric-service-2020", "src-eugene-telecom-providers-2023"]
+    },
+    {
+      "id": "decision-dry-gas-service",
+      "subject": "Fictional separate NW Natural gas-service route",
+      "status": "reviewed_assumption",
+      "value": {
+        "route_basis": "separate from electric/telecom joint trench and modeled wet utilities",
+        "service_material": "polyethylene gas service placeholder",
+        "main_location_pressure_capacity_status": "unknown",
+        "meter_regulator_approval_status": "unknown"
+      },
+      "rationale": "The separate south/east route tests gas topology without presenting a fictional point of connection as a located main. Final availability, size, material specification, pressure, capacity, meter/regulator, route, separation, and approvals require NW Natural design.",
+      "source_ids": ["src-nw-natural-builder-guidance-2026"]
+    },
+    {
+      "id": "decision-site-lighting-service",
+      "subject": "Fictional exterior site-lighting circuit",
+      "status": "reviewed_assumption",
+      "value": {
+        "terminal_id": "penetration-site-lighting",
+        "pole_count": 2,
+        "photometric_design_status": "unknown",
+        "electrical_load_and_circuit_status": "unknown"
+      },
+      "rationale": "A two-pole east-side branch exercises a separate field layer and building terminal. Fixture selection, circuiting, photometrics, voltage drop, controls, grounding, and electrical approval remain unresolved.",
+      "source_ids": ["src-project-brief", "src-eweb-electric-service-2020"]
     }
   ]
 }
