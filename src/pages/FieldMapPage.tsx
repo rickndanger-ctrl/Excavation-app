@@ -21,6 +21,7 @@ import { OVERVIEW_PHASE_ID, type ControlPoint } from '../types/jobsite';
 import { getDocument } from 'pdfjs-dist';
 import { extractPdfPageGeometry } from '../lib/pdfPlanGeometry';
 import { parseSemanticJobsiteManifest } from '../lib/semanticPackageAdapter';
+import { layersAvailableForPhase } from '../lib/layerAvailability';
 import {
   buildReadingL21Draft,
   loadPublishedGradingPackage,
@@ -212,6 +213,12 @@ export function FieldMapPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setActivePhaseId(displayPackage.phases[0]?.id ?? OVERVIEW_PHASE_ID);
   }, [displayPackage]);
+
+  const availableLayers = useMemo(() => layersAvailableForPhase(
+    displayPackage.layers,
+    [...displayPackage.objects, ...displayPackage.utilities],
+    activePhaseId,
+  ), [activePhaseId, displayPackage.layers, displayPackage.objects, displayPackage.utilities]);
 
   const isPhaseVisible = useCallback(
     (phase?: string) => {
@@ -442,7 +449,7 @@ export function FieldMapPage() {
             activePhaseId={activePhaseId}
             onSelectPhase={(id) => { setActivePhaseId(id); setDrawerOpen(false); }}
             phaseProgress={phaseProgress}
-            layers={displayPackage.layers}
+            layers={availableLayers}
             visibility={visibility}
             onToggleLayer={toggleLayer}
             onDownload={downloadPlans}

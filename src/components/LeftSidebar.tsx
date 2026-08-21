@@ -95,7 +95,9 @@ export function LeftSidebar({
 
       <section className="sidebar-section">
         <h2 className="sidebar-heading">Layers</h2>
-        <ul className="layer-list">
+        {layers.length === 0 ? (
+          <p className="phase-summary">No model layers in this phase.</p>
+        ) : <ul className="layer-list">
           {layers.map((layer) => (
             <li key={layer.id}>
               <label className="layer-item">
@@ -109,7 +111,7 @@ export function LeftSidebar({
               </label>
             </li>
           ))}
-        </ul>
+        </ul>}
       </section>
 
       <section className="sidebar-section sidebar-actions">

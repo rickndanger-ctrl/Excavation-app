@@ -5,6 +5,7 @@ import { parseSemanticJobsiteManifest } from '../src/lib/semanticPackageAdapter'
 
 const manifestPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-sanitary/semantic-manifest.json';
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as unknown;
+const combinedManifestPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-water-fire/semantic-manifest.json';
 type Fixture = {
   schema_version: string;
   disclaimer: string;
@@ -59,4 +60,27 @@ test('rejects unsupported versions, missing disclaimers, duplicate IDs, malforme
   const badProvenance = clone();
   badProvenance.objects[0].provenance.status = 'guessed';
   assert.throws(() => parseSemanticJobsiteManifest(badProvenance), /provenance/i);
+});
+
+test('splits combined producer water geometry into independent domestic, fire, and source-reference layers', () => {
+  const combined = JSON.parse(fs.readFileSync(combinedManifestPath, 'utf8')) as unknown;
+  const jobsite = parseSemanticJobsiteManifest(combined);
+  const counts = Object.fromEntries(jobsite.layers.map((layer) => [
+    layer.id,
+    jobsite.objects.filter((feature) => feature.layerId === layer.id).length,
+  ]));
+
+  assert.equal(jobsite.objects.length, 69);
+  assert.equal(counts.property, 12);
+  assert.equal(counts.site, 5);
+  assert.equal(counts.sanitary, 9);
+  assert.equal(counts.storm, 18);
+  assert.equal(counts['domestic-water'], 8);
+  assert.equal(counts['fire-water'], 12);
+  assert.equal(counts['water-reference'], 1);
+  assert.equal(jobsite.layers.some((layer) => layer.id === 'water'), false);
+
+  assert.equal(jobsite.objects.find((feature) => feature.id === 'domestic-water-seg-02')?.layerId, 'domestic-water');
+  assert.equal(jobsite.objects.find((feature) => feature.id === 'fire-water-seg-03')?.layerId, 'fire-water');
+  assert.equal(jobsite.objects.find((feature) => feature.id === 'water-public-main-34th-reference')?.layerId, 'water-reference');
 });

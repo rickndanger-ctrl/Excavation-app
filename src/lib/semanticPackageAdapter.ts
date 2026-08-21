@@ -83,6 +83,36 @@ function formatValue(value: unknown): string | undefined {
   return typeof value === 'number' ? String(value) : typeof value === 'string' ? value : undefined;
 }
 
+function consumerLayerId(source: UnknownRecord): string {
+  if (source.layerId !== 'water') return source.layerId!;
+  if (source.system === 'domestic_water' || source.id?.startsWith('domestic-water-')) return 'domestic-water';
+  if (source.system === 'fire_water' || source.id?.startsWith('fire-')) return 'fire-water';
+  return 'water-reference';
+}
+
+function consumerLayers(sourceLayers: unknown[]): JobsitePackage['layers'] {
+  return sourceLayers.flatMap((value) => {
+    const layer = record(value, 'layer');
+    if (layer.id === 'water') return [
+      { id: 'domestic-water', name: 'Domestic Water', color: '#16a34a', defaultVisible: true },
+      { id: 'fire-water', name: 'Fire Water', color: '#dc2626', defaultVisible: true },
+      { id: 'water-reference', name: 'Water Source Reference', color: '#0f766e', defaultVisible: true },
+    ];
+    const names: Record<string, string> = {
+      property: 'Property / Constraints',
+      site: 'Building / Site',
+      sanitary: 'Sanitary Sewer',
+      storm: 'Storm / Roof Drainage',
+    };
+    return [{
+      id: layer.id!,
+      name: names[layer.id!] ?? String(layer.name),
+      color: String(layer.color),
+      defaultVisible: layer.defaultVisible !== false,
+    }];
+  });
+}
+
 function toObject(source: UnknownRecord, geometry: FeatureGeometry, center: Point, utility?: UnknownRecord): BlueprintObject {
   if (!source.id || !source.label || !source.layerId || !source.type) throw new Error('Every semantic feature requires id, label, layerId, and type');
   const detail = { ...(source.fieldDetail ?? {}), ...(utility?.fieldDetail ?? {}) };
@@ -95,7 +125,7 @@ function toObject(source: UnknownRecord, geometry: FeatureGeometry, center: Poin
   return {
     id: source.id,
     type: source.type,
-    layerId: source.layerId,
+    layerId: consumerLayerId(source),
     x: center.x,
     y: center.y,
     label: source.label,
@@ -188,7 +218,7 @@ export function parseSemanticJobsiteManifest(input: unknown): JobsitePackage {
     disclaimer: source.disclaimer,
     unavailable: structuredClone(source.unavailable ?? []),
     phases: structuredClone(sourcePhases) as JobsitePackage['phases'],
-    layers: structuredClone(sourceLayers) as JobsitePackage['layers'],
+    layers: consumerLayers(sourceLayers),
     plan: { imageUrl: '', widthFt: source.plan.widthFt!, heightFt: source.plan.heightFt! },
     objects,
     utilities: [],
