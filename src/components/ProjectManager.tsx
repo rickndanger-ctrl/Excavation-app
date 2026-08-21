@@ -1,7 +1,8 @@
-import { ChevronDown, FolderOpen, LogIn, LogOut, Plus, Upload, User } from 'lucide-react';
+import { Box, ChevronDown, FolderOpen, LogIn, LogOut, Plus, Upload, User } from 'lucide-react';
 import { useState } from 'react';
 import type { AuthState } from '../hooks/useAuth';
 import type { ProjectsState } from '../hooks/useProjects';
+import type { SemanticPublicationsState } from '../hooks/useSemanticPublications';
 import { supabaseConfigured } from '../lib/supabase';
 import { AuthModal } from './AuthModal';
 import { PlanUploadPanel } from './PlanUploadPanel';
@@ -9,9 +10,10 @@ import { PlanUploadPanel } from './PlanUploadPanel';
 type Props = {
   auth: AuthState;
   projects: ProjectsState;
+  semanticPublications: SemanticPublicationsState;
 };
 
-export function ProjectManager({ auth, projects }: Props) {
+export function ProjectManager({ auth, projects, semanticPublications }: Props) {
   const [showAuth, setShowAuth] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
@@ -26,6 +28,7 @@ export function ProjectManager({ auth, projects }: Props) {
     try {
       const project = await projects.addProject(newProjectName.trim());
       await projects.selectProject(project);
+      semanticPublications.selectPublication(null);
       setNewProjectName('');
       setShowNewProjectInput(false);
       setShowProjectMenu(false);
@@ -51,9 +54,8 @@ export function ProjectManager({ auth, projects }: Props) {
           >
             <FolderOpen size={14} />
             <span className="project-selector__name">
-              {projects.loading
-                ? 'Loading…'
-                : projects.activeProject?.name ?? 'Sample Data'}
+              {semanticPublications.activePublication?.jobsite.projectName
+                ?? (projects.loading ? 'Loading…' : projects.activeProject?.name ?? 'Sample Data')}
             </span>
             <ChevronDown size={13} />
           </button>
@@ -63,9 +65,10 @@ export function ProjectManager({ auth, projects }: Props) {
               {/* Use sample data option */}
               <button
                 type="button"
-                className={`project-menu__item ${!projects.activeProject ? 'project-menu__item--active' : ''}`}
+                className={`project-menu__item ${!projects.activeProject && !semanticPublications.activePublication ? 'project-menu__item--active' : ''}`}
                 onClick={() => {
                   projects.selectProject(null);
+                  semanticPublications.selectPublication(null);
                   setShowProjectMenu(false);
                 }}
               >
@@ -78,13 +81,32 @@ export function ProjectManager({ auth, projects }: Props) {
                 <button
                   key={p.id}
                   type="button"
-                  className={`project-menu__item ${projects.activeProject?.id === p.id ? 'project-menu__item--active' : ''}`}
+                  className={`project-menu__item ${!semanticPublications.activePublication && projects.activeProject?.id === p.id ? 'project-menu__item--active' : ''}`}
                   onClick={() => {
                     projects.selectProject(p);
+                    semanticPublications.selectPublication(null);
                     setShowProjectMenu(false);
                   }}
                 >
                   {p.name}
+                </button>
+              ))}
+
+              {semanticPublications.publications.length > 0 && <div className="project-menu__divider" />}
+              {semanticPublications.publications.map((publication) => (
+                <button
+                  key={publication.identity}
+                  type="button"
+                  className={`project-menu__item ${semanticPublications.activePublication?.identity === publication.identity ? 'project-menu__item--active' : ''}`}
+                  onClick={() => {
+                    projects.selectProject(null);
+                    semanticPublications.selectPublication(publication);
+                    setShowProjectMenu(false);
+                  }}
+                  title={`${publication.identity} · ${publication.envelope.content_sha256}`}
+                >
+                  <Box size={12} />
+                  {publication.jobsite.projectName} · {publication.envelope.package_version}
                 </button>
               ))}
 
@@ -138,7 +160,15 @@ export function ProjectManager({ auth, projects }: Props) {
         )}
 
         {/* Data source indicator */}
-        {supabaseConfigured && projects.error ? (
+        {semanticPublications.error ? (
+          <span className="data-source-badge data-source-badge--error" title={semanticPublications.error}>
+            ● Package sync error
+          </span>
+        ) : semanticPublications.activePublication ? (
+          <span className="data-source-badge data-source-badge--local" title={semanticPublications.activePublication.envelope.content_sha256}>
+            ● Immutable package · offline
+          </span>
+        ) : supabaseConfigured && projects.error ? (
           <span className="data-source-badge data-source-badge--error" title={projects.error}>
             ● Supabase error
           </span>

@@ -11,12 +11,14 @@ import { DryUtilityStudio } from '../components/DryUtilityStudio';
 import { PlanCanvas, type ImportedBasePlan } from '../components/PlanCanvas';
 import { PlanUploadPanel } from '../components/PlanUploadPanel';
 import { RockCalculator } from '../components/RockCalculator';
+import { ProjectManager } from '../components/ProjectManager';
 import { useAuth } from '../hooks/useAuth';
 import { useGps } from '../hooks/useGps';
 import { useJobsitePackage } from '../hooks/useJobsitePackage';
 import { useLayerVisibility } from '../hooks/useLayerVisibility';
 import { useObjectStatus } from '../hooks/useObjectStatus';
 import { useProjects } from '../hooks/useProjects';
+import { useSemanticPublications } from '../hooks/useSemanticPublications';
 import { OVERVIEW_PHASE_ID, type ControlPoint } from '../types/jobsite';
 import { getDocument } from 'pdfjs-dist';
 import { extractPdfPageGeometry } from '../lib/pdfPlanGeometry';
@@ -44,6 +46,7 @@ import { Layers, Navigation, Search, X } from 'lucide-react';
 export function FieldMapPage() {
   const auth = useAuth();
   const projects = useProjects();
+  const semanticPublications = useSemanticPublications();
   const { offlineReady, downloading, downloadPlans, activePackage } = useJobsitePackage();
   const calcRef = useRef<HTMLElement>(null);
   const civilPlanInputRef = useRef<HTMLInputElement>(null);
@@ -72,7 +75,10 @@ export function FieldMapPage() {
     try { return loadPublishedGradingPackage(localStorage); } catch { return null; }
   });
   const [publishedNotice, setPublishedNotice] = useState<string | null>(null);
-  const displayPackage = importedSemanticPackage ?? publishedPackage ?? activePackage;
+  const displayPackage = semanticPublications.activePublication?.jobsite
+    ?? importedSemanticPackage
+    ?? publishedPackage
+    ?? activePackage;
   const { visibility, toggleLayer, isVisible } = useLayerVisibility(displayPackage.layers);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -125,8 +131,19 @@ export function FieldMapPage() {
 
   const importModelPackage = useCallback((file: File | undefined) => {
     if (!file) return;
-    void file.text().then((text) => {
-      const parsed = parseSemanticJobsiteManifest(JSON.parse(text));
+    void file.text().then(async (text) => {
+      const input = JSON.parse(text) as unknown;
+      if (input && typeof input === 'object' && 'publication_schema' in input) {
+        const publication = await semanticPublications.publishLocal(input);
+        setImportedSemanticPackage(null);
+        setPublishedPackage(null);
+        setSelectedObjectId('');
+        setPublishedNotice(`${publication.jobsite.projectName} · ${publication.envelope.package_version} · checksum verified · offline ready`);
+        setDrawerOpen(false);
+        return;
+      }
+      const parsed = parseSemanticJobsiteManifest(input);
+      semanticPublications.selectPublication(null);
       setImportedSemanticPackage(parsed);
       setPublishedPackage(null);
       setSelectedObjectId('');
@@ -135,7 +152,7 @@ export function FieldMapPage() {
     }).catch((error: unknown) => {
       setPublishedNotice(`Model package rejected: ${error instanceof Error ? error.message : 'invalid JSON'}`);
     });
-  }, []);
+  }, [semanticPublications]);
 
   const publishGrading = useCallback((decisions: GradingReviewDecision[]) => {
     if (!reviewDraft) return;
@@ -345,6 +362,12 @@ export function FieldMapPage() {
           <span>Source PDF excluded from offline package</span>
         </div>
       )}
+      {!publishedNotice && displayPackage.disclaimer && (
+        <div className="published-package-status" role="status">
+          <strong>{displayPackage.disclaimer}</strong>
+          <span>Immutable semantic package · verify field conditions and survey control</span>
+        </div>
+      )}
       {reviewDraft && !publishedPackage && !modelStudioOpen && (
         <button type="button" className="model-studio-launch" onClick={() => setModelStudioOpen(true)}>
           Open Model Studio
@@ -444,6 +467,7 @@ export function FieldMapPage() {
           </button>
         </div>
         <div className="field-drawer__body">
+          <ProjectManager auth={auth} projects={projects} semanticPublications={semanticPublications} />
           <LeftSidebar
             phases={displayPackage.phases}
             activePhaseId={activePhaseId}
@@ -454,7 +478,7 @@ export function FieldMapPage() {
             onToggleLayer={toggleLayer}
             onDownload={downloadPlans}
             downloading={downloading}
-            offlineReady={offlineReady}
+            offlineReady={offlineReady || Boolean(semanticPublications.activePublication)}
             onMyLocation={() => { setRecenterToken((t) => t + 1); setDrawerOpen(false); }}
             onQuickCalculator={() => calcRef.current?.scrollIntoView({ behavior: 'smooth' })}
             distanceFt={distanceFt}

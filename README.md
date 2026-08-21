@@ -26,6 +26,42 @@ Additional tools in this prototype:
 - Rock calculator (cubic yards from length × width × depth)
 - Foreman notes (saved to `localStorage`)
 
+## Model Studio publication contract
+
+The field map accepts immutable semantic publication envelopes shaped as follows:
+
+```json
+{
+  "publication_schema": "excavation-field-map.semantic-publication/v1",
+  "package_id": "the-same-value-as-manifest.id",
+  "package_version": "producer-assigned-immutable-version",
+  "content_sha256": "sha256-of-the-exact-UTF-8-manifest_json-string",
+  "created_at": "2026-08-21T12:00:00.000Z",
+  "manifest_json": "{\"schema_version\":\"excavation-field-map.jobsite-package/v0.1.0\",...}"
+}
+```
+
+The receiver verifies the checksum and then runs the existing semantic, geometry,
+provenance, grading datum, cut/fill, and drainage gates. The tuple
+`package_id + package_version` is immutable: byte-identical retries are idempotent,
+while changed content must use a new version. Accepted packages are cached as one
+atomic browser record and appear in the phone project's **Layers & Tools** menu.
+
+For local Model Studio development, publish without copying between browser windows:
+
+```bash
+npm run publish:local -- /absolute/path/to/semantic-publication.json
+```
+
+This writes an ignored development inbox at
+`public/semantic-publications.local.json`; the app validates and caches it when the
+page loads or regains focus. The exact production seam is the
+`semantic_package_publications` table in `supabase-schema.sql`. Deploy that schema,
+authenticate the publisher as an existing manager, supply its target
+`field_project_id`, and set `VITE_SEMANTIC_PUBLICATIONS_ENABLED=true`. The browser
+uses only the publishable/anon key; never put a service-role key in the app. Remote
+sync stays explicitly disabled until that schema and authentication are provisioned.
+
 ## Roadmap (deferred)
 
 - Real `navigator.geolocation` and offline GPS tracking

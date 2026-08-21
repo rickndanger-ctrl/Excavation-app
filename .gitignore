@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 test-results/
+public/semantic-publications.local.json
 
 # Environment secrets — never commit these
 .env
