@@ -167,6 +167,7 @@ body {
 }
 .model-studio-launch--sanitary { top: 120px; border-color: #7c3aed; }
 .model-studio-launch--storm { top: 120px; border-color: #0369a1; }
+.model-studio-launch--water { top: 120px; border-color: #2563eb; }
 
 .model-studio {
   position: absolute;
@@ -223,6 +224,10 @@ body {
 .storm-studio__pending-pipe, .storm-studio__excluded { margin-bottom: 6px; padding: 8px; color: var(--text-secondary); font-size: 0.7rem; }
 .storm-studio__pending-pipe { border-left: 3px solid #38bdf8; background: rgba(3, 105, 161, 0.16); }
 .storm-studio__excluded { border-left: 3px solid var(--yellow); background: var(--yellow-light); }
+.water-studio__symbols { display: grid; margin-bottom: 12px; }
+.water-studio__symbols span { min-height: 44px; display: grid; place-items: center; padding: 6px; border: 1px solid #2563eb; border-radius: 8px; color: #93c5fd; font-size: 0.7rem; }
+.water-studio h2 { margin: 10px 0 6px; font-size: 0.85rem; }
+.water-studio__excluded { margin-bottom: 6px; padding: 8px; border-left: 3px solid var(--yellow); background: var(--yellow-light); color: var(--text-secondary); font-size: 0.7rem; }
 
 @media (min-width: 760px) {
   .model-studio { left: auto; width: 620px; border-left: 1px solid var(--border); box-shadow: -12px 0 32px rgba(0,0,0,0.45); }

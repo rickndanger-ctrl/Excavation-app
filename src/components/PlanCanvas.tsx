@@ -84,6 +84,8 @@ function ObjectIcon({
     icon = <g className="storm-symbol--manhole">{selectionRing}<circle cx={x} cy={y} r={2.8} fill={fill} stroke={stroke} strokeWidth={sw} /><circle cx={x} cy={y} r={1.8} fill="none" stroke={stroke} strokeWidth={0.45} /><text x={x} y={y + 0.9} textAnchor="middle" fontSize="2.4" fontWeight="bold" fill={stroke}>D</text></g>;
   } else if (obj.symbol === 'storm-catch-basin') {
     icon = <g className="storm-symbol--catch-basin">{selectionRing}<polygon points={`${x},${y - 3} ${x + 3},${y} ${x},${y + 3} ${x - 3},${y}`} fill={fill} stroke={stroke} strokeWidth={sw} /><text x={x} y={y + 0.75} textAnchor="middle" fontSize="1.8" fontWeight="bold" fill={stroke}>CB</text></g>;
+  } else if (obj.symbol === 'water-gate') {
+    icon = <g className="water-symbol--gate">{selectionRing}<polygon points={`${x},${y - 3} ${x + 3},${y} ${x},${y + 3} ${x - 3},${y}`} fill={fill} stroke={stroke} strokeWidth={sw} /><line x1={x - 1.5} y1={y} x2={x + 1.5} y2={y} stroke={stroke} strokeWidth={0.55} /><line x1={x} y1={y - 1.5} x2={x} y2={y + 1.5} stroke={stroke} strokeWidth={0.55} /></g>;
   } else if (type === 'manhole') {
     icon = (
       <>
@@ -320,7 +322,7 @@ function ObjectIcon({
     );
   }
 
-  const isSemantic = obj.layerId === 'grading' || obj.layerId === 'sanitary' || obj.layerId === 'storm';
+  const isSemantic = ['grading', 'sanitary', 'storm', 'water'].includes(obj.layerId);
   return (
     <g
       className="plan-object"
@@ -384,6 +386,7 @@ export function PlanCanvas({
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [showSourcePdf, setShowSourcePdf] = useState(true);
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
+  const mouseMoved = useRef(false);
 
   // Touch state stored in ref to avoid stale closures in the passive-false listener
   const touchRef = useRef<{
@@ -395,8 +398,13 @@ export function PlanCanvas({
   } | null>(null);
 
   const { plan, utilities, objects } = jobsite;
+  const nearestVisibleObject = useCallback((point: Point) => objects
+    .filter((obj) => isLayerVisible(obj.layerId) && isPhaseVisible(obj.phase))
+    .map((obj) => ({ obj, distance: distanceFeet(point, obj) }))
+    .filter(({ distance }) => distance <= HIT_RADIUS_FT)
+    .sort((left, right) => left.distance - right.distance)[0]?.obj, [isLayerVisible, isPhaseVisible, objects]);
   const gradingLabels = useMemo(() => new Map(layoutGradingLabels(
-    objects.filter((object) => ['grading', 'sanitary', 'storm'].includes(object.layerId) && isLayerVisible(object.layerId)).map((object) => ({
+    objects.filter((object) => ['grading', 'sanitary', 'storm', 'water'].includes(object.layerId) && isLayerVisible(object.layerId)).map((object) => ({
       id: object.id,
       x: object.x,
       y: object.y,
@@ -489,12 +497,14 @@ export function PlanCanvas({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
+    mouseMoved.current = false;
     setDragging(true);
     dragStart.current = { x: e.clientX, y: e.clientY, offsetX: offset.x, offsetY: offset.y };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!dragging) return;
+    if (Math.hypot(e.clientX - dragStart.current.x, e.clientY - dragStart.current.y) > 4) mouseMoved.current = true;
     setOffset({
       x: dragStart.current.offsetX + (e.clientX - dragStart.current.x),
       y: dragStart.current.offsetY + (e.clientY - dragStart.current.y),
@@ -537,10 +547,7 @@ export function PlanCanvas({
           x: (t.clientX - rect.left - offset.x) / scale,
           y: (t.clientY - rect.top - offset.y) / scale,
         };
-        const hit = objects.find(
-          (obj) =>
-            isLayerVisible(obj.layerId) && isPhaseVisible(obj.phase) && distanceFeet(planPt, obj) <= HIT_RADIUS_FT,
-        );
+        const hit = nearestVisibleObject(planPt);
         if (hit) onSelectObject(hit.id);
       }
     }
@@ -559,12 +566,9 @@ export function PlanCanvas({
   };
 
   const handleMapClick = (e: React.MouseEvent) => {
-    if (dragging) return;
+    if (mouseMoved.current) return;
     const point = screenToPlan(e.clientX, e.clientY);
-    const hit = objects.find(
-      (obj) =>
-        isLayerVisible(obj.layerId) && isPhaseVisible(obj.phase) && distanceFeet(point, obj) <= HIT_RADIUS_FT,
-    );
+    const hit = nearestVisibleObject(point);
     if (hit) onSelectObject(hit.id);
   };
 
@@ -735,7 +739,7 @@ export function PlanCanvas({
               // dim out-of-phase objects rather than hiding them
               const opacity = inPhase ? 1 : 0.22;
               return (
-                <g key={obj.id} opacity={opacity} style={{ pointerEvents: ['grading', 'sanitary', 'storm'].includes(obj.layerId) ? 'none' : inPhase ? 'auto' : 'none' }}>
+                <g key={obj.id} opacity={opacity} style={{ pointerEvents: ['grading', 'sanitary', 'storm', 'water'].includes(obj.layerId) ? 'none' : inPhase ? 'auto' : 'none' }}>
                   <ObjectIcon
                     obj={obj}
                     selected={selected}

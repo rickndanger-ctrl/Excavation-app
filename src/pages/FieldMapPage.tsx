@@ -6,6 +6,7 @@ import { ObjectDetailsPanel } from '../components/ObjectDetailsPanel';
 import { ModelStudio } from '../components/ModelStudio';
 import { SanitaryStudio } from '../components/SanitaryStudio';
 import { StormStudio } from '../components/StormStudio';
+import { WaterStudio } from '../components/WaterStudio';
 import { PlanCanvas, type ImportedBasePlan } from '../components/PlanCanvas';
 import { PlanUploadPanel } from '../components/PlanUploadPanel';
 import { RockCalculator } from '../components/RockCalculator';
@@ -30,6 +31,7 @@ import {
 } from '../lib/gradingPipeline';
 import { buildReadingSanitaryDraft, publishApprovedSanitaryPackage, type SanitaryDraft, type SanitaryReviewDecision } from '../lib/sanitaryPipeline';
 import { buildReadingStormDraft, publishApprovedStormPackage, type StormDraft, type StormReviewDecision } from '../lib/stormPipeline';
+import { buildReadingWaterDraft, publishApprovedWaterPackage, type WaterDraft, type WaterReviewDecision } from '../lib/waterPipeline';
 import { buildCalibration } from '../utils/calibration';
 import { bearingLabel, distanceFeet } from '../utils/distance';
 import { getCalibrationPoints, saveCalibrationPoints } from '../utils/storage';
@@ -56,6 +58,8 @@ export function FieldMapPage() {
   const [sanitaryStudioOpen, setSanitaryStudioOpen] = useState(false);
   const [stormDraft, setStormDraft] = useState<StormDraft | null>(null);
   const [stormStudioOpen, setStormStudioOpen] = useState(false);
+  const [waterDraft, setWaterDraft] = useState<WaterDraft | null>(null);
+  const [waterStudioOpen, setWaterStudioOpen] = useState(false);
   const [publishedPackage, setPublishedPackage] = useState<StoredSemanticPackage | null>(() => {
     try { return loadPublishedGradingPackage(localStorage); } catch { return null; }
   });
@@ -103,6 +107,7 @@ export function FieldMapPage() {
         setReviewDraft(buildReadingL21Draft(gradingGeometry, sourceSha256));
         setSanitaryDraft(buildReadingSanitaryDraft(sanitaryGeometry, sourceSha256));
         setStormDraft(buildReadingStormDraft(sanitaryGeometry, sourceSha256));
+        setWaterDraft(buildReadingWaterDraft(sanitaryGeometry, sourceSha256));
       } finally {
         await document.destroy();
       }
@@ -147,6 +152,16 @@ export function FieldMapPage() {
     setPublishedNotice(`Version ${published.packageVersion} · ${published.objects.filter((object) => object.layerId === 'storm').length} approved storm structures · offline ready`);
     setSelectedObjectId('');
   }, [publishedPackage, stormDraft]);
+
+  const publishWater = useCallback((decisions: WaterReviewDecision[]) => {
+    if (!waterDraft || publishedPackage?.packageVersion !== 'reading-public-library-grading-sanitary-storm-v3') return;
+    const published = publishApprovedWaterPackage(publishedPackage as import('../lib/stormPipeline').PublishedStormPackage, waterDraft, decisions, new Date().toISOString());
+    savePublishedGradingPackage(localStorage, published);
+    setPublishedPackage(published);
+    setLocalBasePlan(null); setReviewDraft(null); setSanitaryDraft(null); setStormDraft(null); setWaterDraft(null); setWaterStudioOpen(false);
+    setPublishedNotice(`Version ${published.packageVersion} · ${published.objects.filter((object) => object.layerId === 'water').length} approved water gates · offline ready`);
+    setSelectedObjectId('');
+  }, [publishedPackage, waterDraft]);
 
   // Filter objects by search query (ID or label)
   const searchResults = useMemo(() => {
@@ -294,7 +309,7 @@ export function FieldMapPage() {
           <span>Source PDF excluded from offline package</span>
         </div>
       )}
-      {reviewDraft && !modelStudioOpen && (
+      {reviewDraft && !publishedPackage && !modelStudioOpen && (
         <button type="button" className="model-studio-launch" onClick={() => setModelStudioOpen(true)}>
           Open Model Studio
         </button>
@@ -306,6 +321,9 @@ export function FieldMapPage() {
       )}
       {stormDraft && publishedPackage?.packageVersion === 'reading-public-library-grading-sanitary-v2' && !stormStudioOpen && (
         <button type="button" className="model-studio-launch model-studio-launch--storm" onClick={() => setStormStudioOpen(true)}>Open Storm Studio</button>
+      )}
+      {waterDraft && publishedPackage?.packageVersion === 'reading-public-library-grading-sanitary-storm-v3' && !waterStudioOpen && (
+        <button type="button" className="model-studio-launch model-studio-launch--water" onClick={() => setWaterStudioOpen(true)}>Open Water Studio</button>
       )}
 
       {/* ── Search overlay ── */}
@@ -464,6 +482,9 @@ export function FieldMapPage() {
       )}
       {stormStudioOpen && stormDraft && (
         <StormStudio draft={stormDraft} onClose={() => setStormStudioOpen(false)} onPublish={publishStorm} />
+      )}
+      {waterStudioOpen && waterDraft && (
+        <WaterStudio draft={waterDraft} onClose={() => setWaterStudioOpen(false)} onPublish={publishWater} />
       )}
     </div>
   );
