@@ -19,8 +19,15 @@ This reproducibly creates:
 
 - `~/Applications/Model Studio.app` — the generated application bundle;
 - `~/Desktop/Model Studio.app` — a symlink with the normal application icon;
-- `~/Library/Application Support/Model Studio/repository` — a stable link to
-  this repository.
+- `~/Library/Application Support/Model Studio/runtime` — installed copies of
+  the committed launcher and supervisor entrypoints; and
+- `~/Library/Application Support/Model Studio/repository-path` — the installer-
+  managed path to the authoritative repository.
+
+The applet executes the installed runtime from Application Support so macOS
+does not have to follow an executable symlink into Documents. The runtime gives
+pm2 the recorded repository path; project data and canonical source remain in
+the repository rather than being copied into the app.
 
 The generated app is intentionally ignored by git. Its AppleScript source,
 installer, launcher, service script, and pm2 ecosystem are committed.

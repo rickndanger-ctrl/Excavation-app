@@ -8,17 +8,22 @@ HEALTH_URL="${MODEL_STUDIO_HEALTH_URL:-http://127.0.0.1:8777/api/health}"
 ATTEMPTS="${MODEL_STUDIO_HEALTH_ATTEMPTS:-30}"
 DELAY_SECONDS="${MODEL_STUDIO_HEALTH_DELAY_SECONDS:-1}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SUPPORT_REPOSITORY="$HOME/Library/Application Support/Model Studio/repository"
+SUPPORT_DIR="$HOME/Library/Application Support/Model Studio"
+SUPPORT_REPOSITORY_PATH="$SUPPORT_DIR/repository-path"
 
 if [[ -n "${MODEL_STUDIO_REPOSITORY:-}" ]]; then
   REPOSITORY="$MODEL_STUDIO_REPOSITORY"
-elif [[ -e "$SUPPORT_REPOSITORY" ]]; then
-  REPOSITORY="$(cd "$SUPPORT_REPOSITORY" && pwd)"
+elif [[ -f "$SUPPORT_REPOSITORY_PATH" ]]; then
+  IFS= read -r REPOSITORY < "$SUPPORT_REPOSITORY_PATH"
 else
   REPOSITORY="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 
-ECOSYSTEM="$REPOSITORY/ops/model-studio-ecosystem.config.cjs"
+if [[ -f "$SCRIPT_DIR/model-studio-ecosystem.config.cjs" ]]; then
+  ECOSYSTEM="$SCRIPT_DIR/model-studio-ecosystem.config.cjs"
+else
+  ECOSYSTEM="$REPOSITORY/ops/model-studio-ecosystem.config.cjs"
+fi
 
 resolve_pm2() {
   if [[ -n "${MODEL_STUDIO_PM2_COMMAND:-}" && -x "$MODEL_STUDIO_PM2_COMMAND" ]]; then
@@ -85,7 +90,7 @@ PM2_COMMAND="$(resolve_pm2 || true)"
 PM2_RUNTIME_DIRECTORY="$(resolve_executable_directory "$PM2_COMMAND" || true)"
 [[ -n "$PM2_RUNTIME_DIRECTORY" ]] || fail "The pm2 runtime could not be resolved. $DISCLAIMER"
 
-if ! PATH="$PM2_RUNTIME_DIRECTORY:$PATH" "$PM2_COMMAND" start "$ECOSYSTEM" --only "$SERVICE_NAME" --update-env >/dev/null 2>&1; then
+if ! MODEL_STUDIO_REPOSITORY="$REPOSITORY" PATH="$PM2_RUNTIME_DIRECTORY:$PATH" "$PM2_COMMAND" start "$ECOSYSTEM" --only "$SERVICE_NAME" --update-env >/dev/null 2>&1; then
   fail "The supervised Model Studio service could not be started. Run 'pm2 logs $SERVICE_NAME' for details. $DISCLAIMER"
 fi
 

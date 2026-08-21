@@ -5,6 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPOSITORY="$(cd "$SCRIPT_DIR/.." && pwd)"
 SUPPORT_DIR="$HOME/Library/Application Support/Model Studio"
 REPOSITORY_LINK="$SUPPORT_DIR/repository"
+REPOSITORY_PATH="$SUPPORT_DIR/repository-path"
+RUNTIME_DIR="$SUPPORT_DIR/runtime"
 APPLICATIONS_DIR="${MODEL_STUDIO_APPLICATIONS_DIR:-$HOME/Applications}"
 DESKTOP_DIR="${MODEL_STUDIO_DESKTOP_DIR:-$HOME/Desktop}"
 TARGET_APP="$APPLICATIONS_DIR/Model Studio.app"
@@ -18,14 +20,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "$SUPPORT_DIR" "$APPLICATIONS_DIR" "$DESKTOP_DIR"
+mkdir -p "$SUPPORT_DIR" "$RUNTIME_DIR" "$APPLICATIONS_DIR" "$DESKTOP_DIR"
 STAGING_DIR="$(mktemp -d "$SUPPORT_DIR/.install.XXXXXX")"
 
-if [[ -e "$REPOSITORY_LINK" && ! -L "$REPOSITORY_LINK" ]]; then
-  echo "Cannot replace non-link path: $REPOSITORY_LINK" >&2
-  exit 1
+if [[ -L "$REPOSITORY_LINK" ]]; then
+  unlink "$REPOSITORY_LINK"
 fi
-ln -sfn "$REPOSITORY" "$REPOSITORY_LINK"
+printf '%s\n' "$REPOSITORY" > "$REPOSITORY_PATH"
+/bin/cp "$REPOSITORY/scripts/launch-model-studio.sh" "$RUNTIME_DIR/launch-model-studio.sh"
+/bin/cp "$REPOSITORY/scripts/run-model-studio-service.sh" "$RUNTIME_DIR/run-model-studio-service.sh"
+/bin/cp "$REPOSITORY/ops/model-studio-ecosystem.config.cjs" "$RUNTIME_DIR/model-studio-ecosystem.config.cjs"
+chmod 755 "$RUNTIME_DIR/launch-model-studio.sh" "$RUNTIME_DIR/run-model-studio-service.sh"
 
 /usr/bin/osacompile -o "$STAGING_DIR/Model Studio.app" "$REPOSITORY/macos/Model Studio.applescript"
 /usr/bin/plutil -replace CFBundleIdentifier -string "local.civil-plan-factory.model-studio" "$STAGING_DIR/Model Studio.app/Contents/Info.plist"

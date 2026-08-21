@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPOSITORY="${MODEL_STUDIO_REPOSITORY:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 HOST="${MODEL_STUDIO_HOST:-127.0.0.1}"
-PORT="${MODEL_STUDIO_PORT:-8765}"
+PORT="${MODEL_STUDIO_PORT:-8777}"
 
 if [[ -x "$REPOSITORY/work/venv/bin/python" ]]; then
   PYTHON="$REPOSITORY/work/venv/bin/python"

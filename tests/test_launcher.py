@@ -8,6 +8,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER = ROOT / "scripts/launch-model-studio.sh"
 INSTALLER = ROOT / "scripts/install-model-studio-app.sh"
+APPLESCRIPT = ROOT / "macos/Model Studio.applescript"
 
 
 class ModelStudioLauncherTests(unittest.TestCase):
@@ -169,14 +170,22 @@ class ModelStudioLauncherTests(unittest.TestCase):
 
             app = applications / "Model Studio.app"
             shortcut = desktop / "Model Studio.app"
-            repository_link = home / "Library/Application Support/Model Studio/repository"
+            support = home / "Library/Application Support/Model Studio"
+            runtime = support / "runtime"
             self.assertEqual(0, first.returncode, first.stderr)
             self.assertEqual(0, second.returncode, second.stderr)
             self.assertTrue((app / "Contents/MacOS/applet").is_file())
             self.assertTrue(shortcut.is_symlink())
             self.assertEqual(app.resolve(), shortcut.resolve())
-            self.assertTrue(repository_link.is_symlink())
-            self.assertEqual(ROOT, repository_link.resolve())
+            self.assertEqual(str(ROOT), (support / "repository-path").read_text().strip())
+            self.assertEqual(LAUNCHER.read_bytes(), (runtime / LAUNCHER.name).read_bytes())
+            self.assertTrue((runtime / "model-studio-ecosystem.config.cjs").is_file())
+            self.assertTrue((runtime / "run-model-studio-service.sh").is_file())
+
+    def test_applet_executes_installed_runtime_outside_documents(self):
+        source = APPLESCRIPT.read_text()
+        self.assertIn("Model Studio/runtime/launch-model-studio.sh", source)
+        self.assertNotIn("repository/scripts/launch-model-studio.sh", source)
 
 
 if __name__ == "__main__":
