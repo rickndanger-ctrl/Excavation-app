@@ -106,13 +106,20 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     from reportlab.lib.pagesizes import landscape, letter
     from reportlab.pdfgen import canvas
 
+    artifact = model.get("artifact_contract", {})
+    title = artifact.get("drawing_title", model["project"]["name"])
+    title_upper = title.upper()
+    footer_location = artifact.get("footer_location", model["project"].get("jurisdiction", "Controlled fictional site"))
+    site_id = artifact.get("site_boundary_feature_id", "property-site-boundary")
+    pad_id = artifact.get("pad_feature_id", "pad-apartment-1")
+    building_id = artifact.get("primary_building_feature_id", "building-apartment-1")
+    drawing_origin = artifact.get("drawing_origin", [186225.0, 98450.0])
     width, height = landscape(letter)
     total_pages = 12 if "grading_basis" in model else 10 if "dry_utility_basis" in model else 8 if "water_fire_basis" in model else 6
     drawing_left = 42.0
     drawing_bottom = 72.0
     scale = 72.0 / 50.0
-    min_x = 186225.0
-    min_y = 98450.0
+    min_x, min_y = drawing_origin
 
     def xy(point: list[float]) -> tuple[float, float]:
         return drawing_left + (point[0] - min_x) * scale, drawing_bottom + (point[1] - min_y) * scale
@@ -145,7 +152,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
 
     raw_path = output_path.with_suffix(".raw.pdf")
     pdf = canvas.Canvas(str(raw_path), pagesize=(width, height), invariant=1, pageCompression=0)
-    pdf.setTitle("Model Studio - Hilyard Civil Plan Set")
+    pdf.setTitle(f"Model Studio - {title} Civil Plan Set")
     pdf.setAuthor("Model Studio")
     pdf.setSubject(f"Canonical geometry SHA-256 {digest}")
 
@@ -154,7 +161,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawString(32, height - 27, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica-Bold", 15)
-    pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD SITE LAYOUT / BUILDING INTERFACES")
+    pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} SITE LAYOUT / BUILDING INTERFACES")
     pdf.setFont("Helvetica", 7)
     pdf.drawString(32, height - 61, "Product-development test data only - no survey, engineering, capacity, approval, or code-compliance claim")
 
@@ -216,17 +223,17 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.setFont("Helvetica", 6.5)
         pdf.drawCentredString(cx, cy, feature["id"])
 
-    site = polygon_by_id["property-site-boundary"]
+    site = polygon_by_id[site_id]
     pdf.setStrokeColor(colors.HexColor("#0f172a"))
     pdf.setLineWidth(1.8)
     path_ring(pdf, site["coordinates"], feature_id=site["id"], fill=0)
 
-    pad = polygon_by_id["pad-apartment-1"]
+    pad = polygon_by_id[pad_id]
     pdf.setFillColor(colors.HexColor("#d1d5db"))
     pdf.setStrokeColor(colors.HexColor("#4b5563"))
     pdf.setLineWidth(1.0)
     path_ring(pdf, pad["coordinates"], feature_id=pad["id"], fill=1)
-    building = polygon_by_id["building-apartment-1"]
+    building = polygon_by_id[building_id]
     pdf.setFillColor(colors.HexColor("#f8fafc"))
     pdf.setStrokeColor(colors.HexColor("#111827"))
     pdf.setLineWidth(2.0)
@@ -234,9 +241,13 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     cx, cy = xy(list(_centroid(building["coordinates"])))
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica-Bold", 4.8)
-    pdf.drawCentredString(cx, cy + 5, "building-apartment-1")
+    pdf.drawCentredString(cx, cy + 5, building_id)
     pdf.setFont("Helvetica", 5.5)
-    pdf.drawCentredString(cx, cy - 5, "45 FT x 90 FT / FFE 445.00 PROVISIONAL")
+    pdf.drawCentredString(
+        cx,
+        cy - 5,
+        artifact.get("building_annotation", "45 FT x 90 FT / FFE 445.00 PROVISIONAL"),
+    )
 
     for line in model["features"]["lines"]:
         mark_geometry(pdf, line["id"], "LineString", line["coordinates"], xy)
@@ -255,11 +266,11 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
 
     pdf.setFillColor(colors.HexColor("#9f1239"))
     pdf.setFont("Helvetica-Bold", 6.5)
-    pdf.drawCentredString(220, 78, "E 34TH AVENUE - ACCESS BASIS")
+    pdf.drawCentredString(220, 78, artifact.get("primary_access_label", "E 34TH AVENUE - ACCESS BASIS"))
     pdf.saveState()
     pdf.translate(324, 190)
     pdf.rotate(90)
-    pdf.drawCentredString(0, 0, "HILYARD STREET - NO DRIVEWAY")
+    pdf.drawCentredString(0, 0, artifact.get("secondary_frontage_label", "HILYARD STREET - NO DRIVEWAY"))
     pdf.restoreState()
 
     points = model["features"]["points"]
@@ -312,16 +323,16 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.setFont("Helvetica-Bold", 9)
     pdf.drawString(notes_x, 520, "BASIS / CONTROL")
     pdf.setFont("Helvetica", 7)
-    basis = [
+    basis = artifact.get("basis_notes", [
         "Horizontal: EPSG:6823, international feet",
-        "DRAWING GRID ORIGIN: E 186225.00 / N 98450.00",
+        f"DRAWING GRID ORIGIN: E {min_x:.2f} / N {min_y:.2f}",
         "Vertical: NAVD88 FT; project benchmark UNKNOWN",
         "City contours: NGVD29 +3.698 FT via NOAA VDatum",
         "Taxlots: City GIS reference-derived; NOT A SURVEY",
         "Replace taxlot geometry first when a boundary survey arrives",
         "Constraints: dimensioned/digitized reference geometry",
         "Utility routing is on discipline sheets; capacity/approval unknown",
-    ]
+    ])
     for offset, note in enumerate(basis):
         pdf.drawString(notes_x, 506 - offset * 11, note)
 
@@ -346,7 +357,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, f"Sheet MS-01 | Hilyard Street, Eugene, Oregon | Composite site context | Page 1 of {total_pages}")
+    pdf.drawString(32, 17, f"Sheet MS-01 | {footer_location} | Composite site context | Page 1 of {total_pages}")
     pdf.drawRightString(width - 32, 17, f"Geometry SHA-256: {digest[:20]}...")
     pdf.showPage()
 
@@ -375,7 +386,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawString(32, height - 27, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica-Bold", 15)
-    pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD SANITARY SEWER PLAN")
+    pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} SANITARY SEWER PLAN")
     pdf.setFont("Helvetica", 7)
     pdf.drawString(32, height - 61, "Reference GIS context plus reviewed-assumption fictional service; no survey, capacity, tie-in approval, or final grading claim")
 
@@ -504,7 +515,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawString(32, height - 27, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica-Bold", 15)
-    pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD SANITARY SEWER PROFILE")
+    pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} SANITARY SEWER PROFILE")
     pdf.setFont("Helvetica", 7)
     pdf.drawString(32, height - 61, "Stations follow penetration-sanitary to TI-1; all proposed vertical values are provisional test assumptions")
     pdf.setStrokeColor(colors.HexColor("#cbd5e1"))
@@ -630,7 +641,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawString(32, height - 27, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica-Bold", 15)
-    pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD STORM / ROOF DRAINAGE PLAN")
+    pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} STORM / ROOF DRAINAGE PLAN")
     pdf.setFont("Helvetica", 7)
     pdf.drawString(32, height - 61, "Roof-only fictional treatment/conveyance system; final grading, capacity, HGL, infiltration, outfall approval, and survey are unresolved")
 
@@ -754,7 +765,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawString(32, height - 27, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica-Bold", 15)
-    pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD STORM / ROOF DRAINAGE PROFILE")
+    pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} STORM / ROOF DRAINAGE PROFILE")
     pdf.setFont("Helvetica", 7)
     pdf.drawString(32, height - 61, "Stations run from permanent roof terminal through planter/flow control/drop manhole to assumed City tie; elevations are test-basis values")
     pdf.setStrokeColor(colors.HexColor("#cbd5e1"))
@@ -841,7 +852,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawString(32, height - 27, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica-Bold", 15)
-    pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD STORM ASSET SCHEDULE / TEST DETAILS")
+    pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} STORM ASSET SCHEDULE / TEST DETAILS")
     pdf.setFont("Helvetica", 7)
     pdf.drawString(32, height - 61, "Stable IDs, numeric test basis, field hold points, and explicit unknowns from the canonical semantic model")
     pdf.setFont("Helvetica-Bold", 8)
@@ -942,7 +953,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.drawString(32, height - 27, DISCLAIMER)
         pdf.setFillColor(colors.black)
         pdf.setFont("Helvetica-Bold", 15)
-        pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD DOMESTIC WATER / FIRE SERVICE PLAN")
+        pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} DOMESTIC WATER / FIRE SERVICE PLAN")
         pdf.setFont("Helvetica", 7)
         pdf.drawString(32, height - 61, "Separate fictional pressure networks from reference GIS context; no pressure, flow, capacity, hydrant-test, tie, meter, backflow, or Fire Marshal approval claim")
 
@@ -1061,7 +1072,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.drawString(32, height - 27, DISCLAIMER)
         pdf.setFillColor(colors.black)
         pdf.setFont("Helvetica-Bold", 14)
-        pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD WATER / FIRE SEPARATION SCHEDULE / TEST DETAILS")
+        pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} WATER / FIRE SEPARATION SCHEDULE / TEST DETAILS")
         pdf.setFont("Helvetica", 7)
         pdf.drawString(32, height - 61, "Stable pressure-network IDs, horizontal coordination checks, restraint notes, field workflow, and explicit hydraulic/approval unknowns")
         pdf.setFont("Helvetica-Bold", 8)
@@ -1173,7 +1184,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.drawString(32, height - 27, DISCLAIMER)
         pdf.setFillColor(colors.black)
         pdf.setFont("Helvetica-Bold", 15)
-        pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD DRY UTILITIES / JOINT TRENCH PLAN")
+        pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} DRY UTILITIES / JOINT TRENCH PLAN")
         pdf.setFont("Helvetica", 7)
         pdf.drawString(32, height - 61, "ALL PROPOSED DRY ROUTES ARE DASHED REVIEWED ASSUMPTIONS - NOT LOCATED UTILITIES OR OWNER-APPROVED DESIGNS")
 
@@ -1293,7 +1304,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.drawString(32, height - 27, DISCLAIMER)
         pdf.setFillColor(colors.black)
         pdf.setFont("Helvetica-Bold", 14)
-        pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD DRY UTILITY SCHEDULE / COORDINATION DETAILS")
+        pdf.drawString(32, height - 49, f"MODEL STUDIO - {title_upper} DRY UTILITY SCHEDULE / COORDINATION DETAILS")
         pdf.setFont("Helvetica", 7)
         pdf.drawString(32, height - 61, "Stable network IDs, joint-trench relationships, owner gates, field workflow, and explicit unresolved service inputs")
         pdf.setFont("Helvetica-Bold", 8)
@@ -1384,7 +1395,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
 
         # Sheet MS-11: reference and proposed grading surfaces.
         grading_header(
-            "MODEL STUDIO - HILYARD GRADING / DRAINAGE PLAN",
+            f"MODEL STUDIO - {title_upper} GRADING / DRAINAGE PLAN",
             "City 1999 reference contours explicitly converted NGVD29 to NAVD88; proposed grading is a fictional reviewed assumption",
         )
         pdf.saveState()
@@ -1512,7 +1523,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
 
         # Sheet MS-12: screening earthwork and temporary site preparation.
         grading_header(
-            "MODEL STUDIO - HILYARD EARTHWORK / SITE PREPARATION PLAN",
+            f"MODEL STUDIO - {title_upper} EARTHWORK / SITE PREPARATION PLAN",
             "Screening-only cut/fill and temporary construction geometry; no survey-to-surface volumes or approved erosion-control plan",
         )
         pdf.saveState()
@@ -1678,7 +1689,11 @@ def verify_parity(
         mismatches.append({"artifact": "pdf", "reason": "geometry_digest"})
     if not vector_paths or image_count:
         mismatches.append({"artifact": "pdf", "reason": "not_vector_only"})
-    for feature_id in ("building-apartment-1", "constraint-wetland", "penetration-sanitary"):
+    parity_text_ids = model.get("artifact_contract", {}).get(
+        "parity_text_feature_ids",
+        ["building-apartment-1", "constraint-wetland", "penetration-sanitary"],
+    )
+    for feature_id in parity_text_ids:
         if feature_id not in text:
             mismatches.append({"artifact": "pdf", "id": feature_id, "reason": "text_not_extractable"})
 
@@ -1747,10 +1762,11 @@ def build_project(model: dict[str, Any], output_dir: Path, qgis_app: Path) -> in
     if errors:
         return 1
 
+    artifact_basename = model.get("artifact_contract", {}).get("basename", "hilyard-site-layout")
     semantic = build_semantic_manifest(model)
     semantic_path = output_dir / "semantic-manifest.json"
-    gpkg_path = output_dir / "hilyard-site-layout.gpkg"
-    pdf_path = output_dir / "hilyard-site-layout.pdf"
+    gpkg_path = output_dir / f"{artifact_basename}.gpkg"
+    pdf_path = output_dir / f"{artifact_basename}.pdf"
     _write_json(semantic_path, semantic)
     create_geopackage(model, gpkg_path, qgis_app)
     digest = geometry_digest(model)

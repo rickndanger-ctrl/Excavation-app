@@ -62,6 +62,45 @@ def _slugify(value: str) -> str:
     return slug or "source"
 
 
+def _readiness_inventory(issues: list[dict[str, Any]]) -> dict[str, Any]:
+    definitions = {
+        "spatial_basis": (
+            {"crs.missing", "datum.missing", "units.missing"},
+            "Establish the source-backed CRS, units, vertical datum, benchmark, and transformations in the authoritative model.",
+        ),
+        "system_coverage": (
+            {"coverage.missing_system", "interface.missing_system"},
+            "Model each required civil system and its building/field interfaces, or explicitly preserve it as unavailable with a reason.",
+        ),
+        "source_integrity": (
+            {"source.lock_unreadable", "source.lock_mismatch", "source.reference_missing"},
+            "Repair the cited source and checksum lock without changing its provenance category.",
+        ),
+        "canonical_model": (
+            set(),
+            "Correct the authoritative semantic model and rerun canonical validation; review notes cannot clear this gate.",
+        ),
+    }
+    grouped: dict[str, dict[str, Any]] = {}
+    assigned: set[int] = set()
+    for name, (codes, action) in definitions.items():
+        indexes = [index for index, issue in enumerate(issues) if issue.get("code") in codes]
+        if name == "canonical_model":
+            indexes = [index for index in range(len(issues)) if index not in assigned]
+        if indexes:
+            assigned.update(indexes)
+            grouped[name] = {
+                "blocker_count": len(indexes),
+                "codes": sorted({issues[index].get("code", "unknown") for index in indexes}),
+                "next_action": action,
+            }
+    return {
+        "status": "blocked" if issues else "validation_clear",
+        "blocker_count": len(issues),
+        "groups": grouped,
+    }
+
+
 class StudioWorkspace:
     """Filesystem-backed workflow facade for one local Model Studio repository."""
 
@@ -164,6 +203,12 @@ class StudioWorkspace:
         ]
         project = (model or {}).get("project", {})
         directory = self._project_dir(slug)
+        current_fingerprint = self._fingerprint(slug)
+        runs = [
+            {**run, "is_current": run.get("project_fingerprint") == current_fingerprint}
+            for run in self.list_runs(slug)
+        ]
+        current_run = next((run for run in runs if run["is_current"]), None)
         result: dict[str, Any] = {
             "slug": slug,
             "project_id": project.get("id", slug),
@@ -172,11 +217,13 @@ class StudioWorkspace:
             "disclaimer": project.get("disclaimer", DISCLAIMER),
             "validation_status": "invalid" if raw_issues else "valid",
             "issue_count": len(raw_issues),
+            "readiness_inventory": _readiness_inventory(raw_issues),
             "provenance": self._provenance_summary(model),
             "input_count": len(list((directory / "inputs").glob("*"))) if (directory / "inputs").exists() else 0,
             "project_file": str(directory / "project.json"),
             "cleared_reviews": cleared_reviews,
-            "runs": self.list_runs(slug),
+            "runs": runs,
+            "current_run": current_run,
         }
         if include_issues:
             result["issues"] = issues
@@ -320,12 +367,16 @@ class StudioWorkspace:
         if not root.exists():
             return []
         runs = []
-        for path in sorted(root.glob("*/run.json"), reverse=True):
+        for path in root.glob("*/run.json"):
             try:
                 runs.append(_read_json(path))
             except (OSError, ValueError, json.JSONDecodeError):
                 continue
-        return runs
+        return sorted(
+            runs,
+            key=lambda run: (run.get("completed_at") or run.get("started_at") or "", run.get("run_id", "")),
+            reverse=True,
+        )
 
     def run_project(self, slug: str) -> dict[str, Any]:
         project_file = self._project_file(slug)

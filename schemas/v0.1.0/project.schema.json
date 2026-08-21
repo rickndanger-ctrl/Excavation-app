@@ -7,6 +7,27 @@
   "properties": {
     "schema_version": {"const": "civil-plan-factory.project/v0.1.0"},
     "project": {"type": "object", "required": ["id", "name", "revision", "jurisdiction", "disclaimer"]},
+    "artifact_contract": {
+      "type": "object",
+      "required": ["basename"],
+      "properties": {
+        "basename": {"type": "string", "pattern": "^[a-z][a-z0-9-]+$"},
+        "plan_width_ft": {"type": "number", "exclusiveMinimum": 0},
+        "plan_height_ft": {"type": "number", "exclusiveMinimum": 0},
+        "coordinate_basis": {"type": "string"},
+        "drawing_title": {"type": "string"},
+        "footer_location": {"type": "string"},
+        "site_boundary_feature_id": {"type": "string"},
+        "pad_feature_id": {"type": "string"},
+        "primary_building_feature_id": {"type": "string"},
+        "parity_text_feature_ids": {"type": "array", "items": {"type": "string"}},
+        "drawing_origin": {"type": "array", "prefixItems": [{"type": "number"}, {"type": "number"}], "minItems": 2, "maxItems": 2},
+        "primary_access_label": {"type": "string"},
+        "secondary_frontage_label": {"type": "string"},
+        "building_annotation": {"type": "string"},
+        "basis_notes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
     "spatial_reference": {"$ref": "canonical.schema.json#/$defs/spatial_reference"},
     "features": {"$ref": "canonical.schema.json#/$defs/feature_collections"},
     "networks": {"type": "array", "items": {"$ref": "canonical.schema.json#/$defs/network"}},

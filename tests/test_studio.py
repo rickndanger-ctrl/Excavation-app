@@ -86,6 +86,62 @@ class ModelStudioModuleTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "validated run"):
                 workspace.publish("oak-street", "not-a-run")
 
+    def test_incomplete_intake_exposes_grouped_actionable_readiness_inventory(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            workspace.create_project("Phoenix Public Plan Intake", "phoenix-intake")
+
+            detail = workspace.project_detail("phoenix-intake")
+
+            inventory = detail["readiness_inventory"]
+            self.assertEqual("blocked", inventory["status"])
+            self.assertEqual(detail["issue_count"], inventory["blocker_count"])
+            self.assertIn("spatial_basis", inventory["groups"])
+            self.assertIn("system_coverage", inventory["groups"])
+            self.assertTrue(all(group["next_action"] for group in inventory["groups"].values()))
+
+    def test_runs_are_ordered_by_completion_time_not_content_address(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            workspace.create_project("Run Ordering", "run-ordering")
+            runs = Path(state) / "runs/run-ordering"
+            for run_id, completed_at in (
+                ("z-old-content-id", "2026-08-21T10:00:00Z"),
+                ("a-new-content-id", "2026-08-21T11:00:00Z"),
+            ):
+                path = runs / run_id
+                path.mkdir(parents=True)
+                (path / "run.json").write_text(json.dumps({
+                    "run_id": run_id,
+                    "completed_at": completed_at,
+                    "started_at": completed_at,
+                }))
+
+            listed = workspace.list_runs("run-ordering")
+
+            self.assertEqual(["a-new-content-id", "z-old-content-id"], [row["run_id"] for row in listed])
+
+    def test_completed_run_becomes_stale_when_authoritative_inputs_change(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            workspace.create_project("Stale Run Guard", "stale-run")
+            completed = workspace.run_project("stale-run")
+
+            before = workspace.project_detail("stale-run")
+            workspace.add_input("stale-run", "new-plan.pdf", b"%PDF-1.7\nchanged input\n%%EOF\n")
+            after = workspace.project_detail("stale-run")
+
+            self.assertEqual(completed["run_id"], before["current_run"]["run_id"])
+            self.assertTrue(before["runs"][0]["is_current"])
+            self.assertIsNone(after["current_run"])
+            self.assertFalse(after["runs"][0]["is_current"])
+
     def test_real_hilyard_run_publishes_a_content_addressed_field_map_handoff(self):
         with tempfile.TemporaryDirectory() as state:
             workspace = StudioWorkspace(REPOSITORY, state_root=Path(state))

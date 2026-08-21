@@ -34,8 +34,8 @@ class ModelStudioWebTests(unittest.TestCase):
         self.state_temp = tempfile.TemporaryDirectory()
         repository = Path(self.repository_temp.name)
         (repository / "projects").mkdir()
-        workspace = StudioWorkspace(repository, state_root=Path(self.state_temp.name))
-        self.server = create_server(workspace, host="127.0.0.1", port=0)
+        self.workspace = StudioWorkspace(repository, state_root=Path(self.state_temp.name))
+        self.server = create_server(self.workspace, host="127.0.0.1", port=0)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.base_url = f"http://127.0.0.1:{self.server.server_port}"
@@ -68,9 +68,12 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertEqual(200, status)
         self.assertIn(DISCLAIMER, html)
         self.assertIn("Publication readiness", html)
+        self.assertIn('id="readiness-groups"', html)
         self.assertIn("Run canonical pipeline", html)
         self.assertIn("data:image/svg+xml", html)
         self.assertIn("/api/projects", javascript)
+        self.assertIn("readiness_inventory", javascript)
+        self.assertIn("current_run", javascript)
         self.assertIn("--danger", stylesheet)
         self.assertIn("[hidden]", stylesheet)
 
@@ -109,6 +112,36 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertEqual("invalid", progress["result"]["status"])
         self.assertEqual("blocked", progress["result"]["publication_readiness"])
         self.assertEqual("reviewed_not_cleared", review["status"])
+
+    def test_operator_sees_latest_completion_when_content_ids_sort_the_other_way(self):
+        self.request(
+            "/api/projects", method="POST", payload={"name": "Run Ordering", "slug": "run-ordering"}
+        )
+        runs = Path(self.state_temp.name) / "runs/run-ordering"
+        fixtures = (
+            ("z-old-content-id", "2026-08-21T10:00:00Z", "invalid"),
+            ("a-new-content-id", "2026-08-21T11:00:00Z", "valid"),
+        )
+        current_fingerprint = self.workspace._fingerprint("run-ordering")
+        for run_id, completed_at, status in fixtures:
+            path = runs / run_id
+            path.mkdir(parents=True)
+            (path / "run.json").write_text(json.dumps({
+                "run_id": run_id,
+                "started_at": completed_at,
+                "completed_at": completed_at,
+                "status": status,
+                "publication_readiness": "ready" if status == "valid" else "blocked",
+                "project_fingerprint": current_fingerprint,
+            }))
+
+        _, detail = self.request("/api/projects/run-ordering")
+
+        self.assertEqual("a-new-content-id", detail["runs"][0]["run_id"])
+        self.assertEqual("valid", detail["runs"][0]["status"])
+        self.assertEqual("z-old-content-id", detail["runs"][1]["run_id"])
+        self.assertEqual("invalid", detail["runs"][1]["status"])
+        self.assertEqual("a-new-content-id", detail["current_run"]["run_id"])
 
     def test_unknown_routes_and_failed_publish_return_json_errors(self):
         with self.assertRaises(HTTPError) as missing:

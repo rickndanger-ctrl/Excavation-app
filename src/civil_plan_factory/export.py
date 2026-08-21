@@ -4,6 +4,7 @@ from .validation import DISCLAIMER
 
 
 def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
+    artifact = model.get("artifact_contract", {})
     unavailable = [
         {
             "system": row["system"],
@@ -115,10 +116,13 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         "disclaimer": DISCLAIMER,
         "plan": {
             "availability": "generated_vector_pdf",
-            "imageUrl": "hilyard-site-layout.pdf",
-            "widthFt": 178.59,
-            "heightFt": 291.97,
-            "coordinateBasis": "EPSG:6823 reference-derived site geometry; not surveyed",
+            "imageUrl": f"{artifact.get('basename', 'hilyard-site-layout')}.pdf",
+            "widthFt": artifact.get("plan_width_ft", 178.59),
+            "heightFt": artifact.get("plan_height_ft", 291.97),
+            "coordinateBasis": artifact.get(
+                "coordinate_basis",
+                "EPSG:6823 reference-derived site geometry; not surveyed",
+            ),
         },
         "phases": model["phases"],
         "layers": model["layers"],

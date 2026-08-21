@@ -37,6 +37,25 @@ class SemanticExportTests(unittest.TestCase):
         self.assertGreater(len(semantic["unavailable"]), 0)
         self.assertNotIn("sheet_count", semantic)
 
+    def test_semantic_package_uses_the_project_artifact_contract(self):
+        model = load_project_bundle(PROJECT)
+        model["artifact_contract"] = {
+            "basename": "cascade-commerce-site",
+            "plan_width_ft": 260.0,
+            "plan_height_ft": 210.0,
+            "coordinate_basis": "Controlled fictional local grid; not surveyed",
+        }
+
+        semantic = build_semantic_manifest(model)
+
+        self.assertEqual("cascade-commerce-site.pdf", semantic["plan"]["imageUrl"])
+        self.assertEqual(260.0, semantic["plan"]["widthFt"])
+        self.assertEqual(210.0, semantic["plan"]["heightFt"])
+        self.assertEqual(
+            "Controlled fictional local grid; not surveyed",
+            semantic["plan"]["coordinateBasis"],
+        )
+
     def test_cli_writes_deterministic_semantic_manifest_and_validation_report(self):
         with tempfile.TemporaryDirectory() as first, tempfile.TemporaryDirectory() as second:
             commands = []

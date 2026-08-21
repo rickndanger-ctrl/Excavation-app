@@ -65,6 +65,13 @@ Field Map consumer uses local file import: choose the published
 reported as `not_configured`; the console does not fabricate a remote endpoint
 or credentials.
 
+The workflow is now exercised against an independent public Phoenix plan-set
+intake (which correctly remains blocked), a third Park Drive intake, and the
+publishable controlled commercial `cascade-commerce` fixture. See
+[`docs/model-studio-repeatability.md`](docs/model-studio-repeatability.md) for
+source checksums, timings, manual interventions, blockers, and the read-only
+Field Map contract result.
+
 Console run state and publications live under `.model-studio/` and are ignored
 by git. For persistent unattended use, run the command under a local process
 supervisor such as pm2. A foreground launch is appropriate for an operator
@@ -149,6 +156,8 @@ later utility-network endpoint references.
 ## Repository layout
 
 - `projects/hilyard/` — frozen project, source lock, and decision ledger
+- `projects/cascade-commerce/` — controlled commercial canonical regression site
+- `docs/model-studio-repeatability.md` — independent-source and controlled-site proof record
 - `schemas/v0.1.0/` — versioned project, canonical geometry/network, ledger, and app-adapter contracts
 - `src/civil_plan_factory/` — Model Studio loader, validators, exporter, and CLI
 - `tests/` — behavior and integration tests
