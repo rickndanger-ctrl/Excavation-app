@@ -35,18 +35,19 @@ model-studio validate projects/hilyard/project.json --output-dir outputs/hilyard
 ```
 
 The `validate` command emits a deterministic semantic package and validation
-report. The current coordinated site/sanitary slice is generated with:
+report. The current coordinated site/sanitary/storm slice is generated with:
 
 ```bash
 model-studio build projects/hilyard/project.json \
-  --output-dir outputs/hilyard-sanitary
+  --output-dir outputs/hilyard-storm
 ```
 
-This produces a three-page, vector-only PDF (composite context, sanitary plan,
-and sanitary profile), a true-geometry GeoPackage, the semantic Excavation
-Field Map package, and validation/parity reports from one canonical model. The
-parity report decodes geometry markers from the actual PDF content stream and
-compares them with geometry read back from the GeoPackage.
+This produces a six-page, vector-only PDF (composite context, sanitary plan and
+profile, storm/roof plan and profile, and storm schedule/test details), a
+true-geometry GeoPackage, the semantic Excavation Field Map package, and
+validation/parity reports from one canonical model. The parity report decodes
+geometry markers from the actual PDF content stream and compares them with
+geometry read back from the GeoPackage, including canonical surface polygons.
 
 The sanitary service is a known-answer fictional design: two 6-inch PVC SDR35
 segments at 1.00% connect the permanent building terminal through a two-way
@@ -54,8 +55,19 @@ cleanout to an explicitly assumed connection on City GIS public main
 `UNIQUE_ID 4589`. City GIS alignment, rims, and inverts are reference-derived;
 the building FFE, extrapolated surface, service inverts, and tie are reviewed
 assumptions. Project survey, final grading, capacity, tie-in approval, and
-utility-owner acceptance remain unresolved. No storm, water, fire, dry-utility,
-full-grading, or cut/fill design is included.
+utility-owner acceptance remain unresolved.
+
+The storm slice connects two reviewed-assumption roof leaders through the
+permanent roof-drainage terminal to a lined 400-square-foot planter, flow
+control, external-drop site manhole, and an assumed connection at City GIS
+storm main `UNIQUE_ID 4183`. The 4,050-square-foot roof uses a conservative
+runoff coefficient of 1.00. The 1.4-inch water-quality volume is 472.50 cubic
+feet; the unrouted 4.46-inch 10-year roof-volume screen is 1,505.25 cubic feet.
+The planter's declared 500-cubic-foot surface storage passes only the simple
+water-quality volume screen. No routed hydrograph, capacity/HGL, infiltration
+credit, approved outfall, final grading, survey authority, or permit-compliance
+claim is made. Water, fire, dry utilities, full grading, and cut/fill remain out
+of scope.
 
 The four City GIS taxlots are explicitly reference-derived and not survey
 authority. They are the first geometry to replace when a real boundary survey
@@ -98,7 +110,11 @@ The next implementation slice begins only after this foundation is committed:
    and actual artifact geometry. This is implemented for the sanitary slice.
 5. Add grading/site preparation, proposed contours, and cut/fill later. Sanitary
    cannot be called valid without its supporting elevation/cover envelope.
-6. Sequence remaining systems by dependency and conflict risk, not convenience.
+6. The storm/roof-drainage slice now follows sanitary. It validates gravity,
+   cover, structure drops, permanent-terminal connectivity, and a modeled
+   storm-below-sanitary crossing while keeping capacity/HGL, infiltration,
+   outfall approval, survey, and final grading explicitly unresolved.
+7. Sequence remaining systems by dependency and conflict risk, not convenience.
 
 ## Planned closed-loop proof
 

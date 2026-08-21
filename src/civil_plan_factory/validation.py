@@ -331,4 +331,77 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
                 for key in ("length_ft", "upstream_invert_ft", "downstream_invert_ft"):
                     if not math.isclose(float(segment.get(key, float("nan"))), float(detail.get(key, float("inf"))), abs_tol=1e-6):
                         issues.append(_issue("profile.model_mismatch", f"deliverables.profiles[{profile_index}].segments[{segment_index}].{key}", "Profile ordinate differs from its canonical network edge"))
+
+    storm = next((row for row in model.get("networks", []) if row.get("system") == "storm"), None)
+    if storm and storm.get("edges"):
+        storm_edges = {row["id"]: row for row in storm["edges"]}
+        for edge_index, edge in enumerate(storm["edges"]):
+            detail = edge.get("field_detail", {})
+            path = f"networks.{storm['id']}.edges[{edge_index}].field_detail"
+            upstream = detail.get("upstream_invert_ft")
+            downstream = detail.get("downstream_invert_ft")
+            if not (_finite_coordinate(upstream) and _finite_coordinate(downstream)) or upstream <= downstream:
+                issues.append(_issue("storm.flow_not_downhill", path, "Gravity edge invert must fall in its downstream direction"))
+            slope = detail.get("slope_percent")
+            minimum_slope = detail.get("minimum_slope_percent")
+            if _finite_coordinate(slope) and _finite_coordinate(minimum_slope) and slope + 1e-9 < minimum_slope:
+                issues.append(_issue("storm.slope_below_min", path, "Gravity edge slope is below its declared minimum"))
+            if detail.get("validation_scope") != "reference_context":
+                samples = detail.get("cover_samples_ft", [])
+                minimum_cover = detail.get("minimum_cover_ft")
+                if not samples or not _finite_coordinate(minimum_cover) or min(samples) + 1e-9 < minimum_cover:
+                    issues.append(_issue("storm.cover_below_min", path, "Proposed gravity edge violates its minimum cover envelope"))
+        for node_index, node in enumerate(storm.get("nodes", [])):
+            detail = node.get("field_detail", {})
+            if detail.get("structure_drop_rule_applies"):
+                drop = detail.get("connection_drop_ft")
+                minimum = detail.get("minimum_drop_ft", 0.1)
+                maximum = detail.get("maximum_internal_drop_ft")
+                if not _finite_coordinate(drop) or drop + 1e-9 < minimum or (
+                    _finite_coordinate(maximum) and drop > maximum + 1e-9
+                ):
+                    issues.append(_issue(
+                        "storm.structure_drop_invalid",
+                        f"networks.{storm['id']}.nodes[{node_index}].field_detail.connection_drop_ft",
+                        "Structure connection drop is outside its declared internal-drop envelope",
+                    ))
+                if detail.get("owner_approval_status") != "unknown" or detail.get("capacity_status") != "unknown":
+                    issues.append(_issue(
+                        "storm.unresolved_assumption_missing",
+                        f"networks.{storm['id']}.nodes[{node_index}].field_detail",
+                        "Assumed storm structure must preserve unknown approval and capacity status",
+                    ))
+        for profile_index, profile in enumerate(model.get("deliverables", {}).get("profiles", [])):
+            if profile.get("id") != "profile-storm-roof-to-public":
+                continue
+            for segment_index, segment in enumerate(profile.get("segments", [])):
+                edge = storm_edges.get(segment.get("edge_id"))
+                if edge is None:
+                    issues.append(_issue("profile.model_mismatch", f"deliverables.profiles[{profile_index}].segments[{segment_index}]", "Profile edge is unresolved"))
+                    continue
+                detail = edge.get("field_detail", {})
+                for key in ("length_ft", "upstream_invert_ft", "downstream_invert_ft"):
+                    if not math.isclose(float(segment.get(key, float("nan"))), float(detail.get(key, float("inf"))), abs_tol=1e-6):
+                        issues.append(_issue("profile.model_mismatch", f"deliverables.profiles[{profile_index}].segments[{segment_index}].{key}", "Profile ordinate differs from its canonical network edge"))
+
+    roof = next((row for row in model.get("networks", []) if row.get("system") == "roof_drainage"), None)
+    if roof is not None:
+        terminal = next((row for row in roof.get("nodes", []) if row.get("geometry_feature_id") == "penetration-roof-drainage"), None)
+        connected = terminal is not None and any(
+            edge.get("to_node_id") == terminal.get("id") for edge in roof.get("edges", [])
+        )
+        if not connected:
+            issues.append(_issue("roof_drainage.terminal_disconnected", "networks.network-roof-drainage", "Roof leaders must resolve to the permanent building terminal"))
+
+    for relationship_id, relationship in model.get("relationships", {}).items():
+        if relationship.get("relationship_type") != "utility_crossing":
+            continue
+        clearance = relationship.get("clearance_ft")
+        minimum = relationship.get("minimum_clearance_ft")
+        if not (_finite_coordinate(clearance) and _finite_coordinate(minimum)) or clearance + 1e-9 < minimum:
+            issues.append(_issue(
+                "utility.crossing_clearance_below_min",
+                f"relationships.{relationship_id}.clearance_ft",
+                "Utility crossing clearance is below its declared reviewed minimum",
+            ))
     return sorted(issues)

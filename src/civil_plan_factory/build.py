@@ -49,7 +49,8 @@ def _geojson_collection(features: list[dict[str, Any]], geometry_type: str) -> d
             "decision_ids": json.dumps(feature["provenance"].get("decision_ids", []), separators=(",", ":")),
             "field_detail": json.dumps(feature.get("field_detail", {}), sort_keys=True, separators=(",", ":")),
         }
-        coordinates = [feature["coordinates"]] if geometry_type == "Polygon" else feature["coordinates"]
+        canonical_coordinates = feature.get("coordinates") or feature.get("boundary")
+        coordinates = [canonical_coordinates] if geometry_type == "Polygon" else canonical_coordinates
         rows.append({
             "type": "Feature",
             "geometry": {"type": geometry_type, "coordinates": coordinates},
@@ -73,6 +74,7 @@ def create_geopackage(model: dict[str, Any], output_path: Path, qgis_app: Path) 
         ("points", "Point", "canonical_points"),
         ("lines", "LineString", "canonical_lines"),
         ("polygons", "Polygon", "canonical_polygons"),
+        ("surfaces", "Polygon", "canonical_surfaces"),
     )
     with tempfile.TemporaryDirectory() as directory:
         temp = Path(directory)
@@ -103,7 +105,6 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import landscape, letter
     from reportlab.pdfgen import canvas
-    from pypdf import PdfReader, PdfWriter
 
     width, height = landscape(letter)
     drawing_left = 42.0
@@ -143,7 +144,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
 
     raw_path = output_path.with_suffix(".raw.pdf")
     pdf = canvas.Canvas(str(raw_path), pagesize=(width, height), invariant=1, pageCompression=0)
-    pdf.setTitle("Model Studio - Hilyard Site Layout")
+    pdf.setTitle("Model Studio - Hilyard Civil Plan Set / Sanitary and Storm Drainage")
     pdf.setAuthor("Model Studio")
     pdf.setSubject(f"Canonical geometry SHA-256 {digest}")
 
@@ -159,6 +160,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     polygon_by_id = {feature["id"]: feature for feature in model["features"]["polygons"]}
     taxlots = [feature for feature in model["features"]["polygons"] if feature["feature_type"] == "taxlot"]
     constraints = [feature for feature in model["features"]["polygons"] if feature["id"].startswith("constraint-")]
+    storm_polygons = [feature for feature in model["features"]["polygons"] if feature.get("system") == "storm"]
 
     constraint_colors = {
         "constraint-row-dedication": colors.HexColor("#fca5a5"),
@@ -173,6 +175,22 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.setStrokeColor(colors.HexColor("#475569"))
         pdf.setLineWidth(0.8)
         path_ring(pdf, feature["coordinates"], feature_id=feature["id"], fill=1)
+        pdf.restoreState()
+
+    for feature in storm_polygons:
+        pdf.saveState()
+        pdf.setFillColor(colors.HexColor("#bfdbfe"))
+        pdf.setStrokeColor(colors.HexColor("#0369a1"))
+        pdf.setLineWidth(0.8)
+        path_ring(pdf, feature["coordinates"], feature_id=feature["id"], fill=1)
+        pdf.restoreState()
+
+    for surface in model["features"]["surfaces"]:
+        pdf.saveState()
+        pdf.setDash(2, 2)
+        pdf.setStrokeColor(colors.HexColor("#166534"))
+        pdf.setLineWidth(0.25)
+        path_ring(pdf, surface["boundary"], feature_id=surface["id"], fill=0)
         pdf.restoreState()
 
     pdf.setFillColor(colors.white)
@@ -306,7 +324,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, "Sheet MS-01 | Hilyard Street, Eugene, Oregon | Composite site context | Page 1 of 3")
+    pdf.drawString(32, 17, "Sheet MS-01 | Hilyard Street, Eugene, Oregon | Composite site context | Page 1 of 6")
     pdf.drawRightString(width - 32, 17, f"Geometry SHA-256: {digest[:20]}...")
     pdf.showPage()
 
@@ -320,9 +338,11 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     def plan_path(coordinates, *, close=False, fill=0):
         path = pdf.beginPath()
         x, y = plan_xy(coordinates[0])
+        x, y = min(max(x, 40), 530), min(max(y, 72), 530)
         path.moveTo(x, y)
         for point in coordinates[1:]:
             x, y = plan_xy(point)
+            x, y = min(max(x, 40), 530), min(max(y, 72), 530)
             path.lineTo(x, y)
         if close:
             path.close()
@@ -340,7 +360,6 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     for feature in constraints:
         pdf.saveState()
         pdf.setFillColor(constraint_colors[feature["id"]])
-        pdf.setFillAlpha(0.25)
         pdf.setStrokeColor(colors.HexColor("#94a3b8"))
         pdf.setLineWidth(0.4)
         plan_path(feature["coordinates"], close=True, fill=1)
@@ -399,7 +418,6 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica-Bold", 5.5)
     pdf.drawString(x + 5, y + 3, "TERMINAL / INV 439.70")
-
     pdf.setFont("Helvetica-Bold", 8)
     notes_x = 550
     pdf.drawString(notes_x, 515, "SANITARY BASIS")
@@ -447,7 +465,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, "Sheet MS-02 | Sanitary sewer plan | 1 IN = 40 FT | EPSG:6823 / NAVD88 FT | Page 2 of 3")
+    pdf.drawString(32, 17, "Sheet MS-02 | Sanitary sewer plan | 1 IN = 40 FT | EPSG:6823 / NAVD88 FT | Page 2 of 6")
     pdf.drawRightString(width - 32, 17, "Reference/main geometry is not survey or capacity authority")
     pdf.showPage()
 
@@ -563,21 +581,320 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, "Sheet MS-03 | Sanitary sewer profile | H 1 IN = 12 FT / V 1 IN = 1.71 FT | NAVD88 FT | Page 3 of 3")
+    pdf.drawString(32, 17, "Sheet MS-03 | Sanitary sewer profile | H 1 IN = 12 FT / V 1 IN = 1.71 FT | NAVD88 FT | Page 3 of 6")
     pdf.drawRightString(width - 32, 17, "Tie, FFE, surface, capacity, and owner acceptance unresolved")
     pdf.showPage()
-    pdf.save()
 
-    reader = PdfReader(raw_path)
-    writer = PdfWriter(clone_from=reader)
-    writer.add_metadata({
-        "/Title": "Model Studio - Hilyard Civil Plan Set / Sanitary Sewer",
-        "/ModelStudioGeometrySHA256": digest,
-        "/ModelStudioDisclaimer": DISCLAIMER,
-    })
-    with output_path.open("wb") as stream:
-        writer.write(stream)
-    raw_path.unlink()
+    # Sheet MS-04: storm and roof-drainage plan.
+    storm_left, storm_bottom, storm_scale = 42.0, 82.0, 2.75
+    storm_min_x, storm_min_y = 186300.0, 98480.0
+
+    def storm_xy(point):
+        return storm_left + (point[0] - storm_min_x) * storm_scale, storm_bottom + (point[1] - storm_min_y) * storm_scale
+
+    def storm_path(coordinates, *, close=False, fill=0):
+        path = pdf.beginPath()
+        x, y = storm_xy(coordinates[0])
+        path.moveTo(x, y)
+        for point in coordinates[1:]:
+            x, y = storm_xy(point)
+            path.lineTo(x, y)
+        if close:
+            path.close()
+        pdf.drawPath(path, fill=fill, stroke=1)
+
+    pdf.setFillColor(colors.HexColor("#991b1b"))
+    pdf.setFont("Helvetica-Bold", 13)
+    pdf.drawString(32, height - 27, DISCLAIMER)
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica-Bold", 15)
+    pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD STORM / ROOF DRAINAGE PLAN")
+    pdf.setFont("Helvetica", 7)
+    pdf.drawString(32, height - 61, "Roof-only fictional treatment/conveyance system; final grading, capacity, HGL, infiltration, outfall approval, and survey are unresolved")
+
+    pdf.setFillColor(colors.HexColor("#f8fafc"))
+    pdf.setStrokeColor(colors.HexColor("#475569"))
+    pdf.setLineWidth(0.8)
+    storm_path(pad["coordinates"], close=True, fill=1)
+    pdf.setFillColor(colors.white)
+    pdf.setStrokeColor(colors.black)
+    pdf.setLineWidth(1.5)
+    storm_path(building["coordinates"], close=True, fill=1)
+    planter = polygon_by_id["storm-planter-01"]
+    pdf.setFillColor(colors.HexColor("#bae6fd"))
+    pdf.setStrokeColor(colors.HexColor("#0369a1"))
+    pdf.setLineWidth(1.2)
+    storm_path(planter["coordinates"], close=True, fill=1)
+    planter_x, planter_y = storm_xy(list(_centroid(planter["coordinates"])))
+    pdf.setFillColor(colors.HexColor("#0c4a6e"))
+    pdf.setFont("Helvetica-Bold", 6)
+    pdf.drawCentredString(planter_x, planter_y + 3, "LINED PLANTER")
+    pdf.drawCentredString(planter_x, planter_y - 6, "400 SF / 500 CF DECLARED")
+
+    storm_lines = [row for row in model["features"]["lines"] if row.get("system") in {"storm", "roof_drainage"}]
+    for feature in storm_lines:
+        public = feature["id"] == "storm-public-main-4183"
+        roof = feature.get("system") == "roof_drainage"
+        pdf.setStrokeColor(colors.HexColor("#7e22ce") if public else colors.HexColor("#0284c7") if roof else colors.HexColor("#0369a1"))
+        pdf.setLineWidth(2.6 if public else 2.0)
+        display_coordinates = feature["coordinates"]
+        if public:
+            start, end = feature["coordinates"]
+            fraction = (98630.0 - start[1]) / (end[1] - start[1])
+            display_coordinates = [start, [start[0] + fraction * (end[0] - start[0]), 98630.0]]
+        if feature["id"] == "storm-planter-underdrain-01":
+            pdf.saveState()
+            pdf.setDash(3, 2)
+            storm_path(display_coordinates)
+            pdf.restoreState()
+        else:
+            storm_path(display_coordinates)
+
+    storm_point_ids = {
+        "roof-leader-north-01": "RL-N", "roof-leader-south-01": "RL-S",
+        "storm-junction-roof-01": "J-1", "storm-planter-inlet-01": "PI-1",
+        "storm-flow-control-01": "FC-1", "storm-site-drop-mh-01": "DMH-1",
+        "storm-public-mh-51800": "CITY MH 51800", "storm-public-node-51759": "CITY 51759",
+    }
+    for feature in points:
+        if feature["id"] not in storm_point_ids and feature["id"] != "penetration-roof-drainage":
+            continue
+        x, y = storm_xy(feature["coordinates"])
+        pdf.setFillColor(colors.white)
+        pdf.setStrokeColor(colors.HexColor("#7e22ce") if feature["phase_id"] == "existing" else colors.HexColor("#0369a1"))
+        pdf.setLineWidth(1.1)
+        pdf.circle(x, y, 3.6, fill=1, stroke=1)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 5.5)
+        label = storm_point_ids.get(feature["id"], "ROOF TERMINAL")
+        pdf.drawString(x + 5, y + 2, label)
+
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(470, 515, "HYDROLOGIC / VERTICAL BASIS")
+    pdf.setFont("Helvetica", 6.2)
+    for offset, note in enumerate([
+        "Roof area: 4,050 SF / C = 1.00 (assumed)",
+        "WQ storm: 1.40 IN / screen volume 472.50 CF",
+        "10-year storm: 4.46 IN / unrouted volume 1,505.25 CF",
+        "Planter declared surface storage: 500.00 CF",
+        "Method: rainfall-volume screening only; NOT ROUTED",
+        "Reference surface / FFE 445.00: PROVISIONAL",
+        "Public main: City GIS UNIQUE_ID 4183 / 21 IN",
+        "MH 51800 rim 444.87 / public out INV 434.33",
+        "Capacity, HGL, tie/outfall approval: UNKNOWN",
+        "Infiltration/geotechnical suitability: UNKNOWN",
+    ]):
+        pdf.drawString(470, 500 - offset * 11, note)
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(470, 375, "ALIGNMENT / CONFLICT")
+    pdf.setFont("Helvetica", 6.2)
+    for offset, note in enumerate([
+        "Private roof collector: 6 IN PVC",
+        "Facility underdrain: 6 IN perforated PVC",
+        "Outlet/public connection: 10 IN PVC SDR35",
+        "DMH-1 external drop: 3.95 FT (assumed)",
+        "Storm below sanitary crossing clearance: 1.253 FT",
+        "Reviewed minimum clearance: 1.00 FT",
+        "Pothole/survey both utilities before real design",
+        "No catch basin/site runoff: final grading excluded",
+    ]):
+        pdf.drawString(470, 360 - offset * 11, note)
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(470, 255, "FIELD HOLD POINTS")
+    pdf.setFont("Helvetica", 6.2)
+    for offset, note in enumerate([
+        "1  Confirm survey/control and final grades",
+        "2  Verify roof drains/overflow with architect",
+        "3  Obtain geotechnical infiltration testing",
+        "4  Confirm public capacity/HGL and City tie approval",
+        "5  Pothole sanitary/storm crossing",
+        "6  Inspect liner, media, bedding, tests, as-builts",
+    ]):
+        pdf.drawString(470, 240 - offset * 11, note)
+    pdf.setFillColor(colors.HexColor("#991b1b"))
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawCentredString(width / 2, 31, DISCLAIMER)
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica", 6)
+    pdf.drawString(32, 17, "Sheet MS-04 | Storm / roof drainage plan | 1 IN = 26.18 FT | EPSG:6823 / NAVD88 FT | Page 4 of 6")
+    pdf.drawRightString(width - 32, 17, "Reference City GIS is not survey, capacity, HGL, or connection authority")
+    pdf.showPage()
+
+    # Sheet MS-05: storm and roof-drainage profile.
+    storm_profile = next(row for row in model["deliverables"]["profiles"] if row["id"] == "profile-storm-roof-to-public")
+    sp_left, sp_bottom, sp_h, sp_v, sp_base = 70.0, 125.0, 4.0, 28.0, 433.0
+
+    def sp_xy(station, elevation):
+        return sp_left + station * sp_h, sp_bottom + (elevation - sp_base) * sp_v
+
+    pdf.setFillColor(colors.HexColor("#991b1b"))
+    pdf.setFont("Helvetica-Bold", 13)
+    pdf.drawString(32, height - 27, DISCLAIMER)
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica-Bold", 15)
+    pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD STORM / ROOF DRAINAGE PROFILE")
+    pdf.setFont("Helvetica", 7)
+    pdf.drawString(32, height - 61, "Stations run from permanent roof terminal through planter/flow control/drop manhole to assumed City tie; elevations are test-basis values")
+    pdf.setStrokeColor(colors.HexColor("#cbd5e1"))
+    pdf.setLineWidth(0.3)
+    for station in range(0, 141, 10):
+        x, _ = sp_xy(station, sp_base)
+        pdf.line(x, sp_bottom, x, sp_bottom + 13 * sp_v)
+    for elevation in range(433, 447):
+        _, y = sp_xy(0, elevation)
+        pdf.line(sp_left, y, sp_left + 140 * sp_h, y)
+        pdf.setFillColor(colors.HexColor("#475569"))
+        pdf.setFont("Helvetica", 5.5)
+        pdf.drawRightString(sp_left - 5, y - 2, f"{elevation}.00")
+    samples = storm_profile["surface_samples"]
+    pdf.setStrokeColor(colors.HexColor("#166534"))
+    pdf.setLineWidth(1.6)
+    path = pdf.beginPath()
+    path.moveTo(*sp_xy(samples[0]["station_ft"], samples[0]["elevation_ft"]))
+    for sample in samples[1:]:
+        path.lineTo(*sp_xy(sample["station_ft"], sample["elevation_ft"]))
+    pdf.drawPath(path, fill=0, stroke=1)
+    pdf.setFillColor(colors.HexColor("#166534"))
+    pdf.setFont("Helvetica-Bold", 6)
+    pdf.drawString(sp_left + 270, sp_xy(0, 444.3)[1] + 5, "GENERATED REFERENCE SURFACE - STORM ENVELOPE ONLY")
+
+    for segment in storm_profile["segments"]:
+        pdf.setStrokeColor(colors.HexColor("#0369a1"))
+        pdf.setLineWidth(3.0)
+        pdf.line(*sp_xy(segment["start_station_ft"], segment["upstream_invert_ft"]), *sp_xy(segment["end_station_ft"], segment["downstream_invert_ft"]))
+    for station, top, bottom, label, label_elevation in [
+        (64.353384, 441.6, 441.2, "PI-1 / PLANTER", 445.55),
+        (102.353384, 441.0, 439.05, "FC-1 / DROP", 445.25),
+        (114.55994, 438.95, 435.0, "DMH-1 / EXT DROP", 445.55),
+        (133.679739, 434.8, 434.33, "CITY MH 51800 / TIE", 445.25),
+    ]:
+        x, y_top = sp_xy(station, top)
+        _, y_bottom = sp_xy(station, bottom)
+        pdf.setStrokeColor(colors.HexColor("#7e22ce"))
+        pdf.setLineWidth(1.4)
+        pdf.line(x, y_top, x, y_bottom)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 5.5)
+        pdf.drawCentredString(x, sp_xy(station, label_elevation)[1], label)
+    pdf.saveState()
+    pdf.setDash(5, 3)
+    pdf.setStrokeColor(colors.HexColor("#0f172a"))
+    pdf.line(sp_left, sp_xy(0, 445.0)[1], sp_left + 140 * sp_h, sp_xy(0, 445.0)[1])
+    pdf.restoreState()
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica-Bold", 6)
+    pdf.drawString(sp_left + 5, sp_xy(0, 445.0)[1] + 4, "FFE 445.00 PROVISIONAL")
+
+    table_y = 105
+    headers = ("EDGE ID", "STATIONS", "LEN FT", "SLOPE", "INVERTS", "COVER FT", "MATERIAL")
+    columns = (55, 218, 315, 365, 420, 520, 610)
+    pdf.setFont("Helvetica-Bold", 6)
+    for x, value in zip(columns, headers):
+        pdf.drawString(x, table_y, value)
+    storm_edge_by_id = {row["id"]: row for row in next(row for row in model["networks"] if row["system"] == "storm")["edges"]}
+    pdf.setFont("Helvetica", 5.3)
+    for index, segment in enumerate(storm_profile["segments"]):
+        detail = storm_edge_by_id[segment["edge_id"]]["field_detail"]
+        row = (
+            segment["edge_id"], f"{segment['start_station_ft']:.2f}-{segment['end_station_ft']:.2f}",
+            f"{detail['length_ft']:.2f}", f"{detail['slope_percent']:.2f}%",
+            f"{detail['upstream_invert_ft']:.2f}->{detail['downstream_invert_ft']:.2f}",
+            f"{min(detail['cover_samples_ft']):.2f}-{max(detail['cover_samples_ft']):.2f}",
+            f"{detail['diameter_in']} IN {detail['material']}",
+        )
+        for x, value in zip(columns, row):
+            pdf.drawString(x, table_y - 12 - index * 10, value)
+    pdf.setFillColor(colors.HexColor("#991b1b"))
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawCentredString(width / 2, 31, DISCLAIMER)
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica", 6)
+    pdf.drawString(32, 17, "Sheet MS-05 | Storm / roof drainage profile | H 1 IN = 18 FT / V 1 IN = 2.57 FT | NAVD88 FT | Page 5 of 6")
+    pdf.drawRightString(width - 32, 17, "Positive gravity/cover checked against declared test basis; hydraulic capacity and HGL not established")
+    pdf.showPage()
+
+    # Sheet MS-06: schedule, test details, workflow, and unresolved design inputs.
+    pdf.setFillColor(colors.HexColor("#991b1b"))
+    pdf.setFont("Helvetica-Bold", 13)
+    pdf.drawString(32, height - 27, DISCLAIMER)
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica-Bold", 15)
+    pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD STORM ASSET SCHEDULE / TEST DETAILS")
+    pdf.setFont("Helvetica", 7)
+    pdf.drawString(32, height - 61, "Stable IDs, numeric test basis, field hold points, and explicit unknowns from the canonical semantic model")
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(35, 505, "CONVEYANCE ASSET SCHEDULE")
+    schedule_columns = (35, 215, 335, 395, 460, 545, 650)
+    for x, header in zip(schedule_columns, ("ASSET ID", "TYPE", "DIA", "LEN", "SLOPE", "INVERTS NAVD88", "STATUS")):
+        pdf.setFont("Helvetica-Bold", 5.8)
+        pdf.drawString(x, 490, header)
+    schedule_edges = [
+        edge for network in model["networks"] if network["system"] in {"roof_drainage", "storm"}
+        for edge in network["edges"] if edge["id"] != "storm-edge-public-main-4183"
+    ]
+    for index, edge in enumerate(schedule_edges):
+        detail = edge["field_detail"]
+        values = (
+            edge["id"], edge["edge_type"], f"{detail['diameter_in']} IN", f"{detail['length_ft']:.2f}",
+            f"{detail['slope_percent']:.2f}%", f"{detail['upstream_invert_ft']:.2f}->{detail['downstream_invert_ft']:.2f}",
+            "ASSUMED / GENERATED",
+        )
+        pdf.setFont("Helvetica", 5.0)
+        for x, value in zip(schedule_columns, values):
+            pdf.drawString(x, 478 - index * 12, value)
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(35, 360, "LINED PLANTER TEST-BASIS DETAIL (NOT A CONSTRUCTION DETAIL)")
+    pdf.setFillColor(colors.HexColor("#bae6fd"))
+    pdf.setStrokeColor(colors.HexColor("#0369a1"))
+    pdf.rect(35, 255, 270, 85, fill=1, stroke=1)
+    pdf.setFillColor(colors.HexColor("#7dd3fc"))
+    pdf.rect(35, 312, 270, 28, fill=1, stroke=0)
+    pdf.setFillColor(colors.HexColor("#e2e8f0"))
+    pdf.rect(35, 275, 270, 37, fill=1, stroke=0)
+    pdf.setStrokeColor(colors.HexColor("#0f172a"))
+    pdf.setLineWidth(1.5)
+    pdf.line(35, 255, 305, 255)
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica", 6)
+    pdf.drawString(42, 326, "1.25 FT DECLARED SURFACE STORAGE = 500 CF")
+    pdf.drawString(42, 294, "FILTER MEDIA / DRAIN ROCK: FINAL SECTION UNKNOWN")
+    pdf.drawString(42, 260, "LINER / 6 IN PERFORATED UNDERDRAIN: CONCEPTUAL")
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(335, 360, "REQUIRED REVIEW / HOLD POINTS")
+    pdf.setFont("Helvetica", 6)
+    for offset, note in enumerate([
+        "Survey boundary, structures, rims/inverts, final grades, and benchmark.",
+        "Confirm architectural roof drains, overflow paths, and plumbing sizes.",
+        "Perform geotechnical infiltration/groundwater testing; no infiltration credit now.",
+        "Route hydrographs and size treatment/flow control/flood overflow.",
+        "Obtain City capacity, HGL, tie-in/outfall, material, and detail acceptance.",
+        "Pothole and survey sanitary/storm crossing; maintain accepted separation.",
+        "Inspect bedding, backfill, compaction, liner/media, testing, and as-builts.",
+    ]):
+        pdf.drawString(335, 344 - offset * 13, f"{offset + 1}. {note}")
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(35, 220, "KNOWN-ANSWER TEST CHECKS")
+    pdf.setFont("Helvetica", 6)
+    checks = [
+        "Roof leaders connect through permanent terminal penetration-roof-drainage.",
+        "Every proposed storm segment falls downstream and meets its declared minimum slope/cover.",
+        "FC-1 internal drop = 1.95 FT; DMH-1 external drop = 3.95 FT.",
+        "Storm/sanitary modeled vertical clearance = 1.252694 FT (reviewed assumption).",
+        "PDF / GeoPackage / semantic package share stable IDs and geometry within 0.01 FT.",
+        "Public capacity, HGL, tie/outfall approval, survey, infiltration, and compliance remain UNKNOWN.",
+    ]
+    for offset, note in enumerate(checks):
+        pdf.drawString(35, 204 - offset * 13, note)
+    pdf.setFillColor(colors.HexColor("#991b1b"))
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawCentredString(width / 2, 31, DISCLAIMER)
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica", 6)
+    pdf.drawString(32, 17, "Sheet MS-06 | Storm asset schedule / test details | Not to scale | Page 6 of 6")
+    pdf.drawRightString(width - 32, 17, "Conceptual test detail only; no professional engineering or permit-compliance claim")
+    pdf.showPage()
+    pdf.save()
+    os.replace(raw_path, output_path)
 
 
 def _flatten_coordinates(value: Any) -> list[float]:
@@ -605,14 +922,15 @@ def verify_parity(
 
     tolerance = float(model["spatial_reference"]["tolerances"]["output_parity_horizontal_ft"])
     canonical = {
-        feature["id"]: feature["coordinates"]
-        for group in ("points", "lines", "polygons")
+        feature["id"]: feature.get("coordinates") or feature.get("boundary")
+        for group in ("points", "lines", "polygons", "surfaces")
         for feature in model["features"][group]
     }
     semantic_geometry = {
         row["id"]: [row["x"], row["y"]] for row in semantic["objects"]
     }
     semantic_geometry.update({row["id"]: row["coordinates"] for row in semantic["linearFeatures"] + semantic["areas"]})
+    semantic_geometry.update({row["id"]: row["coordinates"] for row in semantic["surfaces"]})
     mismatches: list[dict[str, Any]] = []
     for feature_id, coordinates in canonical.items():
         if feature_id not in semantic_geometry:
@@ -627,7 +945,7 @@ def verify_parity(
     env["PROJ_LIB"] = str(proj_data)
     gpkg_ids: set[str] = set()
     gpkg_geometry: dict[str, Any] = {}
-    for layer in ("canonical_points", "canonical_lines", "canonical_polygons"):
+    for layer in ("canonical_points", "canonical_lines", "canonical_polygons", "canonical_surfaces"):
         result = subprocess.run([str(ogrinfo), "-json", "-features", str(gpkg_path), layer], env=env, text=True, capture_output=True)
         if result.returncode:
             raise RuntimeError(f"ogrinfo failed for {layer}: {result.stderr.strip()}")
@@ -636,7 +954,7 @@ def verify_parity(
             feature_id = row["properties"]["id"]
             gpkg_ids.add(feature_id)
             coordinates = row["geometry"]["coordinates"]
-            if layer == "canonical_polygons":
+            if layer in {"canonical_polygons", "canonical_surfaces"}:
                 coordinates = coordinates[0]
             gpkg_geometry[feature_id] = coordinates
             if _max_coordinate_delta(canonical[feature_id], coordinates) > tolerance:
@@ -653,7 +971,9 @@ def verify_parity(
         for obj in page.get("/Resources", {}).get("/XObject", {}).values():
             if obj.get_object().get("/Subtype") == "/Image":
                 image_count += 1
-    pdf_digest = reader.metadata.get("/ModelStudioGeometrySHA256")
+    subject = reader.metadata.get("/Subject", "")
+    prefix = "Canonical geometry SHA-256 "
+    pdf_digest = subject[len(prefix):] if subject.startswith(prefix) else None
     digest = geometry_digest(model)
     if pdf_digest != digest:
         mismatches.append({"artifact": "pdf", "reason": "geometry_digest"})
@@ -700,7 +1020,7 @@ def verify_parity(
         "canonical_geometry_sha256": digest,
         "feature_count": len(canonical),
         "semantic": {"feature_count": len(semantic_geometry)},
-        "geopackage": {"feature_count": len(gpkg_ids), "layers": ["canonical_points", "canonical_lines", "canonical_polygons"]},
+        "geopackage": {"feature_count": len(gpkg_ids), "layers": ["canonical_points", "canonical_lines", "canonical_polygons", "canonical_surfaces"]},
         "pdf": {"geometry_sha256": pdf_digest, "vector_paths_present": vector_paths, "embedded_image_count": image_count, "text_extractable": DISCLAIMER in text},
         "pdf_vs_geopackage": {
             "method": "pdf_content_stream_geometry_markers_vs_gpkg",

@@ -85,7 +85,11 @@
         "sha256": null
       },
       "supports": [
-        "future rule extraction only; no design rule is locked in this slice"
+        "public storm main minimum 10 inches for this application",
+        "storm pipe minimum cover 4 feet",
+        "storm pipe minimum velocity 3 feet per second and target d/D 0.80",
+        "storm manhole maximum spacing 400 feet",
+        "shallow-pipe review trigger below 5 feet cover"
       ]
     },
     {
@@ -105,18 +109,22 @@
       ]
     },
     {
-      "id": "src-eugene-swmm-2025",
+      "id": "src-eugene-stormwater-manual-2025",
       "title": "2025 Stormwater Management Manual",
       "authority": "City of Eugene",
       "provenance_status": "confirmed",
       "citation": "https://www.eugene-or.gov/DocumentCenter/View/79289",
       "lock": {
         "kind": "url",
-        "status": "citation_only",
-        "sha256": null
+        "status": "checksum_locked",
+        "sha256": "69aa0e9a98c649dd4b5d88522d5027a024091dae969cb9f38f59ceda8abf3c7b"
       },
       "supports": [
-        "future stormwater rule extraction only"
+        "1.4-inch 24-hour water quality design storm",
+        "4.46-inch 24-hour 10-year flood-control design storm for drainage basins smaller than 40 acres",
+        "facility hierarchy prioritizing infiltration, extended filtration, then offsite treatment",
+        "site-specific infiltration testing and groundwater separation are required before infiltration credit",
+        "SBUH or continuous simulation is preferred for stormwater planters; Rational Method is limited to flow-rate facility sizing"
       ]
     },
     {
@@ -187,6 +195,29 @@
         "source asset and structure identifiers"
       ],
       "authority_note": "Reference-derived only; not project survey control, capacity approval, or connection authorization. Supersede with owner-accepted survey/as-built information."
+    },
+    {
+      "id": "src-eugene-storm-gis",
+      "title": "City Storm GIS extract for public main UNIQUE_ID 4183 and endpoint structures 51800/51759",
+      "authority": "City of Eugene Geographic Information Services",
+      "provenance_status": "reference-derived",
+      "citation": "/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/projects/hilyard/source-data/city-storm-4183.json",
+      "upstream_citations": [
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWW/StormGeoNetwork/MapServer/2/query?where=UNIQUE_ID%3D4183&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWW/StormGeoNetwork/MapServer/0/query?where=STRUCT_1%20IN%20(51800,51759)&outFields=*&returnGeometry=true&outSR=6823&f=geojson"
+      ],
+      "retrieved_date": "2026-08-21",
+      "lock": {
+        "kind": "local_file",
+        "status": "checksum_locked",
+        "sha256": "ed8400ccf650006b33b4beb88f5f0315cab22c9d65d01513da218a1c1b454562"
+      },
+      "supports": [
+        "reference-derived 21-inch public storm alignment",
+        "NAVD88 public-main endpoint inverts and upstream structure rim",
+        "source asset and structure identifiers"
+      ],
+      "authority_note": "reference-derived only; not project survey control, public-system capacity, approved outfall, HGL analysis, or connection authorization. Supersede with owner-accepted survey/as-built and agency review information."
     }
   ]
 }

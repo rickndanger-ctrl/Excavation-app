@@ -132,8 +132,8 @@ class SanitaryModelTests(unittest.TestCase):
     def test_semantic_package_exposes_clickable_sanitary_assets_and_workflow(self):
         semantic = build_semantic_manifest(self.model)
         utilities = {row["id"]: row for row in semantic["utilities"]}
-        self.assertEqual(set(self.edges), set(utilities))
-        for utility in utilities.values():
+        self.assertTrue(set(self.edges).issubset(utilities))
+        for utility in (utilities[edge_id] for edge_id in self.edges):
             self.assertTrue(utility["searchable"])
             self.assertTrue(utility["clickable"])
             self.assertEqual(utility["id"], utility["mapTarget"])
@@ -155,7 +155,7 @@ class SanitaryBuildTests(unittest.TestCase):
                 result = subprocess.run(command, cwd=ROOT, env=env, text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)
             gpkg_path = Path(directory) / "hilyard-site-layout.gpkg"
-            expected_counts = {"canonical_points": 15, "canonical_lines": 6, "canonical_polygons": 12}
+            expected_counts = {"canonical_points": 23, "canonical_lines": 14, "canonical_polygons": 13, "canonical_surfaces": 2}
             for layer, expected in expected_counts.items():
                 result = subprocess.run(
                     [str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(gpkg_path), layer],
@@ -165,7 +165,7 @@ class SanitaryBuildTests(unittest.TestCase):
                 actual = len(json.loads(result.stdout)["layers"][0]["features"])
                 self.assertEqual(expected, actual, layer)
 
-    def test_build_emits_three_page_vector_plan_profile_and_actual_geometry_parity(self):
+    def test_build_preserves_sanitary_pages_in_coordinated_vector_set_and_actual_geometry_parity(self):
         with tempfile.TemporaryDirectory() as directory:
             command = [
                 sys.executable, "-m", "civil_plan_factory", "build", str(PROJECT),
@@ -180,7 +180,7 @@ class SanitaryBuildTests(unittest.TestCase):
             from pypdf import PdfReader
             pdf_path = output / "hilyard-site-layout.pdf"
             reader = PdfReader(pdf_path)
-            self.assertEqual(3, len(reader.pages))
+            self.assertEqual(6, len(reader.pages))
             page_text = [page.extract_text() or "" for page in reader.pages]
             self.assertIn("SANITARY SEWER PLAN", page_text[1])
             self.assertIn("SANITARY SEWER PROFILE", page_text[2])

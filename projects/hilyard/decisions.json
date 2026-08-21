@@ -185,6 +185,82 @@
         "src-eugene-pids-2023",
         "src-eugene-construction-2024-a4"
       ]
+    },
+    {
+      "id": "decision-storm-hydrology",
+      "subject": "Fictional roof-drainage hydrologic screening basis",
+      "status": "reviewed_assumption",
+      "value": {
+        "contributing_area_sf": 4050.0,
+        "runoff_coefficient": 1.0,
+        "water_quality_storm_in": 1.4,
+        "water_quality_capture_volume_cf": 472.5,
+        "ten_year_storm_in": 4.46,
+        "ten_year_unrouted_roof_volume_cf": 1505.25,
+        "method": "full-roof rainfall-volume screening only",
+        "permit_compliance_claim": false
+      },
+      "rationale": "The complete reviewed building roof area is conservatively treated as impervious for deterministic test-data arithmetic. These volumes are screening quantities, not a routed hydrograph, capacity approval, or compliance finding.",
+      "source_ids": [
+        "src-eugene-stormwater-manual-2025",
+        "src-eugene-pids-2023"
+      ]
+    },
+    {
+      "id": "decision-storm-vertical-basis",
+      "subject": "Minimum fictional vertical basis for roof and storm gravity routing",
+      "status": "reviewed_assumption",
+      "value": {
+        "provisional_building_ffe_navd88_ft": 445.0,
+        "fitness_for_use": "storm-envelope-only",
+        "survey_authority": false,
+        "public_capacity_status": "unknown",
+        "downstream_hgl_status": "unknown"
+      },
+      "rationale": "The mock network reuses the provisional FFE and establishes an explicit generated surface envelope tied to reference City GIS rim context. It is sufficient only to test positive gravity, cover, and conflicts; survey control, final grading, capacity, and HGL remain unresolved.",
+      "source_ids": [
+        "src-eugene-storm-gis",
+        "src-eugene-stormwater-manual-2025",
+        "src-design-constraints"
+      ]
+    },
+    {
+      "id": "decision-storm-facility",
+      "subject": "Lined extended-filtration planter and flow-control test objects",
+      "status": "reviewed_assumption",
+      "value": {
+        "facility_id": "storm-planter-01",
+        "surface_area_sf": 400.0,
+        "surface_storage_depth_ft": 1.25,
+        "declared_surface_storage_cf": 500.0,
+        "infiltration_credit": false,
+        "flood_control_bypass_status": "unknown"
+      },
+      "rationale": "A compact lined planter provides a real treatment/topology object and exceeds the simple water-quality volume screen. It is intentionally not credited for infiltration and is undersized for the unrouted 10-year roof-volume screen; routing, overflow, geotechnical suitability, and agency acceptance remain unknown.",
+      "source_ids": [
+        "src-eugene-stormwater-manual-2025"
+      ]
+    },
+    {
+      "id": "decision-storm-alignment",
+      "subject": "Fictional roof and storm conveyance alignment to City reference context",
+      "status": "reviewed_assumption",
+      "value": {
+        "terminal_id": "penetration-roof-drainage",
+        "private_lateral_diameter_in": 6,
+        "public_connection_diameter_in": 10,
+        "public_source_asset_id": 4183,
+        "tie_in_approval_status": "unknown",
+        "capacity_status": "unknown",
+        "sanitary_crossing_minimum_clearance_ft": 1.0
+      },
+      "rationale": "Two permanent roof leaders combine at the existing building terminal, pass through a lined planter and flow-control structure, and connect through an external-drop site manhole to an assumed point at the reference 21-inch City main. The alignment preserves a modeled storm-below-sanitary clearance but requires survey/potholing and owner review.",
+      "source_ids": [
+        "src-eugene-storm-gis",
+        "src-eugene-stormwater-manual-2025",
+        "src-eugene-pids-2023",
+        "src-eugene-construction-2024-a4"
+      ]
     }
   ]
 }

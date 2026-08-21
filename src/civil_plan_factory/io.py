@@ -18,6 +18,7 @@ def _deep_update(target: dict[str, Any], patch: dict[str, Any]) -> None:
 
 def _apply_design_slice(model: dict[str, Any], design: dict[str, Any]) -> None:
     model["project"]["revision"] = design["project_revision"]
+    _deep_update(model, design.get("model_updates", {}))
     for group, updates in design.get("feature_updates", {}).items():
         by_id = {row["id"]: row for row in model["features"][group]}
         for update in updates:
@@ -29,13 +30,20 @@ def _apply_design_slice(model: dict[str, Any], design: dict[str, Any]) -> None:
             copy.deepcopy(network) if row["id"] == network["id"] else row
             for row in model["networks"]
         ]
+    for network in design.get("networks", []):
+        model["networks"] = [
+            copy.deepcopy(network) if row["id"] == network["id"] else row
+            for row in model["networks"]
+        ]
     for group, rows in design.get("deliverables", {}).items():
         model["deliverables"][group].extend(copy.deepcopy(rows))
     if coverage := design.get("contract_coverage"):
-        model["contract_coverage"] = [
-            copy.deepcopy(coverage) if row["system"] == coverage["system"] else row
-            for row in model["contract_coverage"]
-        ]
+        coverages = coverage if isinstance(coverage, list) else [coverage]
+        for row_coverage in coverages:
+            model["contract_coverage"] = [
+                copy.deepcopy(row_coverage) if row["system"] == row_coverage["system"] else row
+                for row in model["contract_coverage"]
+            ]
 
 
 def load_project_bundle(project_path: Path) -> dict[str, Any]:
