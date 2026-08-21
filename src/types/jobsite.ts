@@ -119,6 +119,7 @@ export type BlueprintObject = {
 
   // ── Basic elevations / geometry ──────────────────────────────────────────
   elevation?: string;
+  verticalDatum?: string;
   rimElevation?: string;
   invertElevation?: string;   // single invert (use invertIn/invertOut for structures)
   invertIn?: string;          // invert of incoming pipe

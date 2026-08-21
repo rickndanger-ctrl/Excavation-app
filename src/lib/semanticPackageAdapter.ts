@@ -23,6 +23,7 @@ type UnknownRecord = Record<string, unknown> & {
   objects?: unknown[];
   linearFeatures?: unknown[];
   areas?: unknown[];
+  surfaces?: unknown[];
   utilities?: unknown[];
   layers?: unknown[];
   phases?: unknown[];
@@ -33,6 +34,7 @@ type UnknownRecord = Record<string, unknown> & {
   fromNodeId?: string;
   toNodeId?: string;
   terminalFeatureId?: string | null;
+  verticalDatum?: string;
 };
 
 function record(value: unknown, name: string): UnknownRecord {
@@ -113,6 +115,83 @@ function consumerLayers(sourceLayers: unknown[]): JobsitePackage['layers'] {
   });
 }
 
+function finiteDetail(detail: Record<string, unknown>, key: string, featureId: string): number {
+  const value = detail[key];
+  if (!Number.isFinite(value)) throw new Error(`${featureId} requires finite ${key} datum provenance.`);
+  return Number(value);
+}
+
+function validateGradingContract(
+  sourceObjects: UnknownRecord[],
+  sourceLines: UnknownRecord[],
+  sourceAreas: UnknownRecord[],
+  sourceSurfaces: UnknownRecord[],
+): void {
+  const all = [...sourceObjects, ...sourceLines, ...sourceAreas, ...sourceSurfaces];
+  const workflowTypes = new Set([
+    'proposed_grade_surface', 'building_subgrade_surface', 'proposed_contour',
+    'grade_break', 'spot_elevation', 'grading_limit', 'earthwork_fill_area',
+    'earthwork_cut_area', 'surface_drainage_arrow',
+  ]);
+  const hasGradingWorkflow = all.some(
+    (feature) => feature.layerId === 'grading' && workflowTypes.has(String(feature.type)),
+  );
+  const existingGround = sourceSurfaces.find((feature) => feature.id === 'surface-existing-grade-reference');
+  if (!hasGradingWorkflow && !existingGround) return;
+  if (!existingGround) throw new Error('Proposed grading requires a validated existing-ground datum basis.');
+
+  const surfaceDetail = existingGround.fieldDetail ?? {};
+  if (existingGround.verticalDatum !== 'NAVD88') throw new Error(`${existingGround.id} requires verticalDatum NAVD88.`);
+  if (surfaceDetail.source_vertical_datum !== 'NGVD29') throw new Error(`${existingGround.id} requires source_vertical_datum NGVD29.`);
+  if (surfaceDetail.model_vertical_datum !== 'NAVD88') throw new Error(`${existingGround.id} requires model_vertical_datum NAVD88.`);
+  const verticalShiftFt = finiteDetail(surfaceDetail, 'vertical_shift_ft', existingGround.id!);
+  finiteDetail(surfaceDetail, 'vertical_conversion_uncertainty_ft', existingGround.id!);
+  const sourceIds = existingGround.provenance?.source_ids;
+  if (!Array.isArray(sourceIds) || sourceIds.length === 0) {
+    throw new Error(`${existingGround.id} requires source_ids datum provenance.`);
+  }
+
+  const contourIds = surfaceDetail.contour_ids;
+  if (!Array.isArray(contourIds) || contourIds.length === 0) throw new Error(`${existingGround.id} requires contour_ids.`);
+  const linesById = new Map(sourceLines.map((feature) => [feature.id, feature]));
+  for (const contourId of contourIds) {
+    const contour = linesById.get(String(contourId));
+    if (!contour) throw new Error(`${existingGround.id} references missing contour ${contourId}.`);
+    const detail = contour.fieldDetail ?? {};
+    if (detail.source_vertical_datum !== 'NGVD29') throw new Error(`${contour.id} requires source_vertical_datum NGVD29.`);
+    if (detail.model_vertical_datum !== 'NAVD88') throw new Error(`${contour.id} requires model_vertical_datum NAVD88.`);
+    const sourceElevationFt = finiteDetail(detail, 'source_elevation_ft', contour.id!);
+    const modelElevationFt = finiteDetail(detail, 'elevation_ft', contour.id!);
+    const contourShiftFt = finiteDetail(detail, 'vertical_shift_ft', contour.id!);
+    if (Math.abs(contourShiftFt - verticalShiftFt) > 0.0005
+      || Math.abs(sourceElevationFt + contourShiftFt - modelElevationFt) > 0.0005) {
+      throw new Error(`${contour.id} source and model elevations do not match its datum shift.`);
+    }
+    if (detail.source_surface_id !== existingGround.id) throw new Error(`${contour.id} must reference ${existingGround.id}.`);
+  }
+
+  for (const feature of sourceAreas.filter(
+    (item) => item.type === 'earthwork_fill_area' || item.type === 'earthwork_cut_area',
+  )) {
+    const detail = feature.fieldDetail ?? {};
+    const areaSf = finiteDetail(detail, 'area_sf', feature.id!);
+    const averageDepthFt = finiteDetail(detail, 'average_depth_ft', feature.id!);
+    const volumeCy = finiteDetail(detail, 'volume_cy', feature.id!);
+    if (detail.quantity_status !== 'screening_only') throw new Error(`${feature.id} quantity_status must be screening_only.`);
+    if (Math.abs(areaSf * averageDepthFt / 27 - volumeCy) > 0.01) {
+      throw new Error(`${feature.id} volume_cy does not match area_sf × average_depth_ft / 27.`);
+    }
+  }
+
+  for (const feature of sourceLines.filter((item) => item.type === 'surface_drainage_arrow')) {
+    const detail = feature.fieldDetail ?? {};
+    if (detail.downhill !== true) throw new Error(`${feature.id} requires an explicit downhill=true validation.`);
+    if (typeof detail.hydraulic_capacity_status !== 'string') {
+      throw new Error(`${feature.id} requires hydraulic_capacity_status.`);
+    }
+  }
+}
+
 function toObject(source: UnknownRecord, geometry: FeatureGeometry, center: Point, utility?: UnknownRecord): BlueprintObject {
   if (!source.id || !source.label || !source.layerId || !source.type) throw new Error('Every semantic feature requires id, label, layerId, and type');
   const detail = { ...(source.fieldDetail ?? {}), ...(utility?.fieldDetail ?? {}) };
@@ -153,6 +232,8 @@ function toObject(source: UnknownRecord, geometry: FeatureGeometry, center: Poin
       upstream: utility?.fromNodeId ? [utility.fromNodeId] : undefined,
       downstream: utility?.toNodeId ? [utility.toNodeId.replace('san-node-', 'sanitary-').replace('-01', '-01')] : undefined,
     },
+    elevation: formatValue(detail.elevation_ft),
+    verticalDatum: formatValue(source.verticalDatum ?? detail.vertical_datum ?? detail.model_vertical_datum),
     rimElevation: formatValue(detail.rim_elevation_ft),
     invertIn: formatValue(detail.invert_in_ft ?? detail.upstream_invert_ft),
     invertOut: formatValue(detail.invert_out_ft ?? detail.downstream_invert_ft),
@@ -166,17 +247,22 @@ export function parseSemanticJobsiteManifest(input: unknown): JobsitePackage {
   const source = record(input, 'semantic manifest');
   if (source.schema_version !== SUPPORTED_SCHEMA) throw new Error(`Unsupported schema version: ${source.schema_version ?? 'missing'}`);
   if (typeof source.disclaimer !== 'string' || !source.disclaimer.includes(REQUIRED_DISCLAIMER)) throw new Error('Semantic package must be marked NOT FOR CONSTRUCTION');
-  const sourceObjects = array(source.objects, 'objects');
-  const sourceLines = array(source.linearFeatures, 'linearFeatures');
-  const sourceAreas = array(source.areas, 'areas');
+  const sourceObjects = array(source.objects, 'objects').map((item) => record(item, 'point feature'));
+  const sourceLines = array(source.linearFeatures, 'linearFeatures').map((item) => record(item, 'line feature'));
+  const sourceAreas = array(source.areas, 'areas').map((item) => record(item, 'area feature'));
+  const sourceSurfaces = (source.surfaces === undefined ? [] : array(source.surfaces, 'surfaces'))
+    .map((item) => record(item, 'surface'));
   const sourceLayers = array(source.layers, 'layers');
   const sourcePhases = array(source.phases, 'phases');
   if (!source.plan || !Number.isFinite(source.plan.widthFt) || !Number.isFinite(source.plan.heightFt)) throw new Error('plan requires finite widthFt and heightFt');
 
+  validateGradingContract(sourceObjects, sourceLines, sourceAreas, sourceSurfaces);
+
   const rawFeatures = [
-    ...sourceObjects.map((item: unknown) => ({ source: record(item, 'point feature'), kind: 'Point' as const })),
-    ...sourceLines.map((item: unknown) => ({ source: record(item, 'line feature'), kind: 'LineString' as const })),
-    ...sourceAreas.map((item: unknown) => ({ source: record(item, 'area feature'), kind: 'Polygon' as const })),
+    ...sourceObjects.map((source) => ({ source, kind: 'Point' as const })),
+    ...sourceLines.map((source) => ({ source, kind: 'LineString' as const })),
+    ...sourceAreas.map((source) => ({ source, kind: 'Polygon' as const })),
+    ...sourceSurfaces.map((source) => ({ source, kind: 'Polygon' as const })),
   ];
   const ids = new Set<string>();
   for (const feature of rawFeatures) {

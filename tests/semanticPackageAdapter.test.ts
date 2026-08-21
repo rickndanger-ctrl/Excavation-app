@@ -70,11 +70,12 @@ test('splits combined producer water geometry into independent domestic, fire, a
     jobsite.objects.filter((feature) => feature.layerId === layer.id).length,
   ]));
 
-  assert.equal(jobsite.objects.length, 69);
+  assert.equal(jobsite.objects.length, 71);
   assert.equal(counts.property, 12);
   assert.equal(counts.site, 5);
   assert.equal(counts.sanitary, 9);
   assert.equal(counts.storm, 18);
+  assert.equal(counts.grading, 2);
   assert.equal(counts['domestic-water'], 8);
   assert.equal(counts['fire-water'], 12);
   assert.equal(counts['water-reference'], 1);

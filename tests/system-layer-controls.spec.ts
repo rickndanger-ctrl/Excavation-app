@@ -12,10 +12,11 @@ test('binds the latest civil systems to the existing Layers controls without rep
   await page.getByRole('button', { name: 'Import Model Package' }).click();
   await (await chooser).setFiles(manifestPath);
 
-  await expect(page.getByRole('status')).toContainText('69 semantic features');
+  await expect(page.getByRole('status')).toContainText('71 semantic features');
   await expect(page.getByText('Willow Creek', { exact: false })).toHaveCount(0);
   await expect.poll(() => featureCount(page, 'sanitary')).toBe(9);
   await expect.poll(() => featureCount(page, 'storm')).toBe(18);
+  await expect.poll(() => featureCount(page, 'grading')).toBe(2);
   await expect.poll(() => featureCount(page, 'domestic-water')).toBe(8);
   await expect.poll(() => featureCount(page, 'fire-water')).toBe(12);
 
