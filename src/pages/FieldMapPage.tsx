@@ -3,7 +3,7 @@ import { defaultSelectedObjectId } from '../data/sampleWillowCreek';
 import { ForemanNotes } from '../components/ForemanNotes';
 import { LeftSidebar } from '../components/LeftSidebar';
 import { ObjectDetailsPanel } from '../components/ObjectDetailsPanel';
-import { PlanCanvas } from '../components/PlanCanvas';
+import { PlanCanvas, type ImportedBasePlan } from '../components/PlanCanvas';
 import { PlanUploadPanel } from '../components/PlanUploadPanel';
 import { RockCalculator } from '../components/RockCalculator';
 import { useAuth } from '../hooks/useAuth';
@@ -23,6 +23,7 @@ export function FieldMapPage() {
   const projects = useProjects();
   const { offlineReady, downloading, downloadPlans, activePackage } = useJobsitePackage();
   const calcRef = useRef<HTMLElement>(null);
+  const civilPlanInputRef = useRef<HTMLInputElement>(null);
 
   const displayPackage = activePackage;
   const { visibility, toggleLayer, isVisible } = useLayerVisibility(displayPackage.layers);
@@ -33,7 +34,35 @@ export function FieldMapPage() {
   const [showSidebarUpload, setShowSidebarUpload] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [localBasePlan, setLocalBasePlan] = useState<ImportedBasePlan | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const storedBasePlan = useMemo<ImportedBasePlan | null>(() => {
+    const sheet = projects.activeSheet;
+    if (!sheet?.public_url) return null;
+    return {
+      url: sheet.public_url,
+      name: sheet.name,
+      mimeType: /\.pdf$/i.test(sheet.storage_path) ? 'application/pdf' : 'image/*',
+    };
+  }, [projects.activeSheet]);
+  const importedBasePlan = localBasePlan ?? storedBasePlan;
+
+  useEffect(() => () => {
+    if (localBasePlan?.url.startsWith('blob:')) URL.revokeObjectURL(localBasePlan.url);
+  }, [localBasePlan]);
+
+  const importCivilPlan = useCallback((file: File | undefined) => {
+    if (!file) return;
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    if (!isPdf) return;
+    setLocalBasePlan((previous) => {
+      if (previous?.url.startsWith('blob:')) URL.revokeObjectURL(previous.url);
+      return { url: URL.createObjectURL(file), name: file.name, mimeType: 'application/pdf' };
+    });
+    setSelectedObjectId('');
+    setDrawerOpen(false);
+  }, []);
 
   // Filter objects by search query (ID or label)
   const searchResults = useMemo(() => {
@@ -140,6 +169,7 @@ export function FieldMapPage() {
             setDrawerOpen(false);
           }}
           recenterToken={recenterToken}
+          importedBasePlan={importedBasePlan}
         />
       </div>
 
@@ -152,7 +182,9 @@ export function FieldMapPage() {
         >
           <Layers size={20} />
         </button>
-        <span className="field-topbar__title">{displayPackage.projectName}</span>
+        <span className="field-topbar__title">
+          {importedBasePlan ? `${displayPackage.projectName} · ${importedBasePlan.name}` : displayPackage.projectName}
+        </span>
         <button
           className="field-topbar__search"
           onClick={() => {
@@ -271,6 +303,8 @@ export function FieldMapPage() {
             isSignedIn={Boolean(auth.user)}
             hasActiveProject={Boolean(projects.activeProject)}
             onUploadPlan={() => setShowSidebarUpload(true)}
+            onImportCivilPlan={() => civilPlanInputRef.current?.click()}
+            importedPlanName={importedBasePlan?.name}
           />
           <RockCalculator sectionRef={calcRef} />
           <ForemanNotes />
@@ -306,6 +340,17 @@ export function FieldMapPage() {
           onClose={() => setShowSidebarUpload(false)}
         />
       )}
+      <input
+        ref={civilPlanInputRef}
+        className="sr-only"
+        type="file"
+        accept="application/pdf,.pdf"
+        aria-label="Choose a civil plan PDF"
+        onChange={(event) => {
+          importCivilPlan(event.target.files?.[0]);
+          event.currentTarget.value = '';
+        }}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Calculator, CloudDownload, Crosshair, Upload } from 'lucide-react';
+import { Calculator, CloudDownload, Crosshair, FileUp, Upload } from 'lucide-react';
 import { OVERVIEW_PHASE_ID, type ExcavationLayer, type JobsitePhase } from '../types/jobsite';
 import { formatFeet } from '../utils/distance';
 
@@ -20,6 +20,8 @@ type LeftSidebarProps = {
   isSignedIn: boolean;
   hasActiveProject: boolean;
   onUploadPlan: () => void;
+  onImportCivilPlan: () => void;
+  importedPlanName?: string | null;
 };
 
 export function LeftSidebar({
@@ -40,6 +42,8 @@ export function LeftSidebar({
   isSignedIn,
   hasActiveProject,
   onUploadPlan,
+  onImportCivilPlan,
+  importedPlanName,
 }: LeftSidebarProps) {
   const activePhase = phases.find((p) => p.id === activePhaseId);
   const isOverview = activePhaseId === OVERVIEW_PHASE_ID;
@@ -105,6 +109,13 @@ export function LeftSidebar({
       </section>
 
       <section className="sidebar-section sidebar-actions">
+        <button type="button" className="btn btn--primary" onClick={onImportCivilPlan}>
+          <FileUp size={16} />
+          Import Civil Plans
+        </button>
+        {importedPlanName && (
+          <p className="sidebar-imported-plan">Base sheet: {importedPlanName}</p>
+        )}
         <button
           type="button"
           className="btn btn--primary"

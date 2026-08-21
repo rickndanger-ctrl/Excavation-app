@@ -615,6 +615,88 @@ body {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
 }
 
+.plan-canvas__pdf {
+  background: #fff;
+}
+
+.plan-canvas__pdf-stack {
+  position: relative;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+.plan-canvas__pdf-stack > canvas {
+  position: absolute;
+  inset: 0 auto auto 0;
+  box-shadow: none;
+}
+
+.plan-canvas__extracted {
+  background: #fff;
+}
+
+.imported-plan-source-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.imported-plan-status {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  z-index: 12;
+  display: flex;
+  max-width: min(28rem, calc(100% - 5rem));
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  background: rgba(17, 24, 39, 0.9);
+  color: #fff;
+  font-size: 0.72rem;
+  box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.3);
+}
+
+.imported-plan-status > span {
+  color: #cbd5e1;
+}
+
+.imported-plan-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.imported-plan-pages button {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0.3rem;
+  padding: 0.18rem 0.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+}
+
+.imported-plan-pages button:disabled {
+  opacity: 0.4;
+}
+
+.imported-plan-error {
+  color: #fca5a5 !important;
+}
+
+.sidebar-imported-plan {
+  margin: -0.2rem 0 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
 .plan-canvas__overlay {
   position: absolute;
   top: 0;

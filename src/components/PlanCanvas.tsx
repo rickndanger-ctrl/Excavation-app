@@ -2,6 +2,13 @@ import { Crosshair, Minus, Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { BlueprintObject, JobsitePackage, ObjectStatus, Point } from '../types/jobsite';
 import { distanceFeet, formatFeet } from '../utils/distance';
+import { PdfPlanLayer } from './PdfPlanLayer';
+
+export type ImportedBasePlan = {
+  url: string;
+  name: string;
+  mimeType: string;
+};
 
 type PlanCanvasProps = {
   jobsite: JobsitePackage;
@@ -13,6 +20,7 @@ type PlanCanvasProps = {
   selectedObjectId: string | null;
   onSelectObject: (id: string) => void;
   recenterToken: number;
+  importedBasePlan?: ImportedBasePlan | null;
 };
 
 const HIT_RADIUS_FT = 8;
@@ -332,11 +340,16 @@ export function PlanCanvas({
   selectedObjectId,
   onSelectObject,
   recenterToken,
+  importedBasePlan,
 }: PlanCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.9);
   const [offset, setOffset] = useState({ x: 20, y: 20 });
   const [dragging, setDragging] = useState(false);
+  const [pdfPage, setPdfPage] = useState(1);
+  const [pdfPageCount, setPdfPageCount] = useState(1);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [showSourcePdf, setShowSourcePdf] = useState(true);
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
 
   // Touch state stored in ref to avoid stale closures in the passive-false listener
@@ -349,8 +362,16 @@ export function PlanCanvas({
   } | null>(null);
 
   const { plan, utilities, objects } = jobsite;
+  const importedPdf = Boolean(importedBasePlan && (
+    importedBasePlan.mimeType === 'application/pdf' || /\.pdf(?:$|[?#])/i.test(importedBasePlan.url)
+  ));
   const selectedObject = objects.find((o) => o.id === selectedObjectId) ?? null;
   const distance = selectedObject ? distanceFeet(userLocation, selectedObject) : null;
+
+  const handlePdfDocumentLoaded = useCallback((pageCount: number) => {
+    setPdfPageCount(pageCount);
+    setPdfPage((page) => Math.min(page, pageCount));
+  }, []);
 
   const recenterOnUser = useCallback(() => {
     const container = containerRef.current;
@@ -504,6 +525,30 @@ export function PlanCanvas({
 
   return (
     <div className="plan-canvas-wrapper">
+      {importedBasePlan && (
+        <div className="imported-plan-status" role="status">
+          <strong>{importedBasePlan.name}</strong>
+          <span>Imported base sheet · field overlays hidden until reviewed and calibrated</span>
+          {importedPdf && pdfPageCount > 1 && (
+            <div className="imported-plan-pages" aria-label="PDF page controls">
+              <button type="button" onClick={() => setPdfPage((page) => Math.max(1, page - 1))} disabled={pdfPage === 1}>Previous</button>
+              <span>Page {pdfPage} of {pdfPageCount}</span>
+              <button type="button" onClick={() => setPdfPage((page) => Math.min(pdfPageCount, page + 1))} disabled={pdfPage === pdfPageCount}>Next</button>
+            </div>
+          )}
+          {importedPdf && (
+            <label className="imported-plan-source-toggle">
+              <input
+                type="checkbox"
+                checked={showSourcePdf}
+                onChange={(event) => setShowSourcePdf(event.target.checked)}
+              />
+              Show source PDF
+            </label>
+          )}
+          {pdfError && <span className="imported-plan-error">{pdfError}</span>}
+        </div>
+      )}
       <div className="compass" aria-hidden="true">
         <span className="compass__arrow">↑</span>
         <span className="compass__label">N</span>
@@ -525,14 +570,38 @@ export function PlanCanvas({
           className="plan-canvas__transform"
           style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})` }}
         >
-          <img
-            src={plan.imageUrl}
-            alt="Jobsite plan"
-            className="plan-canvas__image"
-            width={plan.widthFt}
-            height={plan.heightFt}
-            draggable={false}
-          />
+          {importedBasePlan ? (
+            importedPdf ? (
+              <PdfPlanLayer
+                key={importedBasePlan.url}
+                url={importedBasePlan.url}
+                pageNumber={pdfPage}
+                width={plan.widthFt}
+                zoom={scale}
+                showSourcePdf={showSourcePdf}
+                onDocumentLoaded={handlePdfDocumentLoaded}
+                onError={setPdfError}
+              />
+            ) : (
+              <img
+                src={importedBasePlan.url}
+                alt={`Imported civil plan: ${importedBasePlan.name}`}
+                className="plan-canvas__image"
+                width={plan.widthFt}
+                height={plan.heightFt}
+                draggable={false}
+              />
+            )
+          ) : (
+            <img
+              src={plan.imageUrl}
+              alt="Jobsite plan"
+              className="plan-canvas__image"
+              width={plan.widthFt}
+              height={plan.heightFt}
+              draggable={false}
+            />
+          )}
 
           <svg
             className="plan-canvas__overlay"
@@ -540,7 +609,7 @@ export function PlanCanvas({
             width={plan.widthFt}
             height={plan.heightFt}
           >
-            {utilities.map((line) => {
+            {!importedBasePlan && utilities.map((line) => {
               if (!isLayerVisible(line.layerId)) return null;
               const inPhase = isPhaseVisible(line.phase);
               const layer = jobsite.layers.find((l) => l.id === line.layerId);
@@ -583,7 +652,7 @@ export function PlanCanvas({
               );
             })}
 
-            {selectedObject && mid && (
+            {!importedBasePlan && selectedObject && mid && (
               <>
                 <line
                   x1={userLocation.x}
@@ -610,7 +679,7 @@ export function PlanCanvas({
               </>
             )}
 
-            {objects.map((obj) => {
+            {!importedBasePlan && objects.map((obj) => {
               if (!isLayerVisible(obj.layerId)) return null;
               const inPhase = isPhaseVisible(obj.phase);
               const layer = jobsite.layers.find((l) => l.id === obj.layerId);
@@ -633,8 +702,8 @@ export function PlanCanvas({
               );
             })}
 
-            {/* User location marker */}
-            <g transform={`translate(${userLocation.x}, ${userLocation.y})`}>
+            {/* User location is only trustworthy after the imported plan is reviewed and calibrated. */}
+            {!importedBasePlan && <g transform={`translate(${userLocation.x}, ${userLocation.y})`}>
               <circle r={4} fill="#1a73e8" fillOpacity={0.18} />
               <circle r={2} fill="#1a73e8" stroke="#fff" strokeWidth={0.6} />
               <polygon
@@ -642,7 +711,7 @@ export function PlanCanvas({
                 fill="#1a73e8"
                 transform={`rotate(${userHeading})`}
               />
-            </g>
+            </g>}
           </svg>
         </div>
       </div>
