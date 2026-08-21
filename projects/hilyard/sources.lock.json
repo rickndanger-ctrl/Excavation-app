@@ -298,7 +298,32 @@
       "effective_date": "2023-06-19",
       "lock": {"kind": "url", "status": "citation_only", "sha256": null},
       "supports": ["multiple registered wireline providers operate in Eugene"],
-      "authority_note": "The registry does not identify the provider serving this parcel, a facility location, capacity, point of connection, or approved route."
-    }
-  ]
+    "authority_note": "The registry does not identify the provider serving this parcel, a facility location, capacity, point of connection, or approved route."
+  },
+  {
+    "id": "src-eugene-contours-vdatum",
+    "title": "Hilyard parcel extract of Eugene two-foot contours with explicit NGVD29-to-NAVD88 conversion record",
+    "authority": "City of Eugene Geographic Information Services / NOAA National Geodetic Survey VDatum",
+    "provenance_status": "reference-derived",
+    "citation": "/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/projects/hilyard/source-data/eugene-grading-basis.json",
+    "upstream_citations": [
+      "https://gis.eugene-or.gov/arcgis/rest/services/CatalogOfEugeneLayers/Eug_2ft_Contours_FC/MapServer/0",
+      "https://vdatum.noaa.gov/vdatumweb/api/convert",
+      "https://geodesy.noaa.gov/VERTCON3/index.shtml"
+    ],
+    "retrieved_date": "2026-08-21",
+    "lock": {
+      "kind": "local_file",
+      "status": "checksum_locked",
+      "sha256": "a322a560544e01b24c43cb333fe978ce0384df52ab0a7cc22e786dcee8575006"
+    },
+    "supports": [
+      "reference-scale two-foot contour geometry clipped to the official GIS parcel envelope",
+      "original NGVD29 contour elevations",
+      "NOAA VDatum VERTCON 3.0 conversion of +3.698 feet to the project NAVD88 model at the parcel centroid",
+      "0.165-foot reported transformation uncertainty and 0.004-foot parcel shift range"
+    ],
+    "authority_note": "The contours derive from 1999 orthophotos and are not a current topographic survey. The datum conversion is explicit but does not create project vertical control. Supersede with current survey before any real design, earthwork, staking, bidding, permitting, or construction use."
+  }
+]
 }

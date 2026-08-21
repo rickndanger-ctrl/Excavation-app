@@ -499,6 +499,73 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
                         "Assumed dry-utility geometry must remain unmistakably labeled and dashed",
                     ))
 
+    if "grading_basis" in model:
+        grading_basis = model.get("grading_basis", {})
+        conversion = grading_basis.get("vertical_conversion", {})
+        shift = conversion.get("applied_shift_ft")
+        if (
+            conversion.get("source_datum") != "NGVD29"
+            or conversion.get("target_datum") != "NAVD88"
+            or not _finite_coordinate(shift)
+            or conversion.get("method") != "NOAA VDatum / VERTCON 3.0"
+        ):
+            issues.append(_issue(
+                "grading.vertical_conversion_missing",
+                "grading_basis.vertical_conversion",
+                "Historical contours require an explicit NOAA NGVD29-to-NAVD88 conversion",
+            ))
+        for surface_index, surface in enumerate(features.get("surfaces", [])):
+            if surface.get("id") not in {"surface-existing-grade-reference", "surface-proposed-grade"}:
+                continue
+            detail = surface.get("field_detail", {})
+            if detail.get("survey_authority") is not False:
+                issues.append(_issue(
+                    "grading.unsupported_survey_claim",
+                    f"features.surfaces[{surface_index}].field_detail.survey_authority",
+                    "Reference and fictional grading surfaces cannot claim survey authority",
+                ))
+            if surface.get("id") == "surface-proposed-grade" and not detail.get("elevation_samples"):
+                issues.append(_issue(
+                    "grading.surface_samples_missing",
+                    f"features.surfaces[{surface_index}].field_detail.elevation_samples",
+                    "Proposed grade requires canonical elevation samples",
+                ))
+        for line_index, line in enumerate(features.get("lines", [])):
+            if line.get("feature_type") != "existing_contour_reference":
+                continue
+            detail = line.get("field_detail", {})
+            source_elevation = detail.get("source_elevation_ft")
+            model_elevation = detail.get("elevation_ft")
+            if (
+                detail.get("source_vertical_datum") != "NGVD29"
+                or detail.get("model_vertical_datum") != "NAVD88"
+                or not all(_finite_coordinate(value) for value in (source_elevation, model_elevation, shift))
+                or not math.isclose(source_elevation + shift, model_elevation, abs_tol=1e-6)
+                or "NGVD29" not in line.get("label", "")
+                or "NAVD88" not in line.get("label", "")
+            ):
+                issues.append(_issue(
+                    "grading.contour_datum_mismatch",
+                    f"features.lines[{line_index}].field_detail",
+                    "Existing contours must preserve both source NGVD29 and converted NAVD88 elevations",
+                ))
+        for polygon_index, polygon in enumerate(features.get("polygons", [])):
+            if polygon.get("feature_type") not in {"earthwork_fill_area", "earthwork_cut_area"}:
+                continue
+            detail = polygon.get("field_detail", {})
+            area = detail.get("area_sf")
+            depth = detail.get("average_depth_ft")
+            volume = detail.get("volume_cy")
+            if (
+                not all(_finite_coordinate(value) for value in (area, depth, volume))
+                or not math.isclose(area * depth / 27.0, volume, abs_tol=1e-6)
+            ):
+                issues.append(_issue(
+                    "grading.earthwork_volume_mismatch",
+                    f"features.polygons[{polygon_index}].field_detail.volume_cy",
+                    "Screening earthwork volume must derive from area and average depth",
+                ))
+
     for relationship_id, relationship in model.get("relationships", {}).items():
         if relationship.get("relationship_type") not in {"utility_crossing", "horizontal_clearance"}:
             continue

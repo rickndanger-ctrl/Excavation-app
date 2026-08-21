@@ -343,6 +343,50 @@
       },
       "rationale": "A two-pole east-side branch exercises a separate field layer and building terminal. Fixture selection, circuiting, photometrics, voltage drop, controls, grounding, and electrical approval remain unresolved.",
       "source_ids": ["src-project-brief", "src-eweb-electric-service-2020"]
+    },
+    {
+      "id": "decision-existing-grade-basis",
+      "subject": "Reference existing-grade surface and vertical-datum conversion",
+      "status": "reviewed_assumption",
+      "value": {
+        "source": "City of Eugene two-foot contours derived from 1999 orthophotos",
+        "source_vertical_datum": "NGVD29",
+        "model_vertical_datum": "NAVD88",
+        "vdatum_shift_ft": 3.698,
+        "vdatum_reported_uncertainty_ft": 0.165,
+        "survey_authority": false,
+        "fitness_for_use": "reference_grade_for_product_testing_only"
+      },
+      "rationale": "The City contour geometry is the best consistent public reference available for this fictional site. NOAA VDatum / VERTCON 3.0 converts the historical NGVD29 elevations into the canonical NAVD88 model. Original and converted elevations remain side by side, and the entire surface must be replaced by current project survey before real work.",
+      "source_ids": ["src-eugene-contours-vdatum"]
+    },
+    {
+      "id": "decision-proposed-grading-basis",
+      "subject": "Fictional apartment pad grading and positive surface drainage concept",
+      "status": "reviewed_assumption",
+      "value": {
+        "building_ffe_navd88_ft": 445.0,
+        "building_corner_grade_range_navd88_ft": [444.45, 444.6],
+        "minimum_modeled_ffe_freeboard_ft": 0.4,
+        "proposed_contour_interval_ft": 0.5,
+        "surface_design_status": "screening_only",
+        "drainage_hydraulics_status": "unknown"
+      },
+      "rationale": "A simple crowned pad with spot grades and arrows exercises surface, contour, freeboard, and app-layer behavior without claiming final grading, ADA, inlet capacity, overflow routing, or permit compliance.",
+      "source_ids": ["src-eugene-contours-vdatum", "src-project-brief"]
+    },
+    {
+      "id": "decision-earthwork-site-prep-basis",
+      "subject": "Screening-only cut/fill and temporary site-preparation concept",
+      "status": "reviewed_assumption",
+      "value": {
+        "quantity_method": "plan area times assumed average depth divided by 27",
+        "quantity_status": "screening_only",
+        "temporary_features": ["disturbance limit", "construction entrance", "stockpile", "silt fence"],
+        "erosion_control_approval_status": "unknown"
+      },
+      "rationale": "The fictional cut/fill polygons and temporary controls create testable site-prep layers. They are not survey-to-surface volumes, bid quantities, a construction sequence, or an approved erosion-control plan.",
+      "source_ids": ["src-eugene-contours-vdatum", "src-project-brief"]
     }
   ]
 }

@@ -1,0 +1,14 @@
+{
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "issues": [],
+  "limitations": [
+    "Taxlot and constraint coordinates are frozen reference-scale geometry, not a survey; replace them first when a real boundary survey arrives.",
+    "The building, pad, entries, and wall terminals are reviewed fictional assumptions, not architecture, grading, or approved utility design.",
+    "No utility tie-in, location, size, elevation, pressure, flow, fire flow, or capacity is approved or asserted.",
+    "No geotechnical, groundwater, infiltration, wetland approval, hydraulic, fire-code, or agency review is complete.",
+    "No permit readiness, code compliance, professional engineering, or construction usability is claimed."
+  ],
+  "project_id": "hilyard-apartment-test",
+  "schema_version": "civil-plan-factory.validation-report/v0.2.0",
+  "status": "valid"
+}

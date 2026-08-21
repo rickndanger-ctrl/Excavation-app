@@ -107,7 +107,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     from reportlab.pdfgen import canvas
 
     width, height = landscape(letter)
-    total_pages = 10 if "dry_utility_basis" in model else 8 if "water_fire_basis" in model else 6
+    total_pages = 12 if "grading_basis" in model else 10 if "dry_utility_basis" in model else 8 if "water_fire_basis" in model else 6
     drawing_left = 42.0
     drawing_bottom = 72.0
     scale = 72.0 / 50.0
@@ -145,7 +145,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
 
     raw_path = output_path.with_suffix(".raw.pdf")
     pdf = canvas.Canvas(str(raw_path), pagesize=(width, height), invariant=1, pageCompression=0)
-    pdf.setTitle("Model Studio - Hilyard Civil Plan Set / Sanitary and Storm Drainage")
+    pdf.setTitle("Model Studio - Hilyard Civil Plan Set")
     pdf.setAuthor("Model Studio")
     pdf.setSubject(f"Canonical geometry SHA-256 {digest}")
 
@@ -163,6 +163,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     constraints = [feature for feature in model["features"]["polygons"] if feature["id"].startswith("constraint-")]
     storm_polygons = [feature for feature in model["features"]["polygons"] if feature.get("system") == "storm"]
     dry_polygons = [feature for feature in model["features"]["polygons"] if feature.get("system") == "dry_utilities"]
+    grading_polygons = [feature for feature in model["features"]["polygons"] if feature.get("system") in {"grading", "construction_erosion"}]
 
     constraint_colors = {
         "constraint-row-dedication": colors.HexColor("#fca5a5"),
@@ -192,6 +193,10 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     for feature in dry_polygons:
         mark_geometry(pdf, feature["id"], "Polygon", feature["coordinates"], xy)
         pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY dry_utilities {feature['id']}")
+
+    for feature in grading_polygons:
+        mark_geometry(pdf, feature["id"], "Polygon", feature["coordinates"], xy)
+        pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY {feature['system']} {feature['id']}")
 
     for surface in model["features"]["surfaces"]:
         pdf.saveState()
@@ -235,7 +240,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
 
     for line in model["features"]["lines"]:
         mark_geometry(pdf, line["id"], "LineString", line["coordinates"], xy)
-        if line.get("system") in {"domestic_water", "fire_water", "power", "telecom_fiber", "gas", "site_lighting", "dry_utilities"}:
+        if line.get("system") in {"domestic_water", "fire_water", "power", "telecom_fiber", "gas", "site_lighting", "dry_utilities", "grading", "construction_erosion"}:
             pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY {line['system']} {line['id']}")
             continue
         pdf.setStrokeColor(colors.HexColor("#be123c") if line["id"].startswith("access-") else colors.HexColor("#334155"))
@@ -267,6 +272,9 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         mark_geometry(pdf, feature["id"], "Point", feature["coordinates"], xy)
         if feature.get("system") in {"domestic_water", "fire_water", "power", "telecom_fiber", "gas", "site_lighting"} and feature not in interface_points:
             pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY {feature['system']} {feature['id']}")
+            continue
+        if feature.get("system") == "grading":
+            pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY grading {feature['id']}")
             continue
         if feature in interface_points:
             interface_index = interface_points.index(feature) + 1
@@ -307,11 +315,11 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     basis = [
         "Horizontal: EPSG:6823, international feet",
         "DRAWING GRID ORIGIN: E 186225.00 / N 98450.00",
-        "Vertical: NAVD88 feet; benchmark and elevations UNKNOWN",
+        "Vertical: NAVD88 FT; project benchmark UNKNOWN",
+        "City contours: NGVD29 +3.698 FT via NOAA VDatum",
         "Taxlots: City GIS reference-derived; NOT A SURVEY",
         "Replace taxlot geometry first when a boundary survey arrives",
         "Constraints: dimensioned/digitized reference geometry",
-        "Output parity tolerance: 0.01 ft (not source accuracy)",
         "Utility routing is on discipline sheets; capacity/approval unknown",
     ]
     for offset, note in enumerate(basis):
@@ -1342,6 +1350,247 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.setFont("Helvetica", 6)
         pdf.drawString(32, 17, f"Sheet MS-10 | Dry utility schedule / coordination details | Not to scale | Page 10 of {total_pages}")
         pdf.drawRightString(width - 32, 17, "No locate, capacity, owner-design, code-compliance, or agency-approval conclusion")
+        pdf.showPage()
+    if "grading_basis" in model:
+        grading_left, grading_bottom, grading_scale = 42.0, 70.0, 1.65
+        grading_min_x, grading_min_y = 186225.0, 98450.0
+
+        def grading_xy(point):
+            return (
+                grading_left + (point[0] - grading_min_x) * grading_scale,
+                grading_bottom + (point[1] - grading_min_y) * grading_scale,
+            )
+
+        def grading_path(coordinates, *, close=False, fill=0):
+            path = pdf.beginPath()
+            x, y = grading_xy(coordinates[0])
+            path.moveTo(x, y)
+            for point in coordinates[1:]:
+                x, y = grading_xy(point)
+                path.lineTo(x, y)
+            if close:
+                path.close()
+            pdf.drawPath(path, fill=fill, stroke=1)
+
+        def grading_header(title, subtitle):
+            pdf.setFillColor(colors.HexColor("#991b1b"))
+            pdf.setFont("Helvetica-Bold", 13)
+            pdf.drawString(32, height - 27, DISCLAIMER)
+            pdf.setFillColor(colors.black)
+            pdf.setFont("Helvetica-Bold", 15)
+            pdf.drawString(32, height - 49, title)
+            pdf.setFont("Helvetica", 7)
+            pdf.drawString(32, height - 61, subtitle)
+
+        # Sheet MS-11: reference and proposed grading surfaces.
+        grading_header(
+            "MODEL STUDIO - HILYARD GRADING / DRAINAGE PLAN",
+            "City 1999 reference contours explicitly converted NGVD29 to NAVD88; proposed grading is a fictional reviewed assumption",
+        )
+        pdf.saveState()
+        grading_clip = pdf.beginPath()
+        grading_clip.rect(40, 70, 365, 460)
+        pdf.clipPath(grading_clip, stroke=0, fill=0)
+        pdf.setFillColor(colors.HexColor("#f8fafc"))
+        pdf.setStrokeColor(colors.HexColor("#64748b"))
+        pdf.setLineWidth(0.7)
+        grading_path(site["coordinates"], close=True, fill=1)
+        pdf.setFillColor(colors.HexColor("#e2e8f0"))
+        grading_path(pad["coordinates"], close=True, fill=1)
+        pdf.setFillColor(colors.white)
+        pdf.setStrokeColor(colors.black)
+        pdf.setLineWidth(1.4)
+        grading_path(building["coordinates"], close=True, fill=1)
+
+        grading_lines = [row for row in model["features"]["lines"] if row.get("system") == "grading"]
+        for feature in grading_lines:
+            if feature["feature_type"] == "existing_contour_reference":
+                pdf.setStrokeColor(colors.HexColor("#78350f"))
+                pdf.setDash(3, 2)
+                pdf.setLineWidth(0.7)
+            elif feature["feature_type"] == "proposed_contour":
+                pdf.setStrokeColor(colors.HexColor("#15803d"))
+                pdf.setDash()
+                pdf.setLineWidth(1.0)
+            elif feature["feature_type"] == "surface_drainage_arrow":
+                pdf.setStrokeColor(colors.HexColor("#0284c7"))
+                pdf.setDash()
+                pdf.setLineWidth(1.6)
+            else:
+                pdf.setStrokeColor(colors.HexColor("#111827"))
+                pdf.setDash(7, 3)
+                pdf.setLineWidth(1.0)
+            grading_path(feature["coordinates"])
+            if feature["feature_type"] == "surface_drainage_arrow":
+                end_x, end_y = grading_xy(feature["coordinates"][-1])
+                pdf.setFillColor(colors.HexColor("#0284c7"))
+                pdf.circle(end_x, end_y, 2.4, fill=1, stroke=0)
+            elif feature["feature_type"] in {"existing_contour_reference", "proposed_contour"} and feature["id"] in {
+                "existing-contour-14177-1", "existing-contour-28394-1",
+                "proposed-contour-444-00", "proposed-contour-444-50", "proposed-contour-445-00",
+            }:
+                contour_label_points = {
+                    "existing-contour-14177-1": [186305.616, 98584.299],
+                    "existing-contour-28394-1": [186377.975, 98593.048],
+                    "proposed-contour-444-00": [186305.0, 98478.0],
+                    "proposed-contour-444-50": [186325.0, 98555.0],
+                    "proposed-contour-445-00": [186380.0, 98535.0],
+                }
+                label_point = contour_label_points[feature["id"]]
+                label_x, label_y = grading_xy(label_point)
+                detail = feature["field_detail"]
+                pdf.setFillColor(colors.HexColor("#78350f") if feature["feature_type"] == "existing_contour_reference" else colors.HexColor("#166534"))
+                pdf.setFont("Helvetica-Bold", 4.4)
+                if feature["feature_type"] == "existing_contour_reference":
+                    label = f"REF {detail['source_elevation_ft']:.1f} NGVD29 / {detail['elevation_ft']:.3f} NAVD88"
+                else:
+                    label = f"FG {detail['elevation_ft']:.2f} NAVD88"
+                pdf.drawString(label_x + 3, label_y + 2, label)
+        pdf.setDash()
+
+        grade_points = [row for row in model["features"]["points"] if row.get("system") == "grading"]
+        grade_label_specs = {
+            "grade-spot-building-sw": ("FG 444.50 SW", -4, 7, "right"),
+            "grade-spot-building-se": ("FG 444.45 SE", 4, 7, "left"),
+            "grade-spot-building-ne": ("FG 444.55 NE", 4, 2, "left"),
+            "grade-spot-building-nw": ("FG 444.60 NW", -4, 2, "right"),
+            "grade-spot-site-sw": ("FG 443.90", -4, 2, "right"),
+            "grade-spot-site-se": ("FG 444.10", 4, 2, "left"),
+            "grade-spot-site-ne": ("FG 444.40", 4, 2, "left"),
+            "grade-spot-site-nw": ("FG 444.20", -4, 2, "right"),
+        }
+        for feature in grade_points:
+            x, y = grading_xy(feature["coordinates"])
+            pdf.setFillColor(colors.white)
+            pdf.setStrokeColor(colors.HexColor("#b45309"))
+            pdf.circle(x, y, 2.5, fill=1, stroke=1)
+            pdf.setFillColor(colors.black)
+            pdf.setFont("Helvetica", 4.8)
+            label, dx, dy, alignment = grade_label_specs[feature["id"]]
+            if alignment == "left":
+                pdf.drawString(x + dx, y + dy, label)
+            else:
+                pdf.drawRightString(x + dx, y + dy, label)
+        pdf.restoreState()
+
+        conversion = model["grading_basis"]["vertical_conversion"]
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(430, 515, "VERTICAL-DATUM CONTROL")
+        pdf.setFont("Helvetica", 6.1)
+        for offset, note in enumerate([
+            "Source: City of Eugene 2-FT contours / 1999 orthophotos",
+            "Source datum: NGVD29 / source geometry EPSG:2914",
+            "Canonical datum: NAVD88 / geometry EPSG:6823",
+            f"NOAA VDatum / VERTCON 3.0 shift: +{conversion['applied_shift_ft']:.3f} FT",
+            f"Reported conversion uncertainty: {conversion['reported_uncertainty_ft']:.3f} FT",
+            f"Shift range across parcel: {conversion['parcel_shift_range_ft']:.3f} FT",
+            "Original and converted elevations retained on every contour",
+            "REFERENCE-GRADE ONLY / NOT A TOPOGRAPHIC SURVEY",
+        ]):
+            pdf.drawString(430, 500 - offset * 12, note)
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(430, 390, "PROPOSED-GRADE BASIS")
+        pdf.setFont("Helvetica", 6.1)
+        for offset, note in enumerate([
+            "Building FFE: 445.00 FT NAVD88 (reviewed assumption)",
+            "Corner FG: 444.45-444.60 FT NAVD88",
+            "Modeled FFE freeboard: 0.40-0.55 FT",
+            "Contours/spots/arrows derive from one canonical model",
+            "Drainage capacity and overflow route: UNKNOWN",
+            "ADA, pavement, curb, landscape and final grading: UNKNOWN",
+            "Supersede with current survey and licensed final design",
+        ]):
+            pdf.drawString(430, 375 - offset * 12, note)
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 10)
+        pdf.drawCentredString(width / 2, 31, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica", 6)
+        pdf.drawString(32, 17, f"Sheet MS-11 | GRADING / DRAINAGE PLAN | 1 IN = 43.64 FT | EPSG:6823 / NAVD88 FT | Page 11 of {total_pages}")
+        pdf.drawRightString(width - 32, 17, "Reference grade and fictional test design only; not survey, staking, bidding, permit, or construction data")
+        pdf.showPage()
+
+        # Sheet MS-12: screening earthwork and temporary site preparation.
+        grading_header(
+            "MODEL STUDIO - HILYARD EARTHWORK / SITE PREPARATION PLAN",
+            "Screening-only cut/fill and temporary construction geometry; no survey-to-surface volumes or approved erosion-control plan",
+        )
+        pdf.saveState()
+        grading_clip = pdf.beginPath()
+        grading_clip.rect(40, 70, 365, 460)
+        pdf.clipPath(grading_clip, stroke=0, fill=0)
+        pdf.setFillColor(colors.HexColor("#f8fafc"))
+        pdf.setStrokeColor(colors.HexColor("#64748b"))
+        pdf.setLineWidth(0.7)
+        grading_path(site["coordinates"], close=True, fill=1)
+        earthwork_colors = {
+            "earthwork-fill-pad-01": colors.HexColor("#bfdbfe"),
+            "earthwork-cut-east-01": colors.HexColor("#fecaca"),
+        }
+        grading_polygons_by_id = {row["id"]: row for row in grading_polygons}
+        for feature_id, fill_color in earthwork_colors.items():
+            feature = grading_polygons_by_id[feature_id]
+            pdf.setFillColor(fill_color)
+            pdf.setStrokeColor(colors.HexColor("#1e3a8a" if "fill" in feature_id else "#991b1b"))
+            pdf.setLineWidth(1.0)
+            grading_path(feature["coordinates"], close=True, fill=1)
+            x, y = grading_xy(list(_centroid(feature["coordinates"])))
+            pdf.setFillColor(colors.black)
+            pdf.setFont("Helvetica-Bold", 4.8)
+            label = f"FILL {feature['field_detail']['volume_cy']:.2f} CY*" if "fill" in feature_id else f"CUT {feature['field_detail']['volume_cy']:.2f} CY*"
+            pdf.drawCentredString(x, y, label)
+
+        for feature_id in ("site-prep-disturbance-limit-01", "site-prep-construction-entrance-01", "site-prep-stockpile-01"):
+            feature = grading_polygons_by_id[feature_id]
+            pdf.setFillColor(colors.HexColor("#fef3c7"))
+            pdf.setStrokeColor(colors.HexColor("#dc2626"))
+            pdf.setDash(6, 3)
+            pdf.setLineWidth(1.0)
+            grading_path(feature["coordinates"], close=True, fill=1 if feature_id != "site-prep-disturbance-limit-01" else 0)
+        pdf.setDash()
+        silt = next(row for row in model["features"]["lines"] if row["id"] == "erosion-silt-fence-01")
+        pdf.setStrokeColor(colors.HexColor("#dc2626"))
+        pdf.setDash(2, 2)
+        pdf.setLineWidth(1.6)
+        grading_path(silt["coordinates"])
+        pdf.setDash()
+        pdf.restoreState()
+
+        earthwork = model["earthwork_summary"]
+        fill_detail = grading_polygons_by_id["earthwork-fill-pad-01"]["field_detail"]
+        cut_detail = grading_polygons_by_id["earthwork-cut-east-01"]["field_detail"]
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(430, 515, "SCREENING EARTHWORK SUMMARY")
+        pdf.setFont("Helvetica", 6.2)
+        for offset, note in enumerate([
+            f"FILL: {fill_detail['area_sf']:.0f} SF x {fill_detail['average_depth_ft']:.2f} FT / 27 = {fill_detail['volume_cy']:.2f} CY",
+            f"CUT: {cut_detail['area_sf']:.0f} SF x {cut_detail['average_depth_ft']:.2f} FT / 27 = {cut_detail['volume_cy']:.2f} CY",
+            f"NET IMPORT: {earthwork['net_import_cy']:.2f} CY",
+            "Shrink/swell, topsoil, unsuitable soil and waste: UNKNOWN",
+            "No TIN-to-TIN survey volume calculation was performed",
+            "QUANTITIES ARE NOT FOR BID OR CONSTRUCTION",
+        ]):
+            pdf.drawString(430, 500 - offset * 13, note)
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(430, 405, "TEMPORARY SITE-PREP FEATURES")
+        pdf.setFont("Helvetica", 6.2)
+        for offset, note in enumerate([
+            "Disturbance limit: reviewed fictional assumption",
+            "Construction entrance: location/section unapproved",
+            "Stockpile: stabilization and capacity unresolved",
+            "Silt fence: assumed alignment; no approved ESC design",
+            "Construction sequence and inspection plan: UNKNOWN",
+            "All temporary assets remain in the temporary phase",
+        ]):
+            pdf.drawString(430, 390 - offset * 13, note)
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 10)
+        pdf.drawCentredString(width / 2, 31, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica", 6)
+        pdf.drawString(32, 17, f"Sheet MS-12 | EARTHWORK / SITE PREPARATION PLAN | 1 IN = 43.64 FT | Page 12 of {total_pages}")
+        pdf.drawRightString(width - 32, 17, "Screening quantities and temporary assumptions only; not an approved construction or erosion-control plan")
         pdf.showPage()
     pdf.save()
     os.replace(raw_path, output_path)

@@ -35,18 +35,19 @@ model-studio validate projects/hilyard/project.json --output-dir outputs/hilyard
 ```
 
 The `validate` command emits a deterministic semantic package and validation
-report. The current coordinated site/sanitary/storm/water-fire/dry-utilities
+report. The current coordinated site/sanitary/storm/water-fire/dry-utilities/grading
 slice is generated with:
 
 ```bash
 model-studio build projects/hilyard/project.json \
-  --output-dir outputs/hilyard-dry-utilities
+  --output-dir outputs/hilyard-grading-site-prep
 ```
 
-This produces a ten-page, vector-only PDF (composite context; sanitary plan
+This produces a twelve-page, vector-only PDF (composite context; sanitary plan
 and profile; storm/roof plan, profile, and schedule/test details; and
 water/fire plan plus separation/test details; dry-utility/joint-trench plan and
-coordination schedule), a true-geometry GeoPackage, the
+coordination schedule; grading/drainage plan; and earthwork/site-preparation
+plan), a true-geometry GeoPackage, the
 semantic Excavation Field Map package, and
 validation/parity reports from one canonical model. The parity report decodes
 geometry markers from the actual PDF content stream and compares them with
@@ -89,8 +90,19 @@ separate owner enclosures. Gas uses a separate reviewed-assumption route, and
 site lighting remains a distinct building-fed network. Every proposed route is
 explicitly labeled `ASSUMED ROUTE`, carries dashed display styling in the
 semantic model, and preserves unknown points of service, loads, capacities,
-depths, separations, final grades, and owner approvals. Full grading and cut/fill
-remain out of scope.
+depths, separations, final grades, and owner approvals.
+
+The grading/site-preparation slice uses the City of Eugene's two-foot contours
+derived from 1999 orthophotos as reference-grade geometry only. The source
+elevations remain labeled NGVD29 and are converted into the canonical NAVD88
+model using NOAA VDatum / VERTCON 3.0 at a documented +3.698-foot parcel-center
+shift (0.165-foot reported transformation uncertainty; 0.004-foot shift range
+across the parcel). The original and converted elevation are retained on every
+existing contour. Proposed grade, subgrade, spot elevations, drainage arrows,
+cut/fill areas, disturbance limit, construction entrance, stockpile, and silt
+fence are reviewed fictional assumptions. Earthwork values use screening-only
+plan-area times average-depth calculations, not survey-to-surface volumes, and
+are not bid or construction quantities.
 
 The four City GIS taxlots are explicitly reference-derived and not survey
 authority. They are the first geometry to replace when a real boundary survey
@@ -131,8 +143,10 @@ The next implementation slice begins only after this foundation is committed:
 4. From the same passing canonical run, generate a vector PDF plan/profile,
    GeoPackage, and Excavation Field Map package and reconcile them by asset ID
    and actual artifact geometry. This is implemented for the sanitary slice.
-5. Add grading/site preparation, proposed contours, and cut/fill later. Sanitary
-   cannot be called valid without its supporting elevation/cover envelope.
+5. The grading/site-preparation slice now adds reference and proposed surfaces,
+   datum-labeled contours, spots, breaklines, drainage arrows, screening-only
+   cut/fill areas, and temporary construction/erosion-control geometry without
+   claiming survey, final design, or earthwork quantity authority.
 6. The storm/roof-drainage slice now follows sanitary. It validates gravity,
    cover, structure drops, permanent-terminal connectivity, and a modeled
    storm-below-sanitary crossing while keeping capacity/HGL, infiltration,
@@ -146,9 +160,10 @@ The next implementation slice begins only after this foundation is committed:
    terminal connections, represents power/telecom joint-trench coordination
    without claiming a shared physical vault, and forces every proposed route to
    remain visibly dashed and labeled as not located.
-9. Grading, site preparation, cut/fill, paving/flatwork, and erosion control are
-   the remaining authored civil layers. Sequence them by dependency and conflict
-   risk, not convenience.
+9. Paving/flatwork, ADA, and any jurisdiction-ready erosion-control or final
+   grading design remain explicit future scope. The current grading and
+   site-preparation layers exist only for product testing and must be superseded
+   by current survey and licensed design for real work.
 
 ## Planned closed-loop proof
 
