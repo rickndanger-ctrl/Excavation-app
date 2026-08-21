@@ -166,6 +166,7 @@ body {
   font-weight: 700;
 }
 .model-studio-launch--sanitary { top: 120px; border-color: #7c3aed; }
+.model-studio-launch--storm { top: 120px; border-color: #0369a1; }
 
 .model-studio {
   position: absolute;
@@ -216,6 +217,12 @@ body {
 .sanitary-studio__symbols span { min-height: 44px; display: grid; place-items: center; padding: 6px; border: 1px solid #7c3aed; border-radius: 8px; color: #c4b5fd; font-size: 0.7rem; text-align: center; }
 .sanitary-studio h2 { margin: 10px 0 6px; font-size: 0.85rem; }
 .sanitary-studio__excluded { margin-bottom: 6px; padding: 8px; border-left: 3px solid var(--yellow); background: var(--yellow-light); color: var(--text-secondary); font-size: 0.7rem; }
+.storm-studio__symbols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 12px; }
+.storm-studio__symbols span { min-height: 44px; display: grid; place-items: center; padding: 6px; border: 1px solid #0369a1; border-radius: 8px; color: #7dd3fc; font-size: 0.7rem; text-align: center; }
+.storm-studio h2 { margin: 10px 0 6px; font-size: 0.85rem; }
+.storm-studio__pending-pipe, .storm-studio__excluded { margin-bottom: 6px; padding: 8px; color: var(--text-secondary); font-size: 0.7rem; }
+.storm-studio__pending-pipe { border-left: 3px solid #38bdf8; background: rgba(3, 105, 161, 0.16); }
+.storm-studio__excluded { border-left: 3px solid var(--yellow); background: var(--yellow-light); }
 
 @media (min-width: 760px) {
   .model-studio { left: auto; width: 620px; border-left: 1px solid var(--border); box-shadow: -12px 0 32px rgba(0,0,0,0.45); }

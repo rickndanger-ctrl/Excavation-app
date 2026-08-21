@@ -5,6 +5,7 @@ import { LeftSidebar } from '../components/LeftSidebar';
 import { ObjectDetailsPanel } from '../components/ObjectDetailsPanel';
 import { ModelStudio } from '../components/ModelStudio';
 import { SanitaryStudio } from '../components/SanitaryStudio';
+import { StormStudio } from '../components/StormStudio';
 import { PlanCanvas, type ImportedBasePlan } from '../components/PlanCanvas';
 import { PlanUploadPanel } from '../components/PlanUploadPanel';
 import { RockCalculator } from '../components/RockCalculator';
@@ -28,6 +29,7 @@ import {
   type StoredSemanticPackage,
 } from '../lib/gradingPipeline';
 import { buildReadingSanitaryDraft, publishApprovedSanitaryPackage, type SanitaryDraft, type SanitaryReviewDecision } from '../lib/sanitaryPipeline';
+import { buildReadingStormDraft, publishApprovedStormPackage, type StormDraft, type StormReviewDecision } from '../lib/stormPipeline';
 import { buildCalibration } from '../utils/calibration';
 import { bearingLabel, distanceFeet } from '../utils/distance';
 import { getCalibrationPoints, saveCalibrationPoints } from '../utils/storage';
@@ -52,6 +54,8 @@ export function FieldMapPage() {
   const [modelStudioOpen, setModelStudioOpen] = useState(false);
   const [sanitaryDraft, setSanitaryDraft] = useState<SanitaryDraft | null>(null);
   const [sanitaryStudioOpen, setSanitaryStudioOpen] = useState(false);
+  const [stormDraft, setStormDraft] = useState<StormDraft | null>(null);
+  const [stormStudioOpen, setStormStudioOpen] = useState(false);
   const [publishedPackage, setPublishedPackage] = useState<StoredSemanticPackage | null>(() => {
     try { return loadPublishedGradingPackage(localStorage); } catch { return null; }
   });
@@ -98,6 +102,7 @@ export function FieldMapPage() {
         ]);
         setReviewDraft(buildReadingL21Draft(gradingGeometry, sourceSha256));
         setSanitaryDraft(buildReadingSanitaryDraft(sanitaryGeometry, sourceSha256));
+        setStormDraft(buildReadingStormDraft(sanitaryGeometry, sourceSha256));
       } finally {
         await document.destroy();
       }
@@ -128,6 +133,20 @@ export function FieldMapPage() {
     setPublishedNotice(`Version ${published.packageVersion} · ${published.objects.filter((object) => object.layerId === 'sanitary').length} approved sanitary features · offline ready`);
     setSelectedObjectId('');
   }, [publishedPackage, sanitaryDraft]);
+
+  const publishStorm = useCallback((decisions: StormReviewDecision[]) => {
+    if (!stormDraft || publishedPackage?.packageVersion !== 'reading-public-library-grading-sanitary-v2') return;
+    const published = publishApprovedStormPackage(publishedPackage as import('../lib/sanitaryPipeline').PublishedCombinedPackage, stormDraft, decisions, new Date().toISOString());
+    savePublishedGradingPackage(localStorage, published);
+    setPublishedPackage(published);
+    setLocalBasePlan(null);
+    setReviewDraft(null);
+    setSanitaryDraft(null);
+    setStormDraft(null);
+    setStormStudioOpen(false);
+    setPublishedNotice(`Version ${published.packageVersion} · ${published.objects.filter((object) => object.layerId === 'storm').length} approved storm structures · offline ready`);
+    setSelectedObjectId('');
+  }, [publishedPackage, stormDraft]);
 
   // Filter objects by search query (ID or label)
   const searchResults = useMemo(() => {
@@ -285,6 +304,9 @@ export function FieldMapPage() {
           Open Sanitary Studio
         </button>
       )}
+      {stormDraft && publishedPackage?.packageVersion === 'reading-public-library-grading-sanitary-v2' && !stormStudioOpen && (
+        <button type="button" className="model-studio-launch model-studio-launch--storm" onClick={() => setStormStudioOpen(true)}>Open Storm Studio</button>
+      )}
 
       {/* ── Search overlay ── */}
       {searchOpen && (
@@ -439,6 +461,9 @@ export function FieldMapPage() {
       )}
       {sanitaryStudioOpen && sanitaryDraft && (
         <SanitaryStudio draft={sanitaryDraft} onClose={() => setSanitaryStudioOpen(false)} onPublish={publishSanitary} />
+      )}
+      {stormStudioOpen && stormDraft && (
+        <StormStudio draft={stormDraft} onClose={() => setStormStudioOpen(false)} onPublish={publishStorm} />
       )}
     </div>
   );

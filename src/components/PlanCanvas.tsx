@@ -80,6 +80,10 @@ function ObjectIcon({
     icon = <g className="sanitary-symbol--cleanout">{selectionRing}<circle cx={x} cy={y} r={2.8} fill={fill} stroke={stroke} strokeWidth={sw} /><circle cx={x} cy={y} r={1.8} fill="none" stroke={stroke} strokeWidth={0.45} /><text x={x} y={y + 0.8} textAnchor="middle" fontSize="2.1" fontWeight="bold" fill={stroke}>CO</text></g>;
   } else if (obj.symbol === 'sanitary-pipe') {
     icon = <g className="sanitary-symbol--pipe">{selectionRing}<circle cx={x} cy={y} r={2.5} fill={fill} stroke={stroke} strokeWidth={sw} /><line x1={x - 3.5} y1={y} x2={x + 3.5} y2={y} stroke={stroke} strokeWidth={0.8} /></g>;
+  } else if (obj.symbol === 'storm-manhole') {
+    icon = <g className="storm-symbol--manhole">{selectionRing}<circle cx={x} cy={y} r={2.8} fill={fill} stroke={stroke} strokeWidth={sw} /><circle cx={x} cy={y} r={1.8} fill="none" stroke={stroke} strokeWidth={0.45} /><text x={x} y={y + 0.9} textAnchor="middle" fontSize="2.4" fontWeight="bold" fill={stroke}>D</text></g>;
+  } else if (obj.symbol === 'storm-catch-basin') {
+    icon = <g className="storm-symbol--catch-basin">{selectionRing}<polygon points={`${x},${y - 3} ${x + 3},${y} ${x},${y + 3} ${x - 3},${y}`} fill={fill} stroke={stroke} strokeWidth={sw} /><text x={x} y={y + 0.75} textAnchor="middle" fontSize="1.8" fontWeight="bold" fill={stroke}>CB</text></g>;
   } else if (type === 'manhole') {
     icon = (
       <>
@@ -316,7 +320,7 @@ function ObjectIcon({
     );
   }
 
-  const isSemantic = obj.layerId === 'grading' || obj.layerId === 'sanitary';
+  const isSemantic = obj.layerId === 'grading' || obj.layerId === 'sanitary' || obj.layerId === 'storm';
   return (
     <g
       className="plan-object"
@@ -392,7 +396,7 @@ export function PlanCanvas({
 
   const { plan, utilities, objects } = jobsite;
   const gradingLabels = useMemo(() => new Map(layoutGradingLabels(
-    objects.filter((object) => (object.layerId === 'grading' || object.layerId === 'sanitary') && isLayerVisible(object.layerId)).map((object) => ({
+    objects.filter((object) => ['grading', 'sanitary', 'storm'].includes(object.layerId) && isLayerVisible(object.layerId)).map((object) => ({
       id: object.id,
       x: object.x,
       y: object.y,
@@ -731,7 +735,7 @@ export function PlanCanvas({
               // dim out-of-phase objects rather than hiding them
               const opacity = inPhase ? 1 : 0.22;
               return (
-                <g key={obj.id} opacity={opacity} style={{ pointerEvents: obj.layerId === 'grading' || obj.layerId === 'sanitary' ? 'none' : inPhase ? 'auto' : 'none' }}>
+                <g key={obj.id} opacity={opacity} style={{ pointerEvents: ['grading', 'sanitary', 'storm'].includes(obj.layerId) ? 'none' : inPhase ? 'auto' : 'none' }}>
                   <ObjectIcon
                     obj={obj}
                     selected={selected}

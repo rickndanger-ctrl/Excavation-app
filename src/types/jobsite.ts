@@ -150,7 +150,7 @@ export type BlueprintObject = {
   notes?: string;
   safetyFlag?: SafetyFlag;
   workerLabel?: string;
-  symbol?: 'sanitary-manhole' | 'sanitary-cleanout' | 'sanitary-pipe';
+  symbol?: 'sanitary-manhole' | 'sanitary-cleanout' | 'sanitary-pipe' | 'storm-manhole' | 'storm-catch-basin';
   labelPriority?: number;
   confidence?: 'high' | 'medium' | 'low';
   provenance?: {
