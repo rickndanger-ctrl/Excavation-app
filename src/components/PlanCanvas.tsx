@@ -74,7 +74,13 @@ function ObjectIcon({
 
   let icon: React.ReactNode;
 
-  if (type === 'manhole') {
+  if (obj.symbol === 'sanitary-manhole') {
+    icon = <g className="sanitary-symbol--manhole">{selectionRing}<circle cx={x} cy={y} r={2.8} fill={fill} stroke={stroke} strokeWidth={sw} /><circle cx={x} cy={y} r={1.8} fill="none" stroke={stroke} strokeWidth={0.45} /><text x={x} y={y + 0.9} textAnchor="middle" fontSize="2.5" fontWeight="bold" fill={stroke}>S</text></g>;
+  } else if (obj.symbol === 'sanitary-cleanout') {
+    icon = <g className="sanitary-symbol--cleanout">{selectionRing}<circle cx={x} cy={y} r={2.8} fill={fill} stroke={stroke} strokeWidth={sw} /><circle cx={x} cy={y} r={1.8} fill="none" stroke={stroke} strokeWidth={0.45} /><text x={x} y={y + 0.8} textAnchor="middle" fontSize="2.1" fontWeight="bold" fill={stroke}>CO</text></g>;
+  } else if (obj.symbol === 'sanitary-pipe') {
+    icon = <g className="sanitary-symbol--pipe">{selectionRing}<circle cx={x} cy={y} r={2.5} fill={fill} stroke={stroke} strokeWidth={sw} /><line x1={x - 3.5} y1={y} x2={x + 3.5} y2={y} stroke={stroke} strokeWidth={0.8} /></g>;
+  } else if (type === 'manhole') {
     icon = (
       <>
         {selectionRing}
@@ -310,15 +316,16 @@ function ObjectIcon({
     );
   }
 
-  const isGrading = obj.layerId === 'grading';
+  const isSemantic = obj.layerId === 'grading' || obj.layerId === 'sanitary';
   return (
     <g
       className="plan-object"
       data-object-id={obj.id}
+      data-layer-id={obj.layerId}
       data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'}
       onClick={onClick}
     >
-      {isGrading && (
+      {isSemantic && (
         <circle
           className="plan-object-hit-target"
           cx={x}
@@ -331,7 +338,8 @@ function ObjectIcon({
       {icon}
       <StatusBadge x={x} y={y} status={status} />
       {(!labelLayout || !labelLayout.suppressed) && <text
-        className={isGrading ? 'grading-map-label' : undefined}
+        className={isSemantic ? 'grading-map-label' : undefined}
+        data-label-priority={obj.labelPriority ?? 0}
         x={labelLayout?.labelX ?? x}
         y={labelLayout?.labelY ?? y - 5}
         textAnchor="middle"
@@ -384,14 +392,15 @@ export function PlanCanvas({
 
   const { plan, utilities, objects } = jobsite;
   const gradingLabels = useMemo(() => new Map(layoutGradingLabels(
-    objects.filter((object) => object.layerId === 'grading').map((object) => ({
+    objects.filter((object) => (object.layerId === 'grading' || object.layerId === 'sanitary') && isLayerVisible(object.layerId)).map((object) => ({
       id: object.id,
       x: object.x,
       y: object.y,
       text: object.workerLabel ?? object.label,
+      priority: object.labelPriority,
     })),
     { width: plan.widthFt, height: plan.heightFt },
-  ).map((label) => [label.id, label])), [objects, plan.heightFt, plan.widthFt]);
+  ).map((label) => [label.id, label])), [isLayerVisible, objects, plan.heightFt, plan.widthFt]);
   const importedPdf = Boolean(importedBasePlan && (
     importedBasePlan.mimeType === 'application/pdf' || /\.pdf(?:$|[?#])/i.test(importedBasePlan.url)
   ));
@@ -664,6 +673,7 @@ export function PlanCanvas({
                     />
                   ) : (
                     <polyline
+                      className={line.layerId === 'sanitary' ? 'sanitary-line' : undefined}
                       points={pts}
                       fill="none"
                       stroke={layer?.color ?? '#999'}
@@ -671,7 +681,7 @@ export function PlanCanvas({
                       strokeLinecap="round"
                     />
                   )}
-                  {line.label && line.points[0] && (
+                  {line.label && line.layerId !== 'sanitary' && line.points[0] && (
                     <text
                       x={line.points[0].x + 2}
                       y={line.points[0].y - 2}
@@ -721,7 +731,7 @@ export function PlanCanvas({
               // dim out-of-phase objects rather than hiding them
               const opacity = inPhase ? 1 : 0.22;
               return (
-                <g key={obj.id} opacity={opacity} style={{ pointerEvents: obj.layerId === 'grading' ? 'none' : inPhase ? 'auto' : 'none' }}>
+                <g key={obj.id} opacity={opacity} style={{ pointerEvents: obj.layerId === 'grading' || obj.layerId === 'sanitary' ? 'none' : inPhase ? 'auto' : 'none' }}>
                   <ObjectIcon
                     obj={obj}
                     selected={selected}

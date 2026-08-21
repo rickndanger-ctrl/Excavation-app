@@ -239,20 +239,28 @@ export function publishApprovedGradingPackage(
 }
 
 type PackageStorage = Pick<Storage, 'getItem' | 'setItem'>;
+export type StoredSemanticPackage = JobsitePackage & {
+  packageVersion: string;
+  contentHash: string;
+  immutable: true;
+  sourceIncluded: false;
+  publishedAt: string;
+  limitations: string[];
+};
 const ACTIVE_PACKAGE_KEY = 'excavation-field-map:semantic-package:active';
 
 function packageKey(version: string): string {
   return `excavation-field-map:semantic-package:${version}`;
 }
 
-function verifyPackageIntegrity(published: PublishedGradingPackage): void {
+function verifyPackageIntegrity(published: StoredSemanticPackage): void {
   const { contentHash, ...core } = published;
   if (hashText(JSON.stringify(core)) !== contentHash) {
     throw new Error('Published grading package integrity check failed.');
   }
 }
 
-export function savePublishedGradingPackage(storage: PackageStorage, published: PublishedGradingPackage): void {
+export function savePublishedGradingPackage(storage: PackageStorage, published: StoredSemanticPackage): void {
   verifyPackageIntegrity(published);
   const key = packageKey(published.packageVersion);
   const encoded = JSON.stringify(published);
@@ -264,12 +272,12 @@ export function savePublishedGradingPackage(storage: PackageStorage, published: 
   storage.setItem(ACTIVE_PACKAGE_KEY, published.packageVersion);
 }
 
-export function loadPublishedGradingPackage(storage: PackageStorage): PublishedGradingPackage | null {
+export function loadPublishedGradingPackage(storage: PackageStorage): StoredSemanticPackage | null {
   const version = storage.getItem(ACTIVE_PACKAGE_KEY);
   if (!version) return null;
   const raw = storage.getItem(packageKey(version));
   if (!raw) return null;
-  const published = JSON.parse(raw) as PublishedGradingPackage;
+  const published = JSON.parse(raw) as StoredSemanticPackage;
   verifyPackageIntegrity(published);
   return deepFreeze(published);
 }

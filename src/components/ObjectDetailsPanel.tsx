@@ -46,6 +46,7 @@ function typeLabel(type: BlueprintObject['type']): string {
     control_point: 'Control Point',
     ada_ramp: 'ADA Ramp',
     construction_entrance: 'Construction Entrance',
+    sanitary_pipe: 'Sanitary Pipe',
   };
   return labels[type] ?? type;
 }

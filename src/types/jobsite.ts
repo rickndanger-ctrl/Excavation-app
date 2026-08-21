@@ -15,6 +15,7 @@ export type UtilityLine = {
   label?: string;
   phase?: string;
   points: Point[];
+  provenance?: BlueprintObject['provenance'];
 };
 
 export type SafetyFlag =
@@ -100,7 +101,8 @@ export type BlueprintObject = {
     | 'stockpile'
     | 'control_point'
     | 'ada_ramp'
-    | 'construction_entrance';
+    | 'construction_entrance'
+    | 'sanitary_pipe';
   layerId: string;
   x: number;
   y: number;
@@ -148,6 +150,8 @@ export type BlueprintObject = {
   notes?: string;
   safetyFlag?: SafetyFlag;
   workerLabel?: string;
+  symbol?: 'sanitary-manhole' | 'sanitary-cleanout' | 'sanitary-pipe';
+  labelPriority?: number;
   confidence?: 'high' | 'medium' | 'low';
   provenance?: {
     sourceSha256: string;

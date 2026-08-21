@@ -1,6 +1,6 @@
 export const GRADING_HIT_RADIUS = 7.5;
 
-export type GradingLabelInput = { id: string; x: number; y: number; text: string };
+export type GradingLabelInput = { id: string; x: number; y: number; text: string; priority?: number };
 export type GradingLabelLayout = GradingLabelInput & {
   labelX: number;
   labelY: number;
@@ -48,7 +48,10 @@ export function layoutGradingLabels(inputs: GradingLabelInput[], extent: Extent)
     bounds: { left: input.x - 3.5, right: input.x + 3.5, top: input.y - 3.5, bottom: input.y + 3.5 },
   }));
 
-  return inputs.map((input) => {
+  const layouts = new Map<string, GradingLabelLayout>();
+  const ordered = inputs.map((input, index) => ({ input, index })).sort((left, right) =>
+    (right.input.priority ?? 0) - (left.input.priority ?? 0) || left.index - right.index);
+  for (const { input } of ordered) {
     const width = labelWidth(input.text);
     for (const offset of OFFSETS) {
       const labelX = Math.min(extent.width - PLAN_PADDING - width / 2, Math.max(PLAN_PADDING + width / 2, input.x + offset.x));
@@ -58,11 +61,14 @@ export function layoutGradingLabels(inputs: GradingLabelInput[], extent: Extent)
       const obscuresFeature = markers.some((marker) => marker.id !== input.id && intersects(bounds, marker.bounds, 0.5));
       if (!collidesWithLabel && !obscuresFeature) {
         occupied.push(bounds);
-        return { ...input, labelX, labelY, suppressed: false, bounds };
+        layouts.set(input.id, { ...input, labelX, labelY, suppressed: false, bounds });
+        break;
       }
     }
+    if (layouts.has(input.id)) continue;
     const fallbackX = Math.min(extent.width - PLAN_PADDING - width / 2, Math.max(PLAN_PADDING + width / 2, input.x));
     const fallbackY = Math.min(extent.height - PLAN_PADDING, Math.max(PLAN_PADDING + LABEL_HEIGHT, input.y - 7));
-    return { ...input, labelX: fallbackX, labelY: fallbackY, suppressed: true, bounds: boundsAt(fallbackX, fallbackY, width) };
-  });
+    layouts.set(input.id, { ...input, labelX: fallbackX, labelY: fallbackY, suppressed: true, bounds: boundsAt(fallbackX, fallbackY, width) });
+  }
+  return inputs.map((input) => layouts.get(input.id)!);
 }

@@ -4,6 +4,7 @@ import { ForemanNotes } from '../components/ForemanNotes';
 import { LeftSidebar } from '../components/LeftSidebar';
 import { ObjectDetailsPanel } from '../components/ObjectDetailsPanel';
 import { ModelStudio } from '../components/ModelStudio';
+import { SanitaryStudio } from '../components/SanitaryStudio';
 import { PlanCanvas, type ImportedBasePlan } from '../components/PlanCanvas';
 import { PlanUploadPanel } from '../components/PlanUploadPanel';
 import { RockCalculator } from '../components/RockCalculator';
@@ -24,7 +25,9 @@ import {
   type GradingReviewDecision,
   type GradingReviewDraft,
   type PublishedGradingPackage,
+  type StoredSemanticPackage,
 } from '../lib/gradingPipeline';
+import { buildReadingSanitaryDraft, publishApprovedSanitaryPackage, type SanitaryDraft, type SanitaryReviewDecision } from '../lib/sanitaryPipeline';
 import { buildCalibration } from '../utils/calibration';
 import { bearingLabel, distanceFeet } from '../utils/distance';
 import { getCalibrationPoints, saveCalibrationPoints } from '../utils/storage';
@@ -47,7 +50,9 @@ export function FieldMapPage() {
   const [localBasePlan, setLocalBasePlan] = useState<ImportedBasePlan | null>(null);
   const [reviewDraft, setReviewDraft] = useState<GradingReviewDraft | null>(null);
   const [modelStudioOpen, setModelStudioOpen] = useState(false);
-  const [publishedPackage, setPublishedPackage] = useState<PublishedGradingPackage | null>(() => {
+  const [sanitaryDraft, setSanitaryDraft] = useState<SanitaryDraft | null>(null);
+  const [sanitaryStudioOpen, setSanitaryStudioOpen] = useState(false);
+  const [publishedPackage, setPublishedPackage] = useState<StoredSemanticPackage | null>(() => {
     try { return loadPublishedGradingPackage(localStorage); } catch { return null; }
   });
   const [publishedNotice, setPublishedNotice] = useState<string | null>(null);
@@ -87,8 +92,12 @@ export function FieldMapPage() {
         .map((byte) => byte.toString(16).padStart(2, '0')).join('');
       const document = await getDocument({ data: new Uint8Array(buffer) }).promise;
       try {
-        const page = await document.getPage(6);
-        setReviewDraft(buildReadingL21Draft(await extractPdfPageGeometry(document, page), sourceSha256));
+        const [gradingPage, sanitaryPage] = await Promise.all([document.getPage(6), document.getPage(2)]);
+        const [gradingGeometry, sanitaryGeometry] = await Promise.all([
+          extractPdfPageGeometry(document, gradingPage), extractPdfPageGeometry(document, sanitaryPage),
+        ]);
+        setReviewDraft(buildReadingL21Draft(gradingGeometry, sourceSha256));
+        setSanitaryDraft(buildReadingSanitaryDraft(sanitaryGeometry, sourceSha256));
       } finally {
         await document.destroy();
       }
@@ -106,6 +115,19 @@ export function FieldMapPage() {
     setPublishedNotice(`Version ${published.packageVersion} · ${published.objects.length} approved features · offline ready`);
     setSelectedObjectId('');
   }, [reviewDraft]);
+
+  const publishSanitary = useCallback((decisions: SanitaryReviewDecision[]) => {
+    if (!sanitaryDraft || publishedPackage?.packageVersion !== 'reading-public-library-l2.1-grading-v1') return;
+    const published = publishApprovedSanitaryPackage(publishedPackage as PublishedGradingPackage, sanitaryDraft, decisions, new Date().toISOString());
+    savePublishedGradingPackage(localStorage, published);
+    setPublishedPackage(published);
+    setLocalBasePlan(null);
+    setReviewDraft(null);
+    setSanitaryDraft(null);
+    setSanitaryStudioOpen(false);
+    setPublishedNotice(`Version ${published.packageVersion} · ${published.objects.filter((object) => object.layerId === 'sanitary').length} approved sanitary features · offline ready`);
+    setSelectedObjectId('');
+  }, [publishedPackage, sanitaryDraft]);
 
   // Filter objects by search query (ID or label)
   const searchResults = useMemo(() => {
@@ -256,6 +278,11 @@ export function FieldMapPage() {
       {reviewDraft && !modelStudioOpen && (
         <button type="button" className="model-studio-launch" onClick={() => setModelStudioOpen(true)}>
           Open Model Studio
+        </button>
+      )}
+      {sanitaryDraft && publishedPackage?.packageVersion === 'reading-public-library-l2.1-grading-v1' && !sanitaryStudioOpen && (
+        <button type="button" className="model-studio-launch model-studio-launch--sanitary" onClick={() => setSanitaryStudioOpen(true)}>
+          Open Sanitary Studio
         </button>
       )}
 
@@ -409,6 +436,9 @@ export function FieldMapPage() {
       />
       {modelStudioOpen && reviewDraft && (
         <ModelStudio draft={reviewDraft} onClose={() => setModelStudioOpen(false)} onPublish={publishGrading} />
+      )}
+      {sanitaryStudioOpen && sanitaryDraft && (
+        <SanitaryStudio draft={sanitaryDraft} onClose={() => setSanitaryStudioOpen(false)} onPublish={publishSanitary} />
       )}
     </div>
   );

@@ -51,3 +51,14 @@ test('keeps glove-sized grading hit geometry inside the normalized review extent
   assert.ok(crowded.every((feature) => feature.x - GRADING_HIT_RADIUS >= 1.5));
   assert.ok(crowded.every((feature) => feature.x + GRADING_HIT_RADIUS <= 118.5));
 });
+
+test('places higher-priority sanitary structure and invert labels before pipe attributes', () => {
+  const laidOut = layoutGradingLabels([
+    { id: 'pipe', x: 60, y: 40, text: '8-in PVC', priority: 100 },
+    { id: 'structure', x: 60, y: 40, text: 'SMH IN 154.49 / OUT 154.44', priority: 300 },
+  ], { width: 120, height: 80 });
+  const structure = laidOut.find((label) => label.id === 'structure')!;
+  const pipe = laidOut.find((label) => label.id === 'pipe')!;
+  assert.equal(structure.labelY, 33);
+  assert.notEqual(pipe.labelY, 33);
+});
