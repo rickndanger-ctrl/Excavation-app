@@ -114,6 +114,8 @@ class ModelStudioLauncherTests(unittest.TestCase):
             commands.mkdir()
             user_bin = temp / ".local/bin"
             user_bin.mkdir(parents=True)
+            runtime_bin = temp / "runtime/bin"
+            runtime_bin.mkdir(parents=True)
             trace = temp / "trace"
             ready = temp / "ready"
             self._write_command(
@@ -123,11 +125,15 @@ class ModelStudioLauncherTests(unittest.TestCase):
             )
             self._write_command(commands, "open", 'echo "open $*" >> "$TRACE_FILE"\n')
             self._write_command(commands, "osascript", 'echo "osascript $*" >> "$TRACE_FILE"\n')
-            self._write_command(
-                user_bin,
-                "pm2",
-                'echo "pm2 $*" >> "$TRACE_FILE"\ntouch "$READY_FILE"\n',
+            pm2 = runtime_bin / "pm2"
+            pm2.write_text(
+                "#!/usr/bin/env node\n"
+                'echo "pm2 $*" >> "$TRACE_FILE"\n'
+                'touch "$READY_FILE"\n'
             )
+            pm2.chmod(0o755)
+            (user_bin / "pm2").symlink_to(pm2)
+            self._write_command(runtime_bin, "node", '/bin/bash "$@"\n')
             environment = self._environment(temp, commands, trace)
             environment["READY_FILE"] = str(ready)
 

@@ -38,6 +38,20 @@ resolve_pm2() {
   return 1
 }
 
+resolve_executable_directory() {
+  local executable="$1"
+  local target
+  while [[ -L "$executable" ]]; do
+    target="$(readlink "$executable")" || return 1
+    if [[ "$target" == /* ]]; then
+      executable="$target"
+    else
+      executable="$(dirname "$executable")/$target"
+    fi
+  done
+  (cd "$(dirname "$executable")" && pwd -P)
+}
+
 show_error() {
   local message="$1"
   if [[ "${MODEL_STUDIO_APP_HANDLES_ERRORS:-0}" != "1" ]] && command -v osascript >/dev/null 2>&1; then
@@ -68,8 +82,10 @@ fi
 [[ -f "$ECOSYSTEM" ]] || fail "Supervisor configuration is missing. Reinstall Model Studio from the repository. $DISCLAIMER"
 PM2_COMMAND="$(resolve_pm2 || true)"
 [[ -n "$PM2_COMMAND" ]] || fail "pm2 is not installed or is not available to the launcher. $DISCLAIMER"
+PM2_RUNTIME_DIRECTORY="$(resolve_executable_directory "$PM2_COMMAND" || true)"
+[[ -n "$PM2_RUNTIME_DIRECTORY" ]] || fail "The pm2 runtime could not be resolved. $DISCLAIMER"
 
-if ! "$PM2_COMMAND" start "$ECOSYSTEM" --only "$SERVICE_NAME" --update-env >/dev/null 2>&1; then
+if ! PATH="$PM2_RUNTIME_DIRECTORY:$PATH" "$PM2_COMMAND" start "$ECOSYSTEM" --only "$SERVICE_NAME" --update-env >/dev/null 2>&1; then
   fail "The supervised Model Studio service could not be started. Run 'pm2 logs $SERVICE_NAME' for details. $DISCLAIMER"
 fi
 
