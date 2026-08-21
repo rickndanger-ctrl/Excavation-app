@@ -41,14 +41,14 @@ resolve_pm2() {
 resolve_executable_directory() {
   local executable="$1"
   local target
-  while [[ -L "$executable" ]]; do
+  if [[ -L "$executable" ]]; then
     target="$(readlink "$executable")" || return 1
     if [[ "$target" == /* ]]; then
       executable="$target"
     else
       executable="$(dirname "$executable")/$target"
     fi
-  done
+  fi
   (cd "$(dirname "$executable")" && pwd -P)
 }
 

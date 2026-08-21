@@ -116,6 +116,8 @@ class ModelStudioLauncherTests(unittest.TestCase):
             user_bin.mkdir(parents=True)
             runtime_bin = temp / "runtime/bin"
             runtime_bin.mkdir(parents=True)
+            runtime_lib = temp / "runtime/lib"
+            runtime_lib.mkdir(parents=True)
             trace = temp / "trace"
             ready = temp / "ready"
             self._write_command(
@@ -125,14 +127,15 @@ class ModelStudioLauncherTests(unittest.TestCase):
             )
             self._write_command(commands, "open", 'echo "open $*" >> "$TRACE_FILE"\n')
             self._write_command(commands, "osascript", 'echo "osascript $*" >> "$TRACE_FILE"\n')
-            pm2 = runtime_bin / "pm2"
-            pm2.write_text(
+            pm2_script = runtime_lib / "pm2"
+            pm2_script.write_text(
                 "#!/usr/bin/env node\n"
                 'echo "pm2 $*" >> "$TRACE_FILE"\n'
                 'touch "$READY_FILE"\n'
             )
-            pm2.chmod(0o755)
-            (user_bin / "pm2").symlink_to(pm2)
+            pm2_script.chmod(0o755)
+            (runtime_bin / "pm2").symlink_to("../lib/pm2")
+            (user_bin / "pm2").symlink_to(runtime_bin / "pm2")
             self._write_command(runtime_bin, "node", '/bin/bash "$@"\n')
             environment = self._environment(temp, commands, trace)
             environment["READY_FILE"] = str(ready)
