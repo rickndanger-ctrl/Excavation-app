@@ -51,6 +51,19 @@ test('preserves producer timestamps with PostgreSQL microsecond precision', asyn
   assert.equal(parsed.envelope.created_at, '2026-08-21T21:48:26.819270Z');
 });
 
+test('hashes packages on plain-HTTP LAN origins where Web Crypto is unavailable', async () => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+  Object.defineProperty(globalThis, 'crypto', { configurable: true, value: undefined });
+  try {
+    assert.equal(
+      await sha256Hex('abc'),
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+    );
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, 'crypto', descriptor);
+  }
+});
+
 test('rejects incomplete, incompatible, checksum-mismatched, and cross-project envelopes', async () => {
   await assert.rejects(
     parseSemanticPublication({ ...(await envelope()), content_sha256: '0'.repeat(64) }),

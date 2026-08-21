@@ -1,3 +1,5 @@
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 import type { JobsitePackage } from '../types/jobsite';
 import { parseSemanticJobsiteManifest } from './semanticPackageAdapter';
 
@@ -82,8 +84,7 @@ function envelopeFromUnknown(input: unknown): SemanticPublicationEnvelope {
 }
 
 export async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return bytesToHex(sha256(new TextEncoder().encode(value)));
 }
 
 export async function parseSemanticPublication(input: unknown): Promise<ParsedSemanticPublication> {
