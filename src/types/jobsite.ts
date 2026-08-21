@@ -2,6 +2,11 @@ export type GpsCoord = { lat: number; lng: number };
 
 export type Point = { x: number; y: number };
 
+export type FeatureGeometry =
+  | { type: 'Point'; coordinates: Point }
+  | { type: 'LineString'; coordinates: Point[] }
+  | { type: 'Polygon'; coordinates: Point[] };
+
 export type ExcavationLayer = {
   id: string;
   name: string;
@@ -102,12 +107,15 @@ export type BlueprintObject = {
     | 'control_point'
     | 'ada_ramp'
     | 'construction_entrance'
-    | 'sanitary_pipe';
+    | 'sanitary_pipe'
+    | (string & {});
   layerId: string;
   x: number;
   y: number;
   label: string;
   phase?: string;
+  geometry?: FeatureGeometry;
+  fieldDetail?: Record<string, unknown>;
 
   // ── Basic elevations / geometry ──────────────────────────────────────────
   elevation?: string;
@@ -154,12 +162,14 @@ export type BlueprintObject = {
   labelPriority?: number;
   confidence?: 'high' | 'medium' | 'low';
   provenance?: {
-    sourceSha256: string;
-    sheet: string;
-    pdfPage: number;
-    sourceItemIndexes: number[];
-    sourceText: string[];
-    extraction: string;
+    sourceSha256?: string;
+    sheet?: string;
+    pdfPage?: number;
+    sourceItemIndexes?: number[];
+    sourceText?: string[];
+    extraction?: string;
+    sourceIds?: string[];
+    decisionIds?: string[];
     status: 'confirmed' | 'reference-derived' | 'reviewed_assumption' | 'generated' | 'unknown';
   };
 };
@@ -186,6 +196,10 @@ export const OVERVIEW_PHASE_ID = '__overview__';
 export type JobsitePackage = {
   id: string;
   projectName: string;
+  schemaVersion?: string;
+  canonicalModelVersion?: string;
+  disclaimer?: string;
+  unavailable?: Array<Record<string, unknown>>;
   phases: JobsitePhase[];
   downloadedAt?: string;
   plan: {

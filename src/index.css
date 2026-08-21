@@ -717,6 +717,17 @@ body {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
 }
 
+.semantic-plan-background {
+  display: block;
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(rgba(100, 116, 139, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 116, 139, 0.08) 1px, transparent 1px);
+  background-size: 10px 10px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
 .plan-canvas__pdf {
   background: #fff;
 }

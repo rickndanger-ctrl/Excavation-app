@@ -2,6 +2,7 @@ import { Crosshair, Minus, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { BlueprintObject, JobsitePackage, ObjectStatus, Point } from '../types/jobsite';
 import { distanceFeet, formatFeet } from '../utils/distance';
+import { distanceToFeature } from '../lib/spatialGeometry';
 import { GRADING_HIT_RADIUS, layoutGradingLabels, type GradingLabelLayout } from '../lib/gradingLayout';
 import { PdfPlanLayer } from './PdfPlanLayer';
 
@@ -22,6 +23,7 @@ type PlanCanvasProps = {
   onSelectObject: (id: string) => void;
   recenterToken: number;
   importedBasePlan?: ImportedBasePlan | null;
+  showSemanticOverlaysWithBasePlan?: boolean;
 };
 
 const HIT_RADIUS_FT = 8;
@@ -378,6 +380,7 @@ export function PlanCanvas({
   onSelectObject,
   recenterToken,
   importedBasePlan,
+  showSemanticOverlaysWithBasePlan = false,
 }: PlanCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.9);
@@ -402,7 +405,7 @@ export function PlanCanvas({
   const { plan, utilities, objects } = jobsite;
   const nearestVisibleObject = useCallback((point: Point) => objects
     .filter((obj) => isLayerVisible(obj.layerId) && isPhaseVisible(obj.phase))
-    .map((obj) => ({ obj, distance: distanceFeet(point, obj) }))
+    .map((obj) => ({ obj, distance: distanceToFeature(point, obj) }))
     .filter(({ distance }) => distance <= HIT_RADIUS_FT)
     .sort((left, right) => left.distance - right.distance)[0]?.obj, [isLayerVisible, isPhaseVisible, objects]);
   const gradingLabels = useMemo(() => new Map(layoutGradingLabels(
@@ -418,6 +421,7 @@ export function PlanCanvas({
   const importedPdf = Boolean(importedBasePlan && (
     importedBasePlan.mimeType === 'application/pdf' || /\.pdf(?:$|[?#])/i.test(importedBasePlan.url)
   ));
+  const renderSemanticOverlays = !importedBasePlan || showSemanticOverlaysWithBasePlan;
   const selectedObject = objects.find((o) => o.id === selectedObjectId) ?? null;
   const distance = selectedObject ? distanceFeet(userLocation, selectedObject) : null;
 
@@ -581,7 +585,7 @@ export function PlanCanvas({
       {importedBasePlan && (
         <div className="imported-plan-status" role="status">
           <strong>{importedBasePlan.name}</strong>
-          <span>Imported base sheet · field overlays hidden until reviewed and calibrated</span>
+          <span>{showSemanticOverlaysWithBasePlan ? 'Imported base sheet · approved semantic overlays remain visible' : 'Imported base sheet · field overlays hidden until reviewed and calibrated'}</span>
           {importedPdf && pdfPageCount > 1 && (
             <div className="imported-plan-pages" aria-label="PDF page controls">
               <button type="button" onClick={() => setPdfPage((page) => Math.max(1, page - 1))} disabled={pdfPage === 1}>Previous</button>
@@ -645,7 +649,7 @@ export function PlanCanvas({
                 draggable={false}
               />
             )
-          ) : (
+          ) : plan.imageUrl ? (
             <img
               src={plan.imageUrl}
               alt="Jobsite plan"
@@ -653,6 +657,12 @@ export function PlanCanvas({
               width={plan.widthFt}
               height={plan.heightFt}
               draggable={false}
+            />
+          ) : (
+            <div
+              className="semantic-plan-background"
+              style={{ width: plan.widthFt, height: plan.heightFt }}
+              aria-label="Semantic model background"
             />
           )}
 
@@ -662,7 +672,7 @@ export function PlanCanvas({
             width={plan.widthFt}
             height={plan.heightFt}
           >
-            {!importedBasePlan && utilities.map((line) => {
+            {renderSemanticOverlays && utilities.map((line) => {
               if (!isLayerVisible(line.layerId)) return null;
               const inPhase = isPhaseVisible(line.phase);
               const layer = jobsite.layers.find((l) => l.id === line.layerId);
@@ -706,7 +716,7 @@ export function PlanCanvas({
               );
             })}
 
-            {!importedBasePlan && selectedObject && mid && (
+            {renderSemanticOverlays && selectedObject && mid && (
               <>
                 <line
                   x1={userLocation.x}
@@ -733,32 +743,34 @@ export function PlanCanvas({
               </>
             )}
 
-            {!importedBasePlan && objects.map((obj) => {
+            {renderSemanticOverlays && objects.map((obj) => {
               if (!isLayerVisible(obj.layerId)) return null;
               const inPhase = isPhaseVisible(obj.phase);
               const layer = jobsite.layers.find((l) => l.id === obj.layerId);
               const selected = obj.id === selectedObjectId;
               // dim out-of-phase objects rather than hiding them
               const opacity = inPhase ? 1 : 0.22;
-              return (
-                <g key={obj.id} opacity={opacity} style={{ pointerEvents: ['grading', 'sanitary', 'storm', 'water', 'dry-utility'].includes(obj.layerId) ? 'none' : inPhase ? 'auto' : 'none' }}>
-                  <ObjectIcon
-                    obj={obj}
-                    selected={selected}
-                    color={layer?.color ?? '#5f6368'}
-                    status={getObjectStatus(obj.id)}
-                    labelLayout={gradingLabels.get(obj.id)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectObject(obj.id);
-                    }}
-                  />
-                </g>
-              );
+              const color = layer?.color ?? '#5f6368';
+              const geometry = obj.geometry;
+              if (geometry?.type === 'Polygon') {
+                return <g key={obj.id} className="semantic-feature semantic-feature--polygon" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="Polygon" opacity={opacity}>
+                  <polygon points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill={color} fillOpacity={selected ? 0.28 : 0.12} stroke={selected ? '#ea4335' : color} strokeWidth={selected ? 1.2 : 0.7} onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
+                  <text x={obj.x} y={obj.y} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>
+                </g>;
+              }
+              if (geometry?.type === 'LineString') {
+                return <g key={obj.id} className="semantic-feature semantic-feature--line" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="LineString" opacity={opacity}>
+                  <polyline points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" stroke={selected ? '#ea4335' : color} strokeWidth={selected ? 2.2 : 1.4} strokeLinecap="round" onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
+                  <text x={obj.x} y={obj.y - 2} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>
+                </g>;
+              }
+              return <g key={obj.id} opacity={opacity} data-geometry-type="Point" style={{ pointerEvents: inPhase ? 'auto' : 'none' }}>
+                <ObjectIcon obj={obj} selected={selected} color={color} status={getObjectStatus(obj.id)} labelLayout={gradingLabels.get(obj.id)} onClick={(e) => { e.stopPropagation(); onSelectObject(obj.id); }} />
+              </g>;
             })}
 
             {/* User location is only trustworthy after the imported plan is reviewed and calibrated. */}
-            {!importedBasePlan && <g transform={`translate(${userLocation.x}, ${userLocation.y})`}>
+            {renderSemanticOverlays && <g transform={`translate(${userLocation.x}, ${userLocation.y})`}>
               <circle r={4} fill="#1a73e8" fillOpacity={0.18} />
               <circle r={2} fill="#1a73e8" stroke="#fff" strokeWidth={0.6} />
               <polygon

@@ -22,7 +22,7 @@ const ALL_TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 // ── Type labels ───────────────────────────────────────────────────────────────
 
 function typeLabel(type: BlueprintObject['type']): string {
-  const labels: Record<BlueprintObject['type'], string> = {
+  const labels: Record<string, string> = {
     manhole: 'Manhole',
     catch_basin: 'Catch Basin',
     curb: 'Curb Section',
@@ -122,6 +122,7 @@ function ForemanStrip({ object, distanceFt }: { object: BlueprintObject; distanc
 // ── Tab: Summary ──────────────────────────────────────────────────────────────
 
 function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceFt: number | null }) {
+  const semanticDetails = Object.entries(object.fieldDetail ?? {});
   return (
     <div className="tab-content">
       {/* Location / layout */}
@@ -244,10 +245,26 @@ function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceF
         <div className="detail-section">
           <div className="detail-section__title">Source &amp; confidence</div>
           <dl className="detail-list">
-            <div className="detail-row"><dt>Provenance</dt><dd>Reference-derived</dd></div>
-            <div className="detail-row"><dt>Confidence</dt><dd>{object.confidence === 'high' ? 'High confidence' : 'Medium confidence'}</dd></div>
-            <div className="detail-row"><dt>Source</dt><dd>Sheet {object.provenance.sheet}, PDF page {object.provenance.pdfPage}</dd></div>
-            <div className="detail-row"><dt>Extracted text</dt><dd>{object.provenance.sourceText.join(' / ')}</dd></div>
+            <div className="detail-row"><dt>Provenance</dt><dd>{object.provenance.status.charAt(0).toUpperCase() + object.provenance.status.slice(1)}</dd></div>
+            {object.confidence && <div className="detail-row"><dt>Confidence</dt><dd>{object.confidence === 'high' ? 'High confidence' : 'Medium confidence'}</dd></div>}
+            {(object.provenance.sheet || object.provenance.pdfPage) && <div className="detail-row"><dt>Source</dt><dd>Sheet {object.provenance.sheet}, PDF page {object.provenance.pdfPage}</dd></div>}
+            {(object.provenance.sourceIds?.length ?? 0) > 0 && <div className="detail-row"><dt>Source IDs</dt><dd>{object.provenance.sourceIds!.join(', ')}</dd></div>}
+            {(object.provenance.decisionIds?.length ?? 0) > 0 && <div className="detail-row"><dt>Decision IDs</dt><dd>{object.provenance.decisionIds!.join(', ')}</dd></div>}
+            {object.provenance.sourceText && <div className="detail-row"><dt>Extracted text</dt><dd>{object.provenance.sourceText.join(' / ')}</dd></div>}
+          </dl>
+        </div>
+      )}
+
+      {semanticDetails.length > 0 && (
+        <div className="detail-section">
+          <div className="detail-section__title">Semantic field data</div>
+          <dl className="detail-list">
+            {semanticDetails.map(([key, value]) => (
+              <div className="detail-row" key={key}>
+                <dt>{key.replaceAll('_', ' ')}</dt>
+                <dd>{typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? String(value) : JSON.stringify(value)}</dd>
+              </div>
+            ))}
           </dl>
         </div>
       )}

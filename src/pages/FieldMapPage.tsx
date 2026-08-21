@@ -20,6 +20,7 @@ import { useProjects } from '../hooks/useProjects';
 import { OVERVIEW_PHASE_ID, type ControlPoint } from '../types/jobsite';
 import { getDocument } from 'pdfjs-dist';
 import { extractPdfPageGeometry } from '../lib/pdfPlanGeometry';
+import { parseSemanticJobsiteManifest } from '../lib/semanticPackageAdapter';
 import {
   buildReadingL21Draft,
   loadPublishedGradingPackage,
@@ -45,6 +46,7 @@ export function FieldMapPage() {
   const { offlineReady, downloading, downloadPlans, activePackage } = useJobsitePackage();
   const calcRef = useRef<HTMLElement>(null);
   const civilPlanInputRef = useRef<HTMLInputElement>(null);
+  const modelPackageInputRef = useRef<HTMLInputElement>(null);
 
   const { setStatus, getStatus } = useObjectStatus();
   const [selectedObjectId, setSelectedObjectId] = useState(defaultSelectedObjectId);
@@ -54,6 +56,7 @@ export function FieldMapPage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [localBasePlan, setLocalBasePlan] = useState<ImportedBasePlan | null>(null);
+  const [importedSemanticPackage, setImportedSemanticPackage] = useState<import('../types/jobsite').JobsitePackage | null>(null);
   const [reviewDraft, setReviewDraft] = useState<GradingReviewDraft | null>(null);
   const [modelStudioOpen, setModelStudioOpen] = useState(false);
   const [sanitaryDraft, setSanitaryDraft] = useState<SanitaryDraft | null>(null);
@@ -68,7 +71,7 @@ export function FieldMapPage() {
     try { return loadPublishedGradingPackage(localStorage); } catch { return null; }
   });
   const [publishedNotice, setPublishedNotice] = useState<string | null>(null);
-  const displayPackage = publishedPackage ?? activePackage;
+  const displayPackage = importedSemanticPackage ?? publishedPackage ?? activePackage;
   const { visibility, toggleLayer, isVisible } = useLayerVisibility(displayPackage.layers);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,6 +120,20 @@ export function FieldMapPage() {
         await document.destroy();
       }
     }).catch(() => setReviewDraft(null));
+  }, []);
+
+  const importModelPackage = useCallback((file: File | undefined) => {
+    if (!file) return;
+    void file.text().then((text) => {
+      const parsed = parseSemanticJobsiteManifest(JSON.parse(text));
+      setImportedSemanticPackage(parsed);
+      setPublishedPackage(null);
+      setSelectedObjectId('');
+      setPublishedNotice(`${parsed.projectName} · ${parsed.objects.length} semantic features · ${parsed.disclaimer}`);
+      setDrawerOpen(false);
+    }).catch((error: unknown) => {
+      setPublishedNotice(`Model package rejected: ${error instanceof Error ? error.message : 'invalid JSON'}`);
+    });
   }, []);
 
   const publishGrading = useCallback((decisions: GradingReviewDecision[]) => {
@@ -280,6 +297,7 @@ export function FieldMapPage() {
           }}
           recenterToken={recenterToken}
           importedBasePlan={importedBasePlan}
+          showSemanticOverlaysWithBasePlan={Boolean(importedSemanticPackage || publishedPackage)}
         />
       </div>
 
@@ -438,6 +456,7 @@ export function FieldMapPage() {
             hasActiveProject={Boolean(projects.activeProject)}
             onUploadPlan={() => setShowSidebarUpload(true)}
             onImportCivilPlan={() => civilPlanInputRef.current?.click()}
+            onImportModelPackage={() => modelPackageInputRef.current?.click()}
             importedPlanName={importedBasePlan?.name}
             onOpenModelStudio={reviewDraft ? () => { setModelStudioOpen(true); setDrawerOpen(false); } : undefined}
           />
@@ -483,6 +502,17 @@ export function FieldMapPage() {
         aria-label="Choose a civil plan PDF"
         onChange={(event) => {
           importCivilPlan(event.target.files?.[0]);
+          event.currentTarget.value = '';
+        }}
+      />
+      <input
+        ref={modelPackageInputRef}
+        className="sr-only"
+        type="file"
+        accept="application/json,.json"
+        aria-label="Choose a semantic model package"
+        onChange={(event) => {
+          importModelPackage(event.target.files?.[0]);
           event.currentTarget.value = '';
         }}
       />

@@ -21,6 +21,7 @@ type LeftSidebarProps = {
   hasActiveProject: boolean;
   onUploadPlan: () => void;
   onImportCivilPlan: () => void;
+  onImportModelPackage: () => void;
   importedPlanName?: string | null;
   onOpenModelStudio?: () => void;
 };
@@ -44,6 +45,7 @@ export function LeftSidebar({
   hasActiveProject,
   onUploadPlan,
   onImportCivilPlan,
+  onImportModelPackage,
   importedPlanName,
   onOpenModelStudio,
 }: LeftSidebarProps) {
@@ -111,6 +113,10 @@ export function LeftSidebar({
       </section>
 
       <section className="sidebar-section sidebar-actions">
+        <button type="button" className="btn btn--primary" onClick={onImportModelPackage}>
+          <Upload size={16} />
+          Import Model Package
+        </button>
         <button type="button" className="btn btn--primary" onClick={onImportCivilPlan}>
           <FileUp size={16} />
           Import Civil Plans
