@@ -9,7 +9,7 @@ export function useLayerVisibility(layers: ExcavationLayer[]) {
   const [visibility, setVisibility] = useState<Record<string, boolean>>(initial);
 
   const toggleLayer = (layerId: string) => {
-    setVisibility((prev) => ({ ...prev, [layerId]: !prev[layerId] }));
+    setVisibility((prev) => ({ ...prev, [layerId]: !(prev[layerId] ?? true) }));
   };
 
   const isVisible = (layerId: string) => visibility[layerId] ?? true;

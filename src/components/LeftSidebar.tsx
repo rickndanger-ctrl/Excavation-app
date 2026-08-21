@@ -22,6 +22,7 @@ type LeftSidebarProps = {
   onUploadPlan: () => void;
   onImportCivilPlan: () => void;
   importedPlanName?: string | null;
+  onOpenModelStudio?: () => void;
 };
 
 export function LeftSidebar({
@@ -44,6 +45,7 @@ export function LeftSidebar({
   onUploadPlan,
   onImportCivilPlan,
   importedPlanName,
+  onOpenModelStudio,
 }: LeftSidebarProps) {
   const activePhase = phases.find((p) => p.id === activePhaseId);
   const isOverview = activePhaseId === OVERVIEW_PHASE_ID;
@@ -115,6 +117,11 @@ export function LeftSidebar({
         </button>
         {importedPlanName && (
           <p className="sidebar-imported-plan">Base sheet: {importedPlanName}</p>
+        )}
+        {onOpenModelStudio && (
+          <button type="button" className="btn btn--secondary" onClick={onOpenModelStudio}>
+            Open Model Studio
+          </button>
         )}
         <button
           type="button"

@@ -3,6 +3,7 @@ import { defaultSelectedObjectId } from '../data/sampleWillowCreek';
 import { ForemanNotes } from '../components/ForemanNotes';
 import { LeftSidebar } from '../components/LeftSidebar';
 import { ObjectDetailsPanel } from '../components/ObjectDetailsPanel';
+import { ModelStudio } from '../components/ModelStudio';
 import { PlanCanvas, type ImportedBasePlan } from '../components/PlanCanvas';
 import { PlanUploadPanel } from '../components/PlanUploadPanel';
 import { RockCalculator } from '../components/RockCalculator';
@@ -13,6 +14,17 @@ import { useLayerVisibility } from '../hooks/useLayerVisibility';
 import { useObjectStatus } from '../hooks/useObjectStatus';
 import { useProjects } from '../hooks/useProjects';
 import { OVERVIEW_PHASE_ID, type ControlPoint } from '../types/jobsite';
+import { getDocument } from 'pdfjs-dist';
+import { extractPdfPageGeometry } from '../lib/pdfPlanGeometry';
+import {
+  buildReadingL21Draft,
+  loadPublishedGradingPackage,
+  publishApprovedGradingPackage,
+  savePublishedGradingPackage,
+  type GradingReviewDecision,
+  type GradingReviewDraft,
+  type PublishedGradingPackage,
+} from '../lib/gradingPipeline';
 import { buildCalibration } from '../utils/calibration';
 import { bearingLabel, distanceFeet } from '../utils/distance';
 import { getCalibrationPoints, saveCalibrationPoints } from '../utils/storage';
@@ -25,8 +37,6 @@ export function FieldMapPage() {
   const calcRef = useRef<HTMLElement>(null);
   const civilPlanInputRef = useRef<HTMLInputElement>(null);
 
-  const displayPackage = activePackage;
-  const { visibility, toggleLayer, isVisible } = useLayerVisibility(displayPackage.layers);
   const { setStatus, getStatus } = useObjectStatus();
   const [selectedObjectId, setSelectedObjectId] = useState(defaultSelectedObjectId);
   const [recenterToken, setRecenterToken] = useState(0);
@@ -35,6 +45,14 @@ export function FieldMapPage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [localBasePlan, setLocalBasePlan] = useState<ImportedBasePlan | null>(null);
+  const [reviewDraft, setReviewDraft] = useState<GradingReviewDraft | null>(null);
+  const [modelStudioOpen, setModelStudioOpen] = useState(false);
+  const [publishedPackage, setPublishedPackage] = useState<PublishedGradingPackage | null>(() => {
+    try { return loadPublishedGradingPackage(localStorage); } catch { return null; }
+  });
+  const [publishedNotice, setPublishedNotice] = useState<string | null>(null);
+  const displayPackage = publishedPackage ?? activePackage;
+  const { visibility, toggleLayer, isVisible } = useLayerVisibility(displayPackage.layers);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const storedBasePlan = useMemo<ImportedBasePlan | null>(() => {
@@ -62,7 +80,32 @@ export function FieldMapPage() {
     });
     setSelectedObjectId('');
     setDrawerOpen(false);
+    setPublishedNotice(null);
+    void file.arrayBuffer().then(async (buffer) => {
+      const digest = await crypto.subtle.digest('SHA-256', buffer.slice(0));
+      const sourceSha256 = Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, '0')).join('');
+      const document = await getDocument({ data: new Uint8Array(buffer) }).promise;
+      try {
+        const page = await document.getPage(6);
+        setReviewDraft(buildReadingL21Draft(await extractPdfPageGeometry(document, page), sourceSha256));
+      } finally {
+        await document.destroy();
+      }
+    }).catch(() => setReviewDraft(null));
   }, []);
+
+  const publishGrading = useCallback((decisions: GradingReviewDecision[]) => {
+    if (!reviewDraft) return;
+    const published = publishApprovedGradingPackage(reviewDraft, decisions, new Date().toISOString());
+    savePublishedGradingPackage(localStorage, published);
+    setPublishedPackage(published);
+    setLocalBasePlan(null);
+    setReviewDraft(null);
+    setModelStudioOpen(false);
+    setPublishedNotice(`Version ${published.packageVersion} · ${published.objects.length} approved features · offline ready`);
+    setSelectedObjectId('');
+  }, [reviewDraft]);
 
   // Filter objects by search query (ID or label)
   const searchResults = useMemo(() => {
@@ -204,6 +247,18 @@ export function FieldMapPage() {
         </button>
       </header>
 
+      {publishedNotice && (
+        <div className="published-package-status" role="status">
+          <strong>{publishedNotice}</strong>
+          <span>Source PDF excluded from offline package</span>
+        </div>
+      )}
+      {reviewDraft && !modelStudioOpen && (
+        <button type="button" className="model-studio-launch" onClick={() => setModelStudioOpen(true)}>
+          Open Model Studio
+        </button>
+      )}
+
       {/* ── Search overlay ── */}
       {searchOpen && (
         <div className="search-overlay">
@@ -305,6 +360,7 @@ export function FieldMapPage() {
             onUploadPlan={() => setShowSidebarUpload(true)}
             onImportCivilPlan={() => civilPlanInputRef.current?.click()}
             importedPlanName={importedBasePlan?.name}
+            onOpenModelStudio={reviewDraft ? () => { setModelStudioOpen(true); setDrawerOpen(false); } : undefined}
           />
           <RockCalculator sectionRef={calcRef} />
           <ForemanNotes />
@@ -351,6 +407,9 @@ export function FieldMapPage() {
           event.currentTarget.value = '';
         }}
       />
+      {modelStudioOpen && reviewDraft && (
+        <ModelStudio draft={reviewDraft} onClose={() => setModelStudioOpen(false)} onPublish={publishGrading} />
+      )}
     </div>
   );
 }

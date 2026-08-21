@@ -148,6 +148,16 @@ export type BlueprintObject = {
   notes?: string;
   safetyFlag?: SafetyFlag;
   workerLabel?: string;
+  confidence?: 'high' | 'medium' | 'low';
+  provenance?: {
+    sourceSha256: string;
+    sheet: string;
+    pdfPage: number;
+    sourceItemIndexes: number[];
+    sourceText: string[];
+    extraction: string;
+    status: 'confirmed' | 'reference-derived' | 'reviewed_assumption' | 'generated' | 'unknown';
+  };
 };
 
 export type ControlPoint = {

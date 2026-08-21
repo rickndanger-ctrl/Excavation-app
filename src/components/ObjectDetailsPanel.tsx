@@ -239,6 +239,18 @@ function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceF
         </dl>
       </div>
 
+      {object.provenance && (
+        <div className="detail-section">
+          <div className="detail-section__title">Source &amp; confidence</div>
+          <dl className="detail-list">
+            <div className="detail-row"><dt>Provenance</dt><dd>Reference-derived</dd></div>
+            <div className="detail-row"><dt>Confidence</dt><dd>{object.confidence === 'high' ? 'High confidence' : 'Medium confidence'}</dd></div>
+            <div className="detail-row"><dt>Source</dt><dd>Sheet {object.provenance.sheet}, PDF page {object.provenance.pdfPage}</dd></div>
+            <div className="detail-row"><dt>Extracted text</dt><dd>{object.provenance.sourceText.join(' / ')}</dd></div>
+          </dl>
+        </div>
+      )}
+
       {/* Pavement stack (parking lot) */}
       {object.type === 'parking_lot' && object.topElevation && (
         <div className="detail-section">

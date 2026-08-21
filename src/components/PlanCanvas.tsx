@@ -319,8 +319,9 @@ function ObjectIcon({
         fill={selected ? '#ea4335' : '#202124'}
         fontWeight={selected ? 'bold' : 'normal'}
         fontFamily="Arial, sans-serif"
+        style={{ pointerEvents: 'none' }}
       >
-        {obj.label}
+        {obj.workerLabel ?? obj.label}
       </text>
     </g>
   );
@@ -386,15 +387,19 @@ export function PlanCanvas({
     });
   }, [userLocation, plan.widthFt, plan.heightFt]);
 
-  // Fit-to-viewport on first mount
+  // Refit whenever a newly published semantic package changes the plan extent.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
     const s = Math.min(rect.width / plan.widthFt, rect.height / plan.heightFt) * 0.95;
-    setScale(Math.max(0.3, s));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally run once
+    const fittedScale = Math.max(0.3, s);
+    setScale(fittedScale);
+    setOffset({
+      x: (rect.width - plan.widthFt * fittedScale) / 2,
+      y: (rect.height - plan.heightFt * fittedScale) / 2,
+    });
+  }, [plan.heightFt, plan.widthFt]);
 
   useEffect(() => {
     if (recenterToken > 0) recenterOnUser();
