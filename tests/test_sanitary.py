@@ -155,7 +155,7 @@ class SanitaryBuildTests(unittest.TestCase):
                 result = subprocess.run(command, cwd=ROOT, env=env, text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)
             gpkg_path = Path(directory) / "hilyard-site-layout.gpkg"
-            expected_counts = {"canonical_points": 23, "canonical_lines": 14, "canonical_polygons": 13, "canonical_surfaces": 2}
+            expected_counts = {"canonical_points": 33, "canonical_lines": 23, "canonical_polygons": 13, "canonical_surfaces": 2}
             for layer, expected in expected_counts.items():
                 result = subprocess.run(
                     [str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(gpkg_path), layer],
@@ -180,7 +180,7 @@ class SanitaryBuildTests(unittest.TestCase):
             from pypdf import PdfReader
             pdf_path = output / "hilyard-site-layout.pdf"
             reader = PdfReader(pdf_path)
-            self.assertEqual(6, len(reader.pages))
+            self.assertEqual(8, len(reader.pages))
             page_text = [page.extract_text() or "" for page in reader.pages]
             self.assertIn("SANITARY SEWER PLAN", page_text[1])
             self.assertIn("SANITARY SEWER PROFILE", page_text[2])

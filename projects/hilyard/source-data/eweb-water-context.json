@@ -1,0 +1,36 @@
+{
+  "retrieved_date": "2026-08-21",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "authority": "City of Eugene GIS publication of EWEB water data",
+  "source_crs": "EPSG:2914",
+  "requested_output_crs": "EPSG:6823",
+  "main_query": "https://gis.eugene-or.gov/arcgis/rest/services/PWE/MiscInfra/MapServer/38/query?where=WAM_ID%20IN%20(%27DMN008152%27,%27DMN019519%27)&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+  "valve_query": "https://gis.eugene-or.gov/arcgis/rest/services/PWE/MiscInfra/MapServer/37/query?where=FACILITYID%3D%277921%27&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+  "hydrant_query": "https://gis.eugene-or.gov/arcgis/rest/services/PWE/MiscInfra/MapServer/3/query?where=OBJECTID%3D445&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+  "authority_note": "Reference-derived GIS context only. It is not survey control, pressure or fire-flow evidence, capacity confirmation, hydrant-test evidence, or tie authorization and must be superseded by EWEB-accepted records and field survey.",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[186360.77156110041, 98453.943946740459], [186203.71605862523, 98453.918423240932], [186195.6019433437, 98453.852940110402], [186140.38773853972, 98453.37001931433], [186134.38129598304, 98453.317676450184], [186071.80325239152, 98452.804191338044], [186016.01844372446, 98452.42515448785], [186010.98783457372, 98452.393905013058], [186007.99983485488, 98452.376723326175], [185938.01715321853, 98452.045488489515], [185934.08154126769, 98452.03212596642], [185883.43924353801, 98451.909024196662], [185880.45086163157, 98451.903836836485], [185775.69753351802, 98452.44055996876]]
+      },
+      "properties": {"OBJECTID": 17522, "LIFECYCLESTATUS": "ACT", "MATERIAL": "CI", "OWNERCODE": "E", "MEASUREDLENGTH": 585.07646346, "DIAMETER": 8, "WAM_ID": "DMN008152", "Shape_Length": 585.0764634665387}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "LineString", "coordinates": [[186401.93155685888, 98454.048026078221], [186360.77156110041, 98453.943946740459]]},
+      "properties": {"OBJECTID": 17517, "LIFECYCLESTATUS": "ACT", "MATERIAL": "CI", "OWNERCODE": "E", "MEASUREDLENGTH": 41.15970132, "DIAMETER": 8, "WAM_ID": "DMN019519", "Shape_Length": 41.159701327294}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [186360.77156110041, 98453.943946740459]},
+      "properties": {"OBJECTID": 9328, "FACILITYID": "7921", "LOCATIONDESCRIPTION": "34TH & HILYARD 50' W", "LIFECYCLESTATUS": "ACT", "OWNERCODE": "E", "VALVETYPE": "GV", "DEPTHTOOPERATE": 32, "MANUFACTURER": "UNK", "WAM_ID": "DSV005158"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [186528.20752604803, 98777.994008395166]},
+      "properties": {"OBJECTID": 445, "FD_1ST": "FD15", "owner": "Eugene", "elog_id": 92016, "EWEB_Page": "20I", "ESFD_Page": "162", "GlobalID": "{07469A24-38F8-4106-81D2-CEDA1590DBAA}"}
+    }
+  ]
+}

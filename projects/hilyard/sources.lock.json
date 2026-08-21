@@ -128,19 +128,26 @@
       ]
     },
     {
-      "id": "src-eweb-water",
-      "title": "EWEB Water Design and Construction Standards",
+      "id": "src-eweb-water-standards-2017",
+      "title": "EWEB Water Distribution Design and Construction Standards",
       "authority": "Eugene Water & Electric Board",
       "provenance_status": "confirmed",
       "citation": "https://www.eweb.org/documents/Policies%20and%20Procedures/contractor-developer/eweb-water-design-and-construction-standards%280%29.pdf",
       "effective_date": "2017-04-25",
       "lock": {
         "kind": "url",
-        "status": "citation_only",
-        "sha256": null
+        "status": "checksum_locked",
+        "sha256": "1bf602447f69bacd4b3c6b9bb66be4547008dc6d03824b9ec9442e22d1950541"
       },
       "supports": [
-        "future water rule extraction only; capacity remains unknown"
+        "36-inch minimum service cover",
+        "service cover applies in residential streets, minor collectors, easements, and planter strips",
+        "12-inch minimum vertical clearance and 2-foot horizontal clearance from storm and non-sanitary utilities",
+        "sanitary separation rules and pothole/field-survey coordination requirements",
+        "1-inch minimum water service and master-meter basis for multiple housing on one parcel",
+        "fire sprinkler backflow protection within 10 feet of EWEB point of connection",
+        "fire-line point of connection at right-of-way or property line",
+        "pressure and fire-flow information must be obtained from EWEB and hydraulic analysis may be required"
       ]
     },
     {
@@ -218,6 +225,30 @@
         "source asset and structure identifiers"
       ],
       "authority_note": "reference-derived only; not project survey control, public-system capacity, approved outfall, HGL analysis, or connection authorization. Supersede with owner-accepted survey/as-built and agency review information."
+    },
+    {
+      "id": "src-eweb-water-gis",
+      "title": "City GIS extract of EWEB East 34th Avenue water main, valve, and nearby public hydrant context",
+      "authority": "City of Eugene Geographic Information Services / EWEB reference data",
+      "provenance_status": "reference-derived",
+      "citation": "/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/projects/hilyard/source-data/eweb-water-context.json",
+      "upstream_citations": [
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/MiscInfra/MapServer/38/query?where=WAM_ID%20IN%20(%27DMN008152%27,%27DMN019519%27)&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/MiscInfra/MapServer/37/query?where=FACILITYID%3D%277921%27&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/MiscInfra/MapServer/3/query?where=OBJECTID%3D445&outFields=*&returnGeometry=true&outSR=6823&f=geojson"
+      ],
+      "retrieved_date": "2026-08-21",
+      "lock": {
+        "kind": "local_file",
+        "status": "checksum_locked",
+        "sha256": "79c46aee505a8f19ad75581b58fc1513cdcf5e12c19260a9eba221c59ac38590"
+      },
+      "supports": [
+        "reference-derived active 8-inch cast-iron EWEB distribution main along East 34th Avenue",
+        "reference valve FACILITYID 7921",
+        "nearby public hydrant ELOG ID 92016 without flow-test data"
+      ],
+      "authority_note": "reference-derived context; not pressure, flow, capacity, or tie authority, not hydrant-test evidence, and not project survey control. Supersede with EWEB-accepted records, design direction, and field survey."
     }
   ]
 }

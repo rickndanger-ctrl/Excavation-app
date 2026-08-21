@@ -261,6 +261,48 @@
         "src-eugene-pids-2023",
         "src-eugene-construction-2024-a4"
       ]
+    },
+    {
+      "id": "decision-domestic-water-service",
+      "subject": "Fictional domestic master-meter service basis",
+      "status": "reviewed_assumption",
+      "value": {
+        "reference_main": "8-inch cast-iron EWEB GIS main along East 34th Avenue",
+        "service_diameter_in": 2,
+        "service_material": "HDPE DR11",
+        "meter_basis": "2-inch master meter",
+        "backflow_basis": "2-inch RPBA",
+        "modeled_cover_ft": 3.5,
+        "demand_pressure_capacity_status": "unknown",
+        "approval_status": "unknown"
+      },
+      "rationale": "A straight two-inch service to the permanent south-wall terminal exercises meter, backflow, pressure-network, and field-detail contracts for a multi-unit fictional building. Fixture demand, pressure, meter selection, hazard classification, exact backflow assembly, and EWEB tie/capacity approval are intentionally not inferred.",
+      "source_ids": [
+        "src-eweb-water-standards-2017",
+        "src-eweb-water-gis",
+        "src-oha-water-sewer"
+      ]
+    },
+    {
+      "id": "decision-fire-water-service",
+      "subject": "Fictional private fire service, backflow, and FDC basis",
+      "status": "reviewed_assumption",
+      "value": {
+        "reference_main": "8-inch cast-iron EWEB GIS main along East 34th Avenue",
+        "service_diameter_in": 6,
+        "service_material": "C900 PVC DR18",
+        "backflow_basis": "6-inch detector double check",
+        "fdc_branch_diameter_in": 4,
+        "modeled_cover_ft": 3.5,
+        "fire_flow_pressure_hydraulics_status": "unknown",
+        "eweb_fire_marshal_approval_status": "unknown"
+      },
+      "rationale": "A separate six-inch service with valve, detector backflow, FDC branch, and permanent sprinkler terminal creates coordinated test topology without representing a sprinkler calculation or public-main capacity finding. Occupancy, required fire flow, static/residual pressure, hydrant test, hydraulic losses, thrust/restraint design, exact devices, and agency approvals remain unresolved.",
+      "source_ids": [
+        "src-eweb-water-standards-2017",
+        "src-eweb-water-gis",
+        "src-oha-water-sewer"
+      ]
     }
   ]
 }

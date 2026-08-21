@@ -1,0 +1,34 @@
+{
+  "canonical_geometry_sha256": "be2bb62df3bdf34416e0872a0a75740d3b9bd6ee2ef288304dcacd00678d6c89",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "feature_count": 71,
+  "geopackage": {
+    "feature_count": 71,
+    "layers": [
+      "canonical_points",
+      "canonical_lines",
+      "canonical_polygons",
+      "canonical_surfaces"
+    ]
+  },
+  "horizontal_tolerance_ft": 0.01,
+  "mismatches": [],
+  "pdf": {
+    "embedded_image_count": 0,
+    "geometry_sha256": "be2bb62df3bdf34416e0872a0a75740d3b9bd6ee2ef288304dcacd00678d6c89",
+    "text_extractable": true,
+    "vector_paths_present": true
+  },
+  "pdf_vs_geopackage": {
+    "compared_feature_count": 71,
+    "maximum_delta_ft": 0.0,
+    "method": "pdf_content_stream_geometry_markers_vs_gpkg",
+    "note": "Coordinates decoded from geometry markers in the actual PDF page content stream and compared to geometry read back from GeoPackage; tolerance is output parity only, not source accuracy."
+  },
+  "schema_version": "civil-plan-factory.parity-report/v0.1.0",
+  "semantic": {
+    "feature_count": 71
+  },
+  "status": "valid",
+  "tolerance_note": "Output-to-output numeric equality tolerance; not survey/source accuracy."
+}

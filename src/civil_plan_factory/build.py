@@ -107,6 +107,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     from reportlab.pdfgen import canvas
 
     width, height = landscape(letter)
+    total_pages = 8 if "water_fire_basis" in model else 6
     drawing_left = 42.0
     drawing_bottom = 72.0
     scale = 72.0 / 50.0
@@ -226,10 +227,13 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(cx, cy - 5, "45 FT x 90 FT / FFE 445.00 PROVISIONAL")
 
     for line in model["features"]["lines"]:
+        mark_geometry(pdf, line["id"], "LineString", line["coordinates"], xy)
+        if line.get("system") in {"domestic_water", "fire_water"}:
+            pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY {line['system']} {line['id']}")
+            continue
         pdf.setStrokeColor(colors.HexColor("#be123c") if line["id"].startswith("access-") else colors.HexColor("#334155"))
         pdf.setLineWidth(2.2 if line["id"].startswith("access-") else 1.2)
         path = pdf.beginPath()
-        mark_geometry(pdf, line["id"], "LineString", line["coordinates"], xy)
         x, y = xy(line["coordinates"][0])
         path.moveTo(x, y)
         for point in line["coordinates"][1:]:
@@ -254,6 +258,9 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     for index, feature in enumerate(points, 1):
         x, y = xy(feature["coordinates"])
         mark_geometry(pdf, feature["id"], "Point", feature["coordinates"], xy)
+        if feature.get("system") in {"domestic_water", "fire_water"} and feature not in interface_points:
+            pdf._code.append(f"%MS_DISCIPLINE_SHEET_ONLY {feature['system']} {feature['id']}")
+            continue
         if feature in interface_points:
             interface_index = interface_points.index(feature) + 1
             pdf.setFillColor(colors.HexColor("#0f766e") if feature["feature_type"] == "building_entry" else colors.HexColor("#dc2626"))
@@ -298,7 +305,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         "Replace taxlot geometry first when a boundary survey arrives",
         "Constraints: dimensioned/digitized reference geometry",
         "Output parity tolerance: 0.01 ft (not source accuracy)",
-        "Sanitary routing is on MS-02/MS-03; capacity/approval unknown",
+        "Utility routing is on discipline sheets; capacity/approval unknown",
     ]
     for offset, note in enumerate(basis):
         pdf.drawString(notes_x, 506 - offset * 11, note)
@@ -324,7 +331,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, "Sheet MS-01 | Hilyard Street, Eugene, Oregon | Composite site context | Page 1 of 6")
+    pdf.drawString(32, 17, f"Sheet MS-01 | Hilyard Street, Eugene, Oregon | Composite site context | Page 1 of {total_pages}")
     pdf.drawRightString(width - 32, 17, f"Geometry SHA-256: {digest[:20]}...")
     pdf.showPage()
 
@@ -465,7 +472,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, "Sheet MS-02 | Sanitary sewer plan | 1 IN = 40 FT | EPSG:6823 / NAVD88 FT | Page 2 of 6")
+    pdf.drawString(32, 17, f"Sheet MS-02 | Sanitary sewer plan | 1 IN = 40 FT | EPSG:6823 / NAVD88 FT | Page 2 of {total_pages}")
     pdf.drawRightString(width - 32, 17, "Reference/main geometry is not survey or capacity authority")
     pdf.showPage()
 
@@ -581,7 +588,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, "Sheet MS-03 | Sanitary sewer profile | H 1 IN = 12 FT / V 1 IN = 1.71 FT | NAVD88 FT | Page 3 of 6")
+    pdf.drawString(32, 17, f"Sheet MS-03 | Sanitary sewer profile | H 1 IN = 12 FT / V 1 IN = 1.71 FT | NAVD88 FT | Page 3 of {total_pages}")
     pdf.drawRightString(width - 32, 17, "Tie, FFE, surface, capacity, and owner acceptance unresolved")
     pdf.showPage()
 
@@ -716,7 +723,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, "Sheet MS-04 | Storm / roof drainage plan | 1 IN = 26.18 FT | EPSG:6823 / NAVD88 FT | Page 4 of 6")
+    pdf.drawString(32, 17, f"Sheet MS-04 | Storm / roof drainage plan | 1 IN = 26.18 FT | EPSG:6823 / NAVD88 FT | Page 4 of {total_pages}")
     pdf.drawRightString(width - 32, 17, "Reference City GIS is not survey, capacity, HGL, or connection authority")
     pdf.showPage()
 
@@ -809,7 +816,7 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, "Sheet MS-05 | Storm / roof drainage profile | H 1 IN = 18 FT / V 1 IN = 2.57 FT | NAVD88 FT | Page 5 of 6")
+    pdf.drawString(32, 17, f"Sheet MS-05 | Storm / roof drainage profile | H 1 IN = 18 FT / V 1 IN = 2.57 FT | NAVD88 FT | Page 5 of {total_pages}")
     pdf.drawRightString(width - 32, 17, "Positive gravity/cover checked against declared test basis; hydraulic capacity and HGL not established")
     pdf.showPage()
 
@@ -890,9 +897,241 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf.drawCentredString(width / 2, 31, DISCLAIMER)
     pdf.setFillColor(colors.black)
     pdf.setFont("Helvetica", 6)
-    pdf.drawString(32, 17, "Sheet MS-06 | Storm asset schedule / test details | Not to scale | Page 6 of 6")
+    pdf.drawString(32, 17, f"Sheet MS-06 | Storm asset schedule / test details | Not to scale | Page 6 of {total_pages}")
     pdf.drawRightString(width - 32, 17, "Conceptual test detail only; no professional engineering or permit-compliance claim")
     pdf.showPage()
+
+    if "water_fire_basis" in model:
+        # Sheet MS-07: domestic water and fire service plan.
+        water_left, water_bottom, water_scale = 42.0, 92.0, 2.2
+        water_min_x, water_min_y = 186190.0, 98435.0
+
+        def water_xy(point):
+            return water_left + (point[0] - water_min_x) * water_scale, water_bottom + (point[1] - water_min_y) * water_scale
+
+        def water_path(coordinates, *, close=False, fill=0):
+            path = pdf.beginPath()
+            x, y = water_xy(coordinates[0])
+            x, y = min(max(x, 42), 520), min(max(y, 82), 515)
+            path.moveTo(x, y)
+            for point in coordinates[1:]:
+                x, y = water_xy(point)
+                x, y = min(max(x, 42), 520), min(max(y, 82), 515)
+                path.lineTo(x, y)
+            if close:
+                path.close()
+            pdf.drawPath(path, fill=fill, stroke=1)
+
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 13)
+        pdf.drawString(32, height - 27, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 15)
+        pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD DOMESTIC WATER / FIRE SERVICE PLAN")
+        pdf.setFont("Helvetica", 7)
+        pdf.drawString(32, height - 61, "Separate fictional pressure networks from reference GIS context; no pressure, flow, capacity, hydrant-test, tie, meter, backflow, or Fire Marshal approval claim")
+
+        pdf.setFillColor(colors.HexColor("#f1f5f9"))
+        pdf.setStrokeColor(colors.HexColor("#64748b"))
+        pdf.setLineWidth(0.8)
+        water_path(pad["coordinates"], close=True, fill=1)
+        pdf.setFillColor(colors.white)
+        pdf.setStrokeColor(colors.black)
+        pdf.setLineWidth(1.5)
+        water_path(building["coordinates"], close=True, fill=1)
+
+        water_lines = [row for row in model["features"]["lines"] if row.get("system") in {"domestic_water", "fire_water"}]
+        for feature in water_lines:
+            reference = feature["id"] == "water-public-main-34th-reference"
+            fire = feature.get("system") == "fire_water"
+            pdf.setStrokeColor(colors.HexColor("#2563eb") if reference else colors.HexColor("#dc2626") if fire else colors.HexColor("#16a34a"))
+            pdf.setLineWidth(3.0 if reference else 2.3)
+            water_path(feature["coordinates"])
+        main_label_x, main_label_y = water_xy([186235.0, 98453.93])
+        pdf.setFillColor(colors.HexColor("#1e3a8a"))
+        pdf.setFont("Helvetica-Bold", 6)
+        pdf.drawString(main_label_x, main_label_y + 7, "EWEB GIS REFERENCE / 8 IN CI / WAM DMN008152 + DMN019519")
+
+        water_labels = {
+            "water-public-valve-7921": "V 7921", "domestic-water-tie-01": "DWT-1",
+            "domestic-water-meter-01": "WM-1", "domestic-water-rpba-01": "BFP-D1",
+            "fire-water-tie-01": "FWT-1", "fire-service-valve-01": "FSV-1",
+            "fire-service-ddcva-01": "BFP-F1", "fire-service-junction-01": "FSJ-1",
+            "fire-service-fdc-01": "FDC-1", "penetration-domestic-water": "DOM TERMINAL",
+            "penetration-fire-water": "FIRE TERMINAL",
+        }
+        point_by_id = {row["id"]: row for row in points}
+        label_offsets = {
+            "water-public-valve-7921": (6, 8, "left"),
+            "domestic-water-tie-01": (-5, 3, "right"),
+            "domestic-water-meter-01": (-5, 2, "right"),
+            "domestic-water-rpba-01": (-5, 2, "right"),
+            "fire-water-tie-01": (6, -8, "left"),
+            "fire-service-valve-01": (5, 2, "left"),
+            "fire-service-ddcva-01": (5, 2, "left"),
+            "fire-service-junction-01": (-4, 8, "right"),
+            "fire-service-fdc-01": (5, 2, "left"),
+            "penetration-domestic-water": (-5, 8, "right"),
+            "penetration-fire-water": (5, 8, "left"),
+        }
+        for feature_id, label in water_labels.items():
+            feature = point_by_id[feature_id]
+            x, y = water_xy(feature["coordinates"])
+            fire = feature.get("system") == "fire_water"
+            pdf.setFillColor(colors.white)
+            pdf.setStrokeColor(colors.HexColor("#dc2626") if fire else colors.HexColor("#16a34a"))
+            pdf.setLineWidth(1.1)
+            pdf.circle(x, y, 3.6, fill=1, stroke=1)
+            pdf.setFillColor(colors.black)
+            pdf.setFont("Helvetica-Bold", 5.4)
+            dx, dy, alignment = label_offsets[feature_id]
+            if alignment == "right":
+                pdf.drawRightString(x + dx, y + dy, label)
+            else:
+                pdf.drawString(x + dx, y + dy, label)
+
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(550, 515, "REFERENCE / DESIGN BASIS")
+        pdf.setFont("Helvetica", 6.1)
+        for offset, note in enumerate([
+            "Fronting context: active 8 IN CI EWEB GIS main",
+            "GIS reference only - NOT SURVEY OR TIE AUTHORITY",
+            "Domestic: 2 IN HDPE DR11 / master meter / RPBA",
+            "Fire: 6 IN C900 DR18 / valve / detector double check",
+            "FDC branch: 4 IN assumption to FSJ-1",
+            "Modeled cover: 3.50 FT / declared minimum 3.00 FT",
+            "Pipe elevations and final grades: UNKNOWN",
+            "Pressure, residual pressure, capacity: UNKNOWN",
+            "Hydrant flow test and hydraulic model: UNKNOWN",
+            "Meter/backflow/tie/Fire Marshal approval: UNKNOWN",
+        ]):
+            pdf.drawString(550, 500 - offset * 11, note)
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(550, 375, "PLAN-SEPARATION SCREEN")
+        pdf.setFont("Helvetica", 6.1)
+        for offset, note in enumerate([
+            "Domestic to sanitary: 62.80 FT / 10.00 FT minimum",
+            "Domestic to storm: 39.36 FT / 2.00 FT minimum",
+            "Fire to sanitary: 64.29 FT / 10.00 FT minimum",
+            "Fire to storm: 33.29 FT / 2.00 FT minimum",
+            "All values are horizontal plan distance only",
+            "Vertical separation: UNKNOWN - pothole/survey required",
+            "No water line crosses a modeled storm facility",
+        ]):
+            pdf.drawString(550, 360 - offset * 11, note)
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(550, 260, "FIELD HOLD POINTS")
+        pdf.setFont("Helvetica", 6.1)
+        for offset, note in enumerate([
+            "1  Obtain EWEB pressure/capacity and approved tie basis",
+            "2  Calculate building demand and sprinkler/fire flow",
+            "3  Survey/locate/pothole utilities and final grades",
+            "4  Approve meter, backflow, FDC, valves, and restraint",
+            "5  Inspect tracer/bedding/restraint; pressure/disinfect/test",
+            "6  Capture certified tests and as-built coordinates/depths",
+        ]):
+            pdf.drawString(550, 245 - offset * 11, note)
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 10)
+        pdf.drawCentredString(width / 2, 31, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica", 6)
+        pdf.drawString(32, 17, f"Sheet MS-07 | Domestic water / fire service plan | 1 IN = 32.73 FT | EPSG:6823 | Page 7 of {total_pages}")
+        pdf.drawRightString(width - 32, 17, "Pressure-network plan only; vertical profile omitted because pipe elevations/final grades are unknown")
+        pdf.showPage()
+
+        # Sheet MS-08: pressure-service schedule, separations, and conceptual test details.
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 13)
+        pdf.drawString(32, height - 27, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 14)
+        pdf.drawString(32, height - 49, "MODEL STUDIO - HILYARD WATER / FIRE SEPARATION SCHEDULE / TEST DETAILS")
+        pdf.setFont("Helvetica", 7)
+        pdf.drawString(32, height - 61, "Stable pressure-network IDs, horizontal coordination checks, restraint notes, field workflow, and explicit hydraulic/approval unknowns")
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(35, 515, "PRESSURE SERVICE EDGE SCHEDULE")
+        schedule_columns = (35, 205, 330, 380, 430, 500, 575, 655)
+        for x, header in zip(schedule_columns, ("EDGE ID", "TYPE", "DIA", "LEN", "COVER", "MATERIAL", "RESTRAINT", "HYDRAULICS")):
+            pdf.setFont("Helvetica-Bold", 5.5)
+            pdf.drawString(x, 500, header)
+        pressure_edges = [
+            edge for network in model["networks"] if network["system"] in {"domestic_water", "fire_water"}
+            for edge in network["edges"]
+        ]
+        pdf.setFont("Helvetica", 4.9)
+        for index, edge in enumerate(pressure_edges):
+            detail = edge["field_detail"]
+            restraint = detail["restraint"]
+            if len(restraint) > 24:
+                restraint = restraint[:21] + "..."
+            values = (
+                edge["id"], edge["edge_type"], f"{detail['diameter_in']} IN", f"{detail['length_ft']:.2f}",
+                f"{min(detail['cover_samples_ft']):.2f} FT", detail["material"], restraint, "UNKNOWN",
+            )
+            for x, value in zip(schedule_columns, values):
+                pdf.drawString(x, 487 - index * 12, value)
+
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(35, 365, "HORIZONTAL SEPARATION / VERTICAL-STATUS SCHEDULE")
+        sep_columns = (35, 245, 360, 450, 545, 645)
+        for x, header in zip(sep_columns, ("RELATIONSHIP ID", "SYSTEMS", "PLAN CLEAR", "MINIMUM", "VERTICAL", "STATUS")):
+            pdf.setFont("Helvetica-Bold", 5.6)
+            pdf.drawString(x, 350, header)
+        relationship_ids = [
+            "domestic-sanitary-separation-01", "domestic-storm-separation-01",
+            "fire-sanitary-separation-01", "fire-storm-separation-01",
+        ]
+        for index, relationship_id in enumerate(relationship_ids):
+            relationship = model["relationships"][relationship_id]
+            values = (
+                relationship_id, f"{relationship['first_system']} / {relationship['second_system']}",
+                f"{relationship['clearance_ft']:.2f} FT", f"{relationship['minimum_clearance_ft']:.2f} FT",
+                "UNKNOWN", "PLAN PASS / FIELD VERIFY",
+            )
+            pdf.setFont("Helvetica", 5.2)
+            for x, value in zip(sep_columns, values):
+                pdf.drawString(x, 337 - index * 12, value)
+
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(35, 275, "CONCEPTUAL DEVICE / RESTRAINT DETAIL - NOT A CONSTRUCTION DETAIL")
+        pdf.setStrokeColor(colors.HexColor("#475569"))
+        pdf.setLineWidth(1.1)
+        pdf.line(50, 225, 315, 225)
+        device_boxes = [(65, "TAP"), (125, "VALVE / METER"), (205, "BACKFLOW"), (285, "BLDG")]
+        for x, label in device_boxes:
+            pdf.setFillColor(colors.HexColor("#dcfce7"))
+            pdf.rect(x - 22, 207, 45, 36, fill=1, stroke=1)
+            pdf.setFillColor(colors.black)
+            pdf.setFont("Helvetica-Bold", 5.5)
+            pdf.drawCentredString(x, 222, label)
+        pdf.setFont("Helvetica", 5.8)
+        pdf.drawString(45, 190, "Continuous tracer/warning system; bedding/backfill/compaction per accepted details.")
+        pdf.drawString(45, 178, "Restrain valves, tees, bends, device transitions, and building entry from approved thrust analysis.")
+        pdf.drawString(45, 166, "Exact devices, vault/box drainage, freeze protection, and final grade/elevation remain UNKNOWN.")
+
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(385, 275, "UNRESOLVED DESIGN / APPROVAL GATES")
+        pdf.setFont("Helvetica", 5.9)
+        for offset, note in enumerate([
+            "Building occupancy, fixture demand, irrigation/common-use demand",
+            "Required fire flow, sprinkler demand, hose allowance, duration",
+            "EWEB static/residual pressure, capacity, system impact, tie location",
+            "Hydrant flow test and water/fire hydraulic calculations",
+            "Meter and backflow hazard/device/placement approval",
+            "FDC/riser/access/signage and Fire Marshal approval",
+            "Pipe centerline elevations, final grades, crossings, thrust/restraint",
+            "Survey, permits, testing, disinfection, inspection, and acceptance",
+        ]):
+            pdf.drawString(385, 260 - offset * 13, f"{offset + 1}. {note}")
+        pdf.setFillColor(colors.HexColor("#991b1b"))
+        pdf.setFont("Helvetica-Bold", 10)
+        pdf.drawCentredString(width / 2, 31, DISCLAIMER)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica", 6)
+        pdf.drawString(32, 17, f"Sheet MS-08 | Water / fire separation schedule / test details | Not to scale | Page 8 of {total_pages}")
+        pdf.drawRightString(width - 32, 17, "No hydraulic, capacity, code-compliance, or agency-approval conclusion")
+        pdf.showPage()
     pdf.save()
     os.replace(raw_path, output_path)
 

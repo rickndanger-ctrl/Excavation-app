@@ -35,16 +35,17 @@ model-studio validate projects/hilyard/project.json --output-dir outputs/hilyard
 ```
 
 The `validate` command emits a deterministic semantic package and validation
-report. The current coordinated site/sanitary/storm slice is generated with:
+report. The current coordinated site/sanitary/storm/water-fire slice is generated with:
 
 ```bash
 model-studio build projects/hilyard/project.json \
-  --output-dir outputs/hilyard-storm
+  --output-dir outputs/hilyard-water-fire
 ```
 
-This produces a six-page, vector-only PDF (composite context, sanitary plan and
-profile, storm/roof plan and profile, and storm schedule/test details), a
-true-geometry GeoPackage, the semantic Excavation Field Map package, and
+This produces an eight-page, vector-only PDF (composite context; sanitary plan
+and profile; storm/roof plan, profile, and schedule/test details; and
+water/fire plan plus separation/test details), a true-geometry GeoPackage, the
+semantic Excavation Field Map package, and
 validation/parity reports from one canonical model. The parity report decodes
 geometry markers from the actual PDF content stream and compares them with
 geometry read back from the GeoPackage, including canonical surface polygons.
@@ -66,8 +67,18 @@ feet; the unrouted 4.46-inch 10-year roof-volume screen is 1,505.25 cubic feet.
 The planter's declared 500-cubic-foot surface storage passes only the simple
 water-quality volume screen. No routed hydrograph, capacity/HGL, infiltration
 credit, approved outfall, final grading, survey authority, or permit-compliance
-claim is made. Water, fire, dry utilities, full grading, and cut/fill remain out
-of scope.
+claim is made. Water and fire remain outside that storm design basis.
+
+The coordinated water/fire slice uses the active 8-inch cast-iron East 34th
+Avenue EWEB main from current GIS as reference context. A reviewed-assumption
+2-inch HDPE DR11 domestic service connects through a master meter and RPBA to
+the permanent domestic terminal. A separate reviewed-assumption 6-inch C900
+DR18 fire service connects through an isolation valve and detector double-check
+assembly to the permanent fire terminal, with a 4-inch FDC branch. Exact points
+of connection, available pressure, flow, capacity, hydrant-test results,
+hydraulic adequacy, device selections, tie approval, and agency/Fire Marshal
+acceptance remain explicitly unknown. Dry utilities, full grading, and cut/fill
+remain out of scope.
 
 The four City GIS taxlots are explicitly reference-derived and not survey
 authority. They are the first geometry to replace when a real boundary survey
@@ -114,7 +125,11 @@ The next implementation slice begins only after this foundation is committed:
    cover, structure drops, permanent-terminal connectivity, and a modeled
    storm-below-sanitary crossing while keeping capacity/HGL, infiltration,
    outfall approval, survey, and final grading explicitly unresolved.
-7. Sequence remaining systems by dependency and conflict risk, not convenience.
+7. The domestic/fire water slice now follows storm. It keeps the two pressure
+   networks distinct, resolves both permanent wall terminals, checks declared
+   cover and plan clearances against sanitary/storm, and refuses silent
+   pressure, flow, capacity, or approval claims.
+8. Sequence remaining systems by dependency and conflict risk, not convenience.
 
 ## Planned closed-loop proof
 

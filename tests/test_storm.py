@@ -165,7 +165,7 @@ class StormModelTests(unittest.TestCase):
         expected = set(self.storm_edges) | {row["id"] for row in self.roof["edges"]} | {
             row["id"] for row in next(n for n in self.model["networks"] if n["system"] == "sanitary")["edges"]
         }
-        self.assertEqual(expected, set(utilities))
+        self.assertTrue(expected.issubset(utilities))
         self.assertIn("surface-storm-reference", {row["id"] for row in semantic["surfaces"]})
         for asset_id in set(self.storm_edges) | {row["id"] for row in self.roof["edges"]}:
             self.assertTrue(utilities[asset_id]["searchable"])
@@ -181,7 +181,7 @@ class StormModelTests(unittest.TestCase):
 
 
 class StormBuildTests(unittest.TestCase):
-    def test_build_emits_six_vector_pages_surface_layer_and_actual_artifact_parity(self):
+    def test_build_preserves_storm_pages_in_coordinated_vector_set_and_actual_artifact_parity(self):
         with tempfile.TemporaryDirectory() as directory:
             command = [sys.executable, "-m", "civil_plan_factory", "build", str(PROJECT), "--output-dir", directory, "--qgis-app", "/Applications/QGIS-final-4_2_1.app"]
             env = os.environ.copy()
@@ -192,7 +192,7 @@ class StormBuildTests(unittest.TestCase):
             output = Path(directory)
             from pypdf import PdfReader
             reader = PdfReader(output / "hilyard-site-layout.pdf")
-            self.assertEqual(6, len(reader.pages))
+            self.assertEqual(8, len(reader.pages))
             page_text = [page.extract_text() or "" for page in reader.pages]
             self.assertIn("STORM / ROOF DRAINAGE PLAN", page_text[3])
             self.assertIn("STORM / ROOF DRAINAGE PROFILE", page_text[4])
@@ -208,7 +208,7 @@ class StormBuildTests(unittest.TestCase):
             self.assertEqual("pdf_content_stream_geometry_markers_vs_gpkg", parity["pdf_vs_geopackage"]["method"])
             self.assertLessEqual(parity["pdf_vs_geopackage"]["maximum_delta_ft"], 0.01)
 
-            expected_counts = {"canonical_points": 23, "canonical_lines": 14, "canonical_polygons": 13, "canonical_surfaces": 2}
+            expected_counts = {"canonical_points": 33, "canonical_lines": 23, "canonical_polygons": 13, "canonical_surfaces": 2}
             for layer, expected in expected_counts.items():
                 result = subprocess.run([str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(output / "hilyard-site-layout.gpkg"), layer], text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)

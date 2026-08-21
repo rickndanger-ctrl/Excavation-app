@@ -393,8 +393,57 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
         if not connected:
             issues.append(_issue("roof_drainage.terminal_disconnected", "networks.network-roof-drainage", "Roof leaders must resolve to the permanent building terminal"))
 
+    if "water_fire_basis" in model:
+        pressure_terminals = {
+            "domestic_water": "penetration-domestic-water",
+            "fire_water": "penetration-fire-water",
+        }
+        for system, terminal_feature_id in pressure_terminals.items():
+            network = next((row for row in model.get("networks", []) if row.get("system") == system), None)
+            if network is None:
+                continue
+            terminal_node = next(
+                (row for row in network.get("nodes", []) if row.get("geometry_feature_id") == terminal_feature_id),
+                None,
+            )
+            connected = terminal_node is not None and any(
+                terminal_node.get("id") in {edge.get("from_node_id"), edge.get("to_node_id")}
+                for edge in network.get("edges", [])
+            )
+            if not connected:
+                issues.append(_issue(
+                    "pressure.terminal_disconnected",
+                    f"networks.{network['id']}",
+                    f"{system} must resolve to its permanent building terminal",
+                ))
+            for edge_index, edge in enumerate(network.get("edges", [])):
+                detail = edge.get("field_detail", {})
+                path = f"networks.{network['id']}.edges[{edge_index}].field_detail"
+                diameter = detail.get("diameter_in")
+                material = detail.get("material")
+                if not _finite_coordinate(diameter) or diameter <= 0 or not isinstance(material, str) or not material.strip():
+                    issues.append(_issue(
+                        "pressure.material_or_diameter_missing",
+                        path,
+                        "Pressure edges require a positive diameter and declared material",
+                    ))
+                samples = detail.get("cover_samples_ft", [])
+                minimum_cover = detail.get("minimum_cover_ft")
+                if not samples or not _finite_coordinate(minimum_cover) or min(samples) + 1e-9 < minimum_cover:
+                    issues.append(_issue(
+                        "pressure.cover_below_min",
+                        path,
+                        "Pressure edge violates its declared minimum cover",
+                    ))
+                if detail.get("capacity_status") != "unknown" or detail.get("available_pressure_status") != "unknown":
+                    issues.append(_issue(
+                        "pressure.unsupported_hydraulic_claim",
+                        path,
+                        "Capacity and available pressure must remain unknown without accepted hydraulic evidence",
+                    ))
+
     for relationship_id, relationship in model.get("relationships", {}).items():
-        if relationship.get("relationship_type") != "utility_crossing":
+        if relationship.get("relationship_type") not in {"utility_crossing", "horizontal_clearance"}:
             continue
         clearance = relationship.get("clearance_ft")
         minimum = relationship.get("minimum_clearance_ft")
