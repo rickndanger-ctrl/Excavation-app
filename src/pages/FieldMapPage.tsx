@@ -7,6 +7,7 @@ import { ModelStudio } from '../components/ModelStudio';
 import { SanitaryStudio } from '../components/SanitaryStudio';
 import { StormStudio } from '../components/StormStudio';
 import { WaterStudio } from '../components/WaterStudio';
+import { DryUtilityStudio } from '../components/DryUtilityStudio';
 import { PlanCanvas, type ImportedBasePlan } from '../components/PlanCanvas';
 import { PlanUploadPanel } from '../components/PlanUploadPanel';
 import { RockCalculator } from '../components/RockCalculator';
@@ -32,6 +33,7 @@ import {
 import { buildReadingSanitaryDraft, publishApprovedSanitaryPackage, type SanitaryDraft, type SanitaryReviewDecision } from '../lib/sanitaryPipeline';
 import { buildReadingStormDraft, publishApprovedStormPackage, type StormDraft, type StormReviewDecision } from '../lib/stormPipeline';
 import { buildReadingWaterDraft, publishApprovedWaterPackage, type WaterDraft, type WaterReviewDecision } from '../lib/waterPipeline';
+import { buildReadingDryUtilityDraft, publishApprovedDryUtilityPackage, type DryUtilityDraft, type DryUtilityReviewDecision } from '../lib/dryUtilityPipeline';
 import { buildCalibration } from '../utils/calibration';
 import { bearingLabel, distanceFeet } from '../utils/distance';
 import { getCalibrationPoints, saveCalibrationPoints } from '../utils/storage';
@@ -60,6 +62,8 @@ export function FieldMapPage() {
   const [stormStudioOpen, setStormStudioOpen] = useState(false);
   const [waterDraft, setWaterDraft] = useState<WaterDraft | null>(null);
   const [waterStudioOpen, setWaterStudioOpen] = useState(false);
+  const [dryUtilityDraft, setDryUtilityDraft] = useState<DryUtilityDraft | null>(null);
+  const [dryUtilityStudioOpen, setDryUtilityStudioOpen] = useState(false);
   const [publishedPackage, setPublishedPackage] = useState<StoredSemanticPackage | null>(() => {
     try { return loadPublishedGradingPackage(localStorage); } catch { return null; }
   });
@@ -108,6 +112,7 @@ export function FieldMapPage() {
         setSanitaryDraft(buildReadingSanitaryDraft(sanitaryGeometry, sourceSha256));
         setStormDraft(buildReadingStormDraft(sanitaryGeometry, sourceSha256));
         setWaterDraft(buildReadingWaterDraft(sanitaryGeometry, sourceSha256));
+        setDryUtilityDraft(buildReadingDryUtilityDraft(sanitaryGeometry, sourceSha256));
       } finally {
         await document.destroy();
       }
@@ -162,6 +167,12 @@ export function FieldMapPage() {
     setPublishedNotice(`Version ${published.packageVersion} · ${published.objects.filter((object) => object.layerId === 'water').length} approved water gates · offline ready`);
     setSelectedObjectId('');
   }, [publishedPackage, waterDraft]);
+
+  const publishDryUtility = useCallback((decisions: DryUtilityReviewDecision[]) => {
+    if (!dryUtilityDraft || publishedPackage?.packageVersion !== 'reading-public-library-grading-sanitary-storm-water-v4') return;
+    const published = publishApprovedDryUtilityPackage(publishedPackage as import('../lib/waterPipeline').PublishedWaterPackage, dryUtilityDraft, decisions, new Date().toISOString());
+    savePublishedGradingPackage(localStorage, published); setPublishedPackage(published); setLocalBasePlan(null); setReviewDraft(null); setSanitaryDraft(null); setStormDraft(null); setWaterDraft(null); setDryUtilityDraft(null); setDryUtilityStudioOpen(false); setPublishedNotice(`Version ${published.packageVersion} · 2 approved light bollards · offline ready`); setSelectedObjectId('');
+  }, [dryUtilityDraft, publishedPackage]);
 
   // Filter objects by search query (ID or label)
   const searchResults = useMemo(() => {
@@ -325,6 +336,7 @@ export function FieldMapPage() {
       {waterDraft && publishedPackage?.packageVersion === 'reading-public-library-grading-sanitary-storm-v3' && !waterStudioOpen && (
         <button type="button" className="model-studio-launch model-studio-launch--water" onClick={() => setWaterStudioOpen(true)}>Open Water Studio</button>
       )}
+      {dryUtilityDraft && publishedPackage?.packageVersion === 'reading-public-library-grading-sanitary-storm-water-v4' && !dryUtilityStudioOpen && <button type="button" className="model-studio-launch model-studio-launch--dry" onClick={() => setDryUtilityStudioOpen(true)}>Open Dry Utility Studio</button>}
 
       {/* ── Search overlay ── */}
       {searchOpen && (
@@ -486,6 +498,7 @@ export function FieldMapPage() {
       {waterStudioOpen && waterDraft && (
         <WaterStudio draft={waterDraft} onClose={() => setWaterStudioOpen(false)} onPublish={publishWater} />
       )}
+      {dryUtilityStudioOpen && dryUtilityDraft && <DryUtilityStudio draft={dryUtilityDraft} onClose={() => setDryUtilityStudioOpen(false)} onPublish={publishDryUtility} />}
     </div>
   );
 }

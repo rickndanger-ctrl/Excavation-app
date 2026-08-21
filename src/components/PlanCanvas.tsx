@@ -86,6 +86,8 @@ function ObjectIcon({
     icon = <g className="storm-symbol--catch-basin">{selectionRing}<polygon points={`${x},${y - 3} ${x + 3},${y} ${x},${y + 3} ${x - 3},${y}`} fill={fill} stroke={stroke} strokeWidth={sw} /><text x={x} y={y + 0.75} textAnchor="middle" fontSize="1.8" fontWeight="bold" fill={stroke}>CB</text></g>;
   } else if (obj.symbol === 'water-gate') {
     icon = <g className="water-symbol--gate">{selectionRing}<polygon points={`${x},${y - 3} ${x + 3},${y} ${x},${y + 3} ${x - 3},${y}`} fill={fill} stroke={stroke} strokeWidth={sw} /><line x1={x - 1.5} y1={y} x2={x + 1.5} y2={y} stroke={stroke} strokeWidth={0.55} /><line x1={x} y1={y - 1.5} x2={x} y2={y + 1.5} stroke={stroke} strokeWidth={0.55} /></g>;
+  } else if (obj.symbol === 'dry-light-bollard') {
+    icon = <g className="dry-symbol--light-bollard">{selectionRing}<circle cx={x} cy={y} r={2.8} fill={fill} stroke={stroke} strokeWidth={sw}/><line x1={x} y1={y-1.8} x2={x} y2={y+1.8} stroke={stroke} strokeWidth={0.6}/><line x1={x-1.8} y1={y} x2={x+1.8} y2={y} stroke={stroke} strokeWidth={0.6}/></g>;
   } else if (type === 'manhole') {
     icon = (
       <>
@@ -322,7 +324,7 @@ function ObjectIcon({
     );
   }
 
-  const isSemantic = ['grading', 'sanitary', 'storm', 'water'].includes(obj.layerId);
+  const isSemantic = ['grading', 'sanitary', 'storm', 'water', 'dry-utility'].includes(obj.layerId);
   return (
     <g
       className="plan-object"
@@ -404,7 +406,7 @@ export function PlanCanvas({
     .filter(({ distance }) => distance <= HIT_RADIUS_FT)
     .sort((left, right) => left.distance - right.distance)[0]?.obj, [isLayerVisible, isPhaseVisible, objects]);
   const gradingLabels = useMemo(() => new Map(layoutGradingLabels(
-    objects.filter((object) => ['grading', 'sanitary', 'storm', 'water'].includes(object.layerId) && isLayerVisible(object.layerId)).map((object) => ({
+    objects.filter((object) => ['grading', 'sanitary', 'storm', 'water', 'dry-utility'].includes(object.layerId) && isLayerVisible(object.layerId)).map((object) => ({
       id: object.id,
       x: object.x,
       y: object.y,
@@ -739,7 +741,7 @@ export function PlanCanvas({
               // dim out-of-phase objects rather than hiding them
               const opacity = inPhase ? 1 : 0.22;
               return (
-                <g key={obj.id} opacity={opacity} style={{ pointerEvents: ['grading', 'sanitary', 'storm', 'water'].includes(obj.layerId) ? 'none' : inPhase ? 'auto' : 'none' }}>
+                <g key={obj.id} opacity={opacity} style={{ pointerEvents: ['grading', 'sanitary', 'storm', 'water', 'dry-utility'].includes(obj.layerId) ? 'none' : inPhase ? 'auto' : 'none' }}>
                   <ObjectIcon
                     obj={obj}
                     selected={selected}

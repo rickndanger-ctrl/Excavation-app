@@ -168,6 +168,7 @@ body {
 .model-studio-launch--sanitary { top: 120px; border-color: #7c3aed; }
 .model-studio-launch--storm { top: 120px; border-color: #0369a1; }
 .model-studio-launch--water { top: 120px; border-color: #2563eb; }
+.model-studio-launch--dry { top: 120px; border-color: #a16207; }
 
 .model-studio {
   position: absolute;
@@ -228,6 +229,7 @@ body {
 .water-studio__symbols span { min-height: 44px; display: grid; place-items: center; padding: 6px; border: 1px solid #2563eb; border-radius: 8px; color: #93c5fd; font-size: 0.7rem; }
 .water-studio h2 { margin: 10px 0 6px; font-size: 0.85rem; }
 .water-studio__excluded { margin-bottom: 6px; padding: 8px; border-left: 3px solid var(--yellow); background: var(--yellow-light); color: var(--text-secondary); font-size: 0.7rem; }
+.dry-utility-studio__symbols span { min-height:44px;display:grid;place-items:center;border:1px solid #a16207;border-radius:8px;color:#fde68a;margin-bottom:10px}.dry-utility-studio h2{font-size:.85rem;margin:10px 0 6px}.dry-utility-studio__pending,.dry-utility-studio__excluded{padding:8px;margin-bottom:6px;font-size:.7rem;color:var(--text-secondary)}.dry-utility-studio__pending{border-left:3px solid #a16207}.dry-utility-studio__excluded{border-left:3px solid var(--yellow);background:var(--yellow-light)}
 
 @media (min-width: 760px) {
   .model-studio { left: auto; width: 620px; border-left: 1px solid var(--border); box-shadow: -12px 0 32px rgba(0,0,0,0.45); }
