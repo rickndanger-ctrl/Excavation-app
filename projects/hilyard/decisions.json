@@ -1,0 +1,54 @@
+{
+  "schema_version": "civil-plan-factory.decision-ledger/v0.1.0",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "decisions": [
+    {
+      "id": "decision-canonical-crs",
+      "subject": "Canonical horizontal coordinate reference system",
+      "status": "reviewed_assumption",
+      "value": "EPSG:6823",
+      "rationale": "Selected project workflow CRS; City GIS EPSG:2914 inputs will be transformed once at ingestion.",
+      "source_ids": ["src-design-constraints", "src-project-brief"]
+    },
+    {
+      "id": "decision-benchmark",
+      "subject": "Project benchmark elevation and monument",
+      "status": "unknown",
+      "value": null,
+      "rationale": "No surveyed project benchmark has been supplied; no test elevation is invented in this foundation slice.",
+      "source_ids": ["src-design-constraints"]
+    },
+    {
+      "id": "decision-site-design",
+      "subject": "Final building, grading, access geometry, and site layout",
+      "status": "unknown",
+      "value": null,
+      "rationale": "The research brief's concept is not a locked engineering design. East 34th Avenue is the confirmed access basis, but exact geometry requires later review.",
+      "source_ids": ["src-rfp-appendix", "src-project-brief"]
+    },
+    {
+      "id": "decision-utility-tie-ins",
+      "subject": "Utility tie-in points, sizes, routes, and capacities",
+      "status": "unknown",
+      "value": null,
+      "rationale": "Agency-approved tie-ins and capacities are not established; gas and non-EWEB telecom locations are also unknown.",
+      "source_ids": ["src-design-constraints", "src-project-brief"]
+    },
+    {
+      "id": "decision-stormwater",
+      "subject": "Stormwater treatment, detention, infiltration, and outfall design",
+      "status": "unknown",
+      "value": null,
+      "rationale": "Geotechnical, groundwater, infiltration, downstream HGL, and final sizing inputs remain unavailable.",
+      "source_ids": ["src-design-constraints", "src-project-brief"]
+    },
+    {
+      "id": "decision-materials",
+      "subject": "Final utility and civil materials and specifications",
+      "status": "unknown",
+      "value": null,
+      "rationale": "Research defaults are not adopted as final engineering choices in this foundation slice.",
+      "source_ids": ["src-design-constraints"]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civil-plan-factory.local/schemas/v0.1.0/ledgers.schema.json",
+  "title": "Source and Decision Ledger Types",
+  "$defs": {
+    "source": {"type": "object", "required": ["id", "title", "authority", "provenance_status", "citation", "lock", "supports"]},
+    "decision": {"type": "object", "required": ["id", "subject", "status", "value", "rationale", "source_ids"], "properties": {"status": {"enum": ["confirmed", "reference-derived", "reviewed_assumption", "generated", "unknown"]}}}
+  }
+}

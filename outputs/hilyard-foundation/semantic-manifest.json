@@ -1,0 +1,245 @@
+{
+  "calibrationPoints": [],
+  "canonical_model_version": "civil-plan-factory.project/v0.1.0",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "id": "hilyard-apartment-test",
+  "layers": [
+    {
+      "color": "#6b7280",
+      "defaultVisible": true,
+      "id": "control",
+      "name": "Control"
+    },
+    {
+      "color": "#7c3aed",
+      "defaultVisible": true,
+      "id": "property",
+      "name": "Property / Easements / Resources"
+    },
+    {
+      "color": "#92400e",
+      "defaultVisible": true,
+      "id": "grading",
+      "name": "Grading / Surfaces"
+    },
+    {
+      "color": "#9333ea",
+      "defaultVisible": true,
+      "id": "sanitary",
+      "name": "Sanitary"
+    },
+    {
+      "color": "#1d8fe1",
+      "defaultVisible": true,
+      "id": "storm",
+      "name": "Storm / Roof Drainage"
+    },
+    {
+      "color": "#16a34a",
+      "defaultVisible": true,
+      "id": "water",
+      "name": "Domestic / Fire Water"
+    },
+    {
+      "color": "#f97316",
+      "defaultVisible": true,
+      "id": "dry-utilities",
+      "name": "Gas / Power / Telecom / Lighting"
+    },
+    {
+      "color": "#b45309",
+      "defaultVisible": true,
+      "id": "site",
+      "name": "Buildings / Paving / Flatwork / ADA"
+    },
+    {
+      "color": "#dc2626",
+      "defaultVisible": true,
+      "id": "construction-erosion",
+      "name": "Construction / Erosion Control"
+    }
+  ],
+  "objects": [],
+  "phases": [
+    {
+      "id": "existing",
+      "name": "Existing / source basis",
+      "summary": "Reference-scale existing conditions only."
+    },
+    {
+      "id": "proposed",
+      "name": "Proposed",
+      "summary": "Declared but not designed in this foundation slice."
+    },
+    {
+      "id": "temporary",
+      "name": "Temporary construction",
+      "summary": "Declared but not designed in this foundation slice."
+    }
+  ],
+  "plan": {
+    "availability": "unavailable",
+    "heightFt": null,
+    "imageUrl": null,
+    "reason": "No plan sheet or surveyed site extent exists in the foundation slice.",
+    "widthFt": null
+  },
+  "projectName": "Hilyard Apartment Civil Plan Test",
+  "provenance": {
+    "decision_ids": [
+      "decision-canonical-crs",
+      "decision-benchmark",
+      "decision-site-design",
+      "decision-utility-tie-ins",
+      "decision-stormwater",
+      "decision-materials"
+    ],
+    "source_ids": [
+      "src-rfp-appendix",
+      "src-design-constraints",
+      "src-project-brief",
+      "src-eugene-pids-2023",
+      "src-eugene-construction-2024-a4",
+      "src-eugene-swmm-2025",
+      "src-eweb-water",
+      "src-oha-water-sewer",
+      "src-deq-div52-appendix-a"
+    ]
+  },
+  "schema_version": "excavation-field-map.jobsite-package/v0.1.0",
+  "unavailable": [
+    {
+      "provenance_status": "unknown",
+      "reason": "Surveyed boundary, topography, and control are unavailable.",
+      "system": "coordinates_control"
+    },
+    {
+      "provenance_status": "reference-derived",
+      "reason": "Aggregate parcel facts are known; canonical boundary geometry is unavailable.",
+      "system": "property_limits"
+    },
+    {
+      "provenance_status": "reference-derived",
+      "reason": "Widths and constraints are known; canonical surveyed geometry is unavailable.",
+      "system": "easements_row_resource_limits"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No surveyed terrain or reviewed design surfaces exist.",
+      "system": "surfaces"
+    },
+    {
+      "provenance_status": "reference-derived",
+      "reason": "Nearby/crossing system is reported; exact topology, elevations, tie-in, and capacity are unknown.",
+      "system": "sanitary"
+    },
+    {
+      "provenance_status": "reference-derived",
+      "reason": "Nearby system is reported; exact topology, elevations, tie-in, HGL, and capacity are unknown.",
+      "system": "storm"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Pressure, flow, main data, meter, service size, and approved route are unknown.",
+      "system": "domestic_water"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Fire flow, Fire Marshal criteria, service size, and approved route are unknown.",
+      "system": "fire_water"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Gas facilities, tie-in, and owner criteria are unknown.",
+      "system": "gas"
+    },
+    {
+      "provenance_status": "reference-derived",
+      "reason": "EWEB easement basis is known; route, equipment, capacity, and approval are unknown.",
+      "system": "power"
+    },
+    {
+      "provenance_status": "reference-derived",
+      "reason": "EWEB fiber corridor basis is known; non-EWEB telecom and final routes are unknown.",
+      "system": "telecom_fiber"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Lighting design is outside this foundation slice.",
+      "system": "site_lighting"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Building and stormwater designs are not locked.",
+      "system": "roof_drainage"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No civil structures are designed.",
+      "system": "structures"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "The research concept is not adopted as final design.",
+      "system": "buildings_pads"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Existing and proposed surfaces are unavailable.",
+      "system": "grading"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No site design is locked.",
+      "system": "curbs"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No site design is locked.",
+      "system": "sidewalks"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No pavement layout or section is locked.",
+      "system": "paving"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No accessibility geometry or compliance determination exists.",
+      "system": "ada"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Existing surveyed objects and demolition scope are unavailable.",
+      "system": "demolition"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Disturbance limits and construction sequence are not designed.",
+      "system": "construction_erosion"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Research defaults are not final selections.",
+      "system": "materials_specifications"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "No design geometry exists from which to derive these artifacts; sheet count is intentionally not fixed.",
+      "system": "plans_profiles_sections_schedules"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Attribute contract is declared, but there are no designed objects to populate.",
+      "system": "field_details_workflows_checklists"
+    },
+    {
+      "provenance_status": "unknown",
+      "reason": "Relationship types are declared, but there are no designed objects to connect.",
+      "system": "relationships"
+    }
+  ],
+  "userHeading": null,
+  "userLocation": null,
+  "utilities": []
+}

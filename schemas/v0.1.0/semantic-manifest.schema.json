@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civil-plan-factory.local/schemas/v0.1.0/semantic-manifest.schema.json",
+  "title": "Excavation Field Map Semantic Adapter",
+  "type": "object",
+  "required": ["schema_version", "canonical_model_version", "id", "projectName", "disclaimer", "plan", "phases", "layers", "objects", "utilities", "calibrationPoints", "unavailable", "provenance"],
+  "properties": {
+    "schema_version": {"const": "excavation-field-map.jobsite-package/v0.1.0"},
+    "objects": {"type": "array"},
+    "utilities": {"type": "array"},
+    "calibrationPoints": {"type": "array"},
+    "unavailable": {"type": "array", "items": {"type": "object", "required": ["system", "reason", "provenance_status"]}}
+  }
+}

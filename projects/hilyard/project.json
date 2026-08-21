@@ -1,0 +1,115 @@
+{
+  "schema_version": "civil-plan-factory.project/v0.1.0",
+  "project": {
+    "id": "hilyard-apartment-test",
+    "name": "Hilyard Apartment Civil Plan Test",
+    "revision": "foundation-0.1.0",
+    "purpose": "product-development test data; not professional engineering services",
+    "jurisdiction": "City of Eugene, Oregon",
+    "site_description": "City-owned Hilyard Street property between East 33rd and East 34th Avenue",
+    "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"
+  },
+  "source_ledger": "sources.lock.json",
+  "decision_ledger": "decisions.json",
+  "spatial_reference": {
+    "horizontal_crs": "EPSG:6823",
+    "horizontal_crs_name": "NAD83(2011) / Oregon Eugene zone",
+    "horizontal_units": "international_foot",
+    "source_crs_common": "EPSG:2914",
+    "vertical_datum": "NAVD88",
+    "vertical_units": "foot",
+    "benchmark": {"status": "unknown", "elevation": null, "monument": null, "decision_id": "decision-benchmark"},
+    "transformations": [{"from": "EPSG:2914", "to": "EPSG:6823", "status": "declared_not_executed"}],
+    "tolerances": {"status": "unknown", "reason": "Survey/control accuracy and application reconciliation tolerance are not yet reviewed."}
+  },
+  "site_basis": {
+    "taxlot_count": {"value": 4, "provenance_status": "confirmed", "source_ids": ["src-rfp-appendix"]},
+    "gross_area_acres_approx": {"value": 0.9485, "provenance_status": "confirmed", "source_ids": ["src-rfp-appendix"]},
+    "post_row_area_acres_approx": {"value": 0.76, "provenance_status": "reference-derived", "source_ids": ["src-rfp-appendix", "src-project-brief"]},
+    "sanitary_easement_width_ft": {"value": 12, "orientation": "east-west", "provenance_status": "confirmed", "source_ids": ["src-rfp-appendix"]},
+    "eweb_easements": {"description": "30-foot west and 15-foot south corridors", "provenance_status": "confirmed", "source_ids": ["src-rfp-appendix"]},
+    "sanitary_system": {"description": "City GIS identifies an 8-inch line crossing the site", "provenance_status": "reference-derived", "source_ids": ["src-project-brief"]},
+    "storm_system": {"description": "City GIS identifies a 21-inch line near the east side", "provenance_status": "reference-derived", "source_ids": ["src-project-brief"]},
+    "wetland_area_acres_approx": {"value": 0.13, "provenance_status": "confirmed", "source_ids": ["src-rfp-appendix"]},
+    "soil": {"description": "hydric, poorly drained, high-clay", "provenance_status": "reference-derived", "source_ids": ["src-project-brief"]},
+    "access_basis": {"street": "East 34th Avenue", "hilyard_driveway_prohibited_by_site_basis": true, "provenance_status": "confirmed", "source_ids": ["src-rfp-appendix"]}
+  },
+  "phases": [
+    {"id": "existing", "name": "Existing / source basis", "summary": "Reference-scale existing conditions only."},
+    {"id": "proposed", "name": "Proposed", "summary": "Declared but not designed in this foundation slice."},
+    {"id": "temporary", "name": "Temporary construction", "summary": "Declared but not designed in this foundation slice."}
+  ],
+  "layers": [
+    {"id": "control", "name": "Control", "color": "#6b7280", "defaultVisible": true},
+    {"id": "property", "name": "Property / Easements / Resources", "color": "#7c3aed", "defaultVisible": true},
+    {"id": "grading", "name": "Grading / Surfaces", "color": "#92400e", "defaultVisible": true},
+    {"id": "sanitary", "name": "Sanitary", "color": "#9333ea", "defaultVisible": true},
+    {"id": "storm", "name": "Storm / Roof Drainage", "color": "#1d8fe1", "defaultVisible": true},
+    {"id": "water", "name": "Domestic / Fire Water", "color": "#16a34a", "defaultVisible": true},
+    {"id": "dry-utilities", "name": "Gas / Power / Telecom / Lighting", "color": "#f97316", "defaultVisible": true},
+    {"id": "site", "name": "Buildings / Paving / Flatwork / ADA", "color": "#b45309", "defaultVisible": true},
+    {"id": "construction-erosion", "name": "Construction / Erosion Control", "color": "#dc2626", "defaultVisible": true}
+  ],
+  "features": {"points": [], "lines": [], "polygons": [], "surfaces": []},
+  "networks": [
+    {"id": "network-sanitary", "system": "sanitary", "network_kind": "gravity", "nodes": [], "edges": []},
+    {"id": "network-storm", "system": "storm", "network_kind": "gravity", "nodes": [], "edges": []},
+    {"id": "network-roof-drainage", "system": "roof_drainage", "network_kind": "drainage", "nodes": [], "edges": []},
+    {"id": "network-domestic-water", "system": "domestic_water", "network_kind": "pressure", "nodes": [], "edges": []},
+    {"id": "network-fire-water", "system": "fire_water", "network_kind": "pressure", "nodes": [], "edges": []},
+    {"id": "network-gas", "system": "gas", "network_kind": "pressure", "nodes": [], "edges": []},
+    {"id": "network-power", "system": "power", "network_kind": "dry", "nodes": [], "edges": []},
+    {"id": "network-telecom-fiber", "system": "telecom_fiber", "network_kind": "dry", "nodes": [], "edges": []},
+    {"id": "network-site-lighting", "system": "site_lighting", "network_kind": "dry", "nodes": [], "edges": []}
+  ],
+  "field_detail_contract": {
+    "dimensions": ["diameter", "pipe_size", "width", "depth", "length", "structure_type", "wall_thickness", "sdr"],
+    "elevations": ["elevation", "rim", "invert_in", "invert_out", "drop", "cover", "finished_grade", "subgrade"],
+    "materials": ["primary", "pipe", "fitting", "bedding", "backfill", "concrete", "compaction", "geotextile", "tracer", "warning_tape"],
+    "relationships": ["upstream", "downstream", "laterals", "crossings", "related_object_ids"],
+    "workflow_groups": ["pre_task", "layout", "excavation", "installation", "backfill", "testing", "inspection", "as_built"],
+    "interaction": ["searchable_label", "map_target", "detail_refs", "location_guidance", "nearby_reference", "warnings", "checklist"]
+  },
+  "deliverables": {"plans": [], "profiles": [], "sections": [], "schedules": [], "detail_cards": []},
+  "export_targets": [
+    {"type": "semantic_manifest", "status": "skeleton_available"},
+    {"type": "validation_report", "status": "available"},
+    {"type": "geopackage", "status": "declared_unavailable"},
+    {"type": "dxf", "status": "declared_unavailable"},
+    {"type": "layered_vector_geopdf", "status": "declared_unavailable"}
+  ],
+  "contract_coverage": [
+    {"system": "coordinates_control", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Surveyed boundary, topography, and control are unavailable."},
+    {"system": "property_limits", "availability": "reference_only", "provenance_status": "reference-derived", "reason": "Aggregate parcel facts are known; canonical boundary geometry is unavailable."},
+    {"system": "easements_row_resource_limits", "availability": "reference_only", "provenance_status": "reference-derived", "reason": "Widths and constraints are known; canonical surveyed geometry is unavailable."},
+    {"system": "surfaces", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "No surveyed terrain or reviewed design surfaces exist."},
+    {"system": "sanitary", "availability": "reference_only", "provenance_status": "reference-derived", "reason": "Nearby/crossing system is reported; exact topology, elevations, tie-in, and capacity are unknown."},
+    {"system": "storm", "availability": "reference_only", "provenance_status": "reference-derived", "reason": "Nearby system is reported; exact topology, elevations, tie-in, HGL, and capacity are unknown."},
+    {"system": "domestic_water", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Pressure, flow, main data, meter, service size, and approved route are unknown."},
+    {"system": "fire_water", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Fire flow, Fire Marshal criteria, service size, and approved route are unknown."},
+    {"system": "gas", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Gas facilities, tie-in, and owner criteria are unknown."},
+    {"system": "power", "availability": "reference_only", "provenance_status": "reference-derived", "reason": "EWEB easement basis is known; route, equipment, capacity, and approval are unknown."},
+    {"system": "telecom_fiber", "availability": "reference_only", "provenance_status": "reference-derived", "reason": "EWEB fiber corridor basis is known; non-EWEB telecom and final routes are unknown."},
+    {"system": "site_lighting", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Lighting design is outside this foundation slice."},
+    {"system": "roof_drainage", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Building and stormwater designs are not locked."},
+    {"system": "structures", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "No civil structures are designed."},
+    {"system": "buildings_pads", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "The research concept is not adopted as final design."},
+    {"system": "grading", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Existing and proposed surfaces are unavailable."},
+    {"system": "curbs", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "No site design is locked."},
+    {"system": "sidewalks", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "No site design is locked."},
+    {"system": "paving", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "No pavement layout or section is locked."},
+    {"system": "ada", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "No accessibility geometry or compliance determination exists."},
+    {"system": "demolition", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Existing surveyed objects and demolition scope are unavailable."},
+    {"system": "construction_erosion", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Disturbance limits and construction sequence are not designed."},
+    {"system": "materials_specifications", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "Research defaults are not final selections."},
+    {"system": "plans_profiles_sections_schedules", "availability": "declared_unavailable", "provenance_status": "unknown", "reason": "No design geometry exists from which to derive these artifacts; sheet count is intentionally not fixed."},
+    {"system": "field_details_workflows_checklists", "availability": "contract_only", "provenance_status": "unknown", "reason": "Attribute contract is declared, but there are no designed objects to populate."},
+    {"system": "relationships", "availability": "contract_only", "provenance_status": "unknown", "reason": "Relationship types are declared, but there are no designed objects to connect."}
+  ],
+  "limitations": [
+    "No survey, boundary, control point, benchmark, or design geometry is asserted.",
+    "No utility tie-in, location, size, elevation, pressure, flow, fire flow, or capacity is approved or asserted.",
+    "No geotechnical, groundwater, infiltration, wetland approval, hydraulic, fire-code, or agency review is complete.",
+    "No permit readiness, code compliance, professional engineering, or construction usability is claimed."
+  ]
+}

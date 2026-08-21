@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civil-plan-factory.local/schemas/v0.1.0/project.schema.json",
+  "title": "Civil Plan Factory Project Bundle",
+  "type": "object",
+  "required": ["schema_version", "project", "spatial_reference", "features", "networks", "deliverables", "contract_coverage"],
+  "properties": {
+    "schema_version": {"const": "civil-plan-factory.project/v0.1.0"},
+    "project": {"type": "object", "required": ["id", "name", "revision", "jurisdiction", "disclaimer"]},
+    "spatial_reference": {"$ref": "canonical.schema.json#/$defs/spatial_reference"},
+    "features": {"$ref": "canonical.schema.json#/$defs/feature_collections"},
+    "networks": {"type": "array", "items": {"$ref": "canonical.schema.json#/$defs/network"}},
+    "deliverables": {"$ref": "canonical.schema.json#/$defs/deliverables"},
+    "contract_coverage": {"type": "array", "items": {"type": "object", "required": ["system", "availability", "provenance_status", "reason"]}}
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civil-plan-factory.local/schemas/v0.1.0/canonical.schema.json",
+  "title": "Canonical Civil Geometry and Network Types",
+  "$defs": {
+    "provenance_status": {"enum": ["confirmed", "reference-derived", "reviewed_assumption", "generated", "unknown"]},
+    "provenance": {"type": "object", "required": ["status", "source_ids"], "properties": {"status": {"$ref": "#/$defs/provenance_status"}, "source_ids": {"type": "array", "items": {"type": "string"}}, "decision_ids": {"type": "array", "items": {"type": "string"}}, "unavailable_reason": {"type": "string"}}},
+    "position": {"type": "array", "minItems": 2, "maxItems": 3, "items": {"type": "number"}},
+    "control_point": {"allOf": [{"$ref": "#/$defs/point_feature"}, {"type": "object", "required": ["control_class"], "properties": {"control_class": {"type": "string"}, "gps_coordinate": {"type": "object", "required": ["lat", "lng"]}}}]},
+    "point_feature": {"type": "object", "required": ["id", "feature_type", "layer_id", "phase_id", "label", "coordinates", "provenance"], "properties": {"coordinates": {"$ref": "#/$defs/position"}, "provenance": {"$ref": "#/$defs/provenance"}, "field_detail": {"$ref": "#/$defs/field_detail"}}},
+    "line_feature": {"type": "object", "required": ["id", "feature_type", "layer_id", "phase_id", "label", "coordinates", "provenance"], "properties": {"coordinates": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/position"}}, "provenance": {"$ref": "#/$defs/provenance"}, "field_detail": {"$ref": "#/$defs/field_detail"}}},
+    "polygon_feature": {"type": "object", "required": ["id", "feature_type", "layer_id", "phase_id", "label", "coordinates", "provenance"], "properties": {"coordinates": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/position"}}, "provenance": {"$ref": "#/$defs/provenance"}, "field_detail": {"$ref": "#/$defs/field_detail"}}},
+    "surface": {"type": "object", "required": ["id", "surface_type", "boundary", "elevation_source", "provenance"], "properties": {"surface_type": {"enum": ["existing", "proposed", "subgrade", "pavement_layer", "cut_fill"]}, "boundary": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/position"}}, "elevation_source": {"type": "object"}, "provenance": {"$ref": "#/$defs/provenance"}}},
+    "field_detail": {"type": "object", "properties": {"dimensions": {"type": "object"}, "elevations": {"type": "object"}, "materials": {"type": "object"}, "connections": {"type": "object"}, "warnings": {"type": "array", "items": {"type": "string"}}, "workflow": {"type": "object"}, "checklist": {"type": "array"}, "detail_refs": {"type": "array", "items": {"type": "string"}}, "location_guidance": {"type": "string"}, "unavailable": {"type": "object"}}},
+    "feature_collections": {"type": "object", "required": ["points", "lines", "polygons", "surfaces"], "properties": {"points": {"type": "array", "items": {"$ref": "#/$defs/point_feature"}}, "lines": {"type": "array", "items": {"$ref": "#/$defs/line_feature"}}, "polygons": {"type": "array", "items": {"$ref": "#/$defs/polygon_feature"}}, "surfaces": {"type": "array", "items": {"$ref": "#/$defs/surface"}}}},
+    "network_node": {"type": "object", "required": ["id", "node_type", "geometry_feature_id", "provenance"]},
+    "network_edge": {"type": "object", "required": ["id", "from_node_id", "to_node_id", "geometry_feature_id", "provenance"]},
+    "network": {"type": "object", "required": ["id", "system", "network_kind", "nodes", "edges"], "properties": {"network_kind": {"enum": ["gravity", "pressure", "dry", "drainage"]}, "nodes": {"type": "array", "items": {"$ref": "#/$defs/network_node"}}, "edges": {"type": "array", "items": {"$ref": "#/$defs/network_edge"}}}},
+    "spatial_reference": {"type": "object", "required": ["horizontal_crs", "horizontal_units", "vertical_datum", "vertical_units", "benchmark", "transformations", "tolerances"]},
+    "plan": {"type": "object", "required": ["id", "title", "asset_ids", "scale"]},
+    "profile": {"type": "object", "required": ["id", "alignment_id", "asset_ids"]},
+    "section": {"type": "object", "required": ["id", "cut_line_id", "asset_ids"]},
+    "schedule": {"type": "object", "required": ["id", "schedule_type", "asset_ids"]},
+    "deliverables": {"type": "object", "required": ["plans", "profiles", "sections", "schedules", "detail_cards"], "properties": {"plans": {"type": "array", "items": {"$ref": "#/$defs/plan"}}, "profiles": {"type": "array", "items": {"$ref": "#/$defs/profile"}}, "sections": {"type": "array", "items": {"$ref": "#/$defs/section"}}, "schedules": {"type": "array", "items": {"$ref": "#/$defs/schedule"}}, "detail_cards": {"type": "array"}}}
+  }
+}
