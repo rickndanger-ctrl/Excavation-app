@@ -37,6 +37,16 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=Path("/Applications/QGIS-final-4_2_1.app"),
     )
+    serve = subparsers.add_parser("serve", help="run the local Model Studio production console")
+    serve.add_argument("--repository", type=Path, default=Path.cwd())
+    serve.add_argument("--state-dir", type=Path)
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8765)
+    serve.add_argument(
+        "--qgis-app",
+        type=Path,
+        default=Path("/Applications/QGIS-final-4_2_1.app"),
+    )
     args = parser.parse_args(argv)
 
     if args.command == "doctor":
@@ -45,6 +55,26 @@ def main(argv: list[str] | None = None) -> int:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             _write_json(args.output, report)
         print(json.dumps(report, sort_keys=True))
+        return 0
+
+    if args.command == "serve":
+        from .studio import StudioWorkspace
+        from .web import create_server
+
+        workspace = StudioWorkspace(
+            args.repository,
+            state_root=args.state_dir,
+            qgis_app=args.qgis_app,
+        )
+        server = create_server(workspace, host=args.host, port=args.port)
+        print(f"Model Studio listening at http://{args.host}:{server.server_port}", flush=True)
+        print(DISCLAIMER, flush=True)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            server.server_close()
         return 0
 
     if args.command == "build":

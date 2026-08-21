@@ -16,3 +16,6 @@ model-studio = "civil_plan_factory.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+civil_plan_factory = ["studio_web/*.html", "studio_web/*.css", "studio_web/*.js"]

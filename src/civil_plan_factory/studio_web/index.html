@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model Studio · Civil Plan Factory</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23102b23'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='sans-serif' font-size='24' font-weight='700' fill='%23cbe1d9'%3EMS%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="mark">MS</span><div><strong>Model Studio</strong><small>Civil Plan Factory</small></div></div>
+    <div class="environment"><span class="pulse"></span> Local workspace</div>
+    <div class="warning">FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION</div>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sidebar-title"><span>Projects</span><button id="new-project" class="icon-button" title="Create project">+</button></div>
+      <div id="project-list" class="project-list"><div class="skeleton"></div></div>
+      <footer><span>Canonical model authority</span><strong>Fail closed</strong></footer>
+    </aside>
+    <main>
+      <section id="empty-state" class="empty-state">
+        <div class="empty-mark">⌖</div><h1>Choose a project</h1><p>Open an existing semantic civil job or create an explicit intake draft.</p>
+      </section>
+      <div id="workspace" hidden>
+        <section class="project-heading">
+          <div><span class="eyebrow">Active project</span><h1 id="project-name"></h1><p id="project-meta"></p></div>
+          <div id="validation-chip" class="chip"></div>
+        </section>
+        <nav class="workflow" aria-label="Model Studio workflow">
+          <span class="active">1 · Intake</span><span>2 · Validate & build</span><span>3 · Review gates</span><span>4 · Publish handoff</span>
+        </nav>
+        <div id="notice" class="notice" hidden></div>
+        <div class="dashboard-grid">
+          <section class="card intake-card">
+            <div class="card-heading"><div><span class="eyebrow">Source intake</span><h2>Plan-set inputs</h2></div><span id="input-count" class="metric"></span></div>
+            <label id="dropzone" class="dropzone">
+              <input id="plan-input" type="file" accept="application/pdf,.pdf">
+              <span class="upload-icon">⇧</span><strong>Drop a PDF plan set here</strong><small>or choose a file · bytes are SHA-256 locked on intake</small>
+            </label>
+            <p class="guardrail">New inputs remain <code>unknown</code> and support no model claims until reviewed into the canonical bundle.</p>
+          </section>
+          <section class="card pipeline-card">
+            <div class="card-heading"><div><span class="eyebrow">Canonical execution</span><h2>Pipeline run</h2></div><button id="run-pipeline" class="primary">Run canonical pipeline</button></div>
+            <div class="progress-track"><span id="progress-bar"></span></div>
+            <div class="stage-row"><strong id="run-stage">Not started</strong><span id="run-detail">Validation → artifacts → parity</span></div>
+            <div id="artifact-list" class="artifact-list"></div>
+          </section>
+          <section class="card provenance-card">
+            <div class="card-heading"><div><span class="eyebrow">Evidence basis</span><h2>Provenance</h2></div></div>
+            <div id="provenance" class="provenance"></div>
+          </section>
+          <section class="card readiness-card">
+            <div class="card-heading"><div><span class="eyebrow">Field Map handoff</span><h2>Publication readiness</h2></div><span id="readiness-badge" class="chip blocked">Blocked</span></div>
+            <p id="readiness-copy">A passing canonical validation and artifact parity report are required.</p>
+            <button id="publish" class="publish" disabled>Publish immutable package</button>
+            <div id="publication-result" class="publication-result"></div>
+          </section>
+        </div>
+        <section class="card issues-card">
+          <div class="card-heading"><div><span class="eyebrow">Fail-closed review queue</span><h2>Validation outcomes</h2></div><span id="issue-count" class="metric"></span></div>
+          <p>Review notes are audit records only. An issue clears only after the authoritative model is corrected and the validator passes.</p>
+          <div id="issues" class="issues"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <dialog id="project-dialog"><form id="project-form" method="dialog"><h2>Create intake project</h2><p>No coordinates, engineering inputs, or approvals will be invented.</p><label>Project name<input name="name" required placeholder="Oak Street Intake"></label><label>Slug<input name="slug" pattern="[a-z][a-z0-9-]*" placeholder="oak-street"></label><div class="dialog-actions"><button value="cancel">Cancel</button><button class="primary" value="default">Create project</button></div></form></dialog>
+  <dialog id="review-dialog"><form id="review-form" method="dialog"><h2>Record recovery note</h2><p id="review-issue"></p><input name="issue_key" type="hidden"><label>Reviewer<input name="reviewer" required></label><label>Recovery / resolution note<textarea name="note" rows="4" required></textarea></label><p class="guardrail">This note does not bypass or downgrade the validation gate.</p><div class="dialog-actions"><button value="cancel">Cancel</button><button class="primary" value="default">Record review</button></div></form></dialog>
+  <script src="/app.js"></script>
+</body>
+</html>

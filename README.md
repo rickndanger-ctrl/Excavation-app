@@ -34,6 +34,42 @@ model-studio doctor
 model-studio validate projects/hilyard/project.json --output-dir outputs/hilyard-foundation
 ```
 
+## Local production console
+
+The operator-facing console runs locally and delegates all civil-model work to
+the canonical loader, validator, and builder in this package:
+
+```bash
+model-studio serve --repository "$PWD"
+```
+
+Open `http://127.0.0.1:8765`. The console provides one fail-closed workflow:
+
+1. select an existing project or create an explicitly incomplete intake draft;
+2. add PDF plan sets, which are copied into the project intake folder and
+   SHA-256 locked with `unknown` provenance and no supported model claims;
+3. run the canonical validation/build/parity pipeline and watch its current
+   stage;
+4. review active issues and record recovery notes without clearing or
+   downgrading the validator gate;
+5. inspect limitations, provenance counts, artifacts, and publication
+   readiness; and
+6. publish a passing run to a content-addressed immutable handoff under
+   `.model-studio/published/<project>/<sha256>/`.
+
+The handoff directory contains `semantic-manifest.json`, the validation and
+parity evidence, the coordinated generated artifacts, and
+`handoff-manifest.json` with checksums and the exact import seam. The current
+Field Map consumer uses local file import: choose the published
+`semantic-manifest.json` in its model-package file input. Remote delivery is
+reported as `not_configured`; the console does not fabricate a remote endpoint
+or credentials.
+
+Console run state and publications live under `.model-studio/` and are ignored
+by git. For persistent unattended use, run the command under a local process
+supervisor such as pm2. A foreground launch is appropriate for an operator
+session and exits cleanly with Ctrl-C.
+
 The `validate` command emits a deterministic semantic package and validation
 report. The current coordinated site/sanitary/storm/water-fire/dry-utilities/grading
 slice is generated with:
