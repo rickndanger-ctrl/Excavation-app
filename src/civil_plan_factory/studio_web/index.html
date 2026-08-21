@@ -6,6 +6,7 @@
   <title>Model Studio · Civil Plan Factory</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23102b23'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='sans-serif' font-size='24' font-weight='700' fill='%23cbe1d9'%3EMS%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/observability.css">
 </head>
 <body>
   <header class="topbar">
@@ -32,6 +33,24 @@
           <span class="active">1 · Intake</span><span>2 · Validate & build</span><span>3 · Review gates</span><span>4 · Publish handoff</span>
         </nav>
         <div id="notice" class="notice" hidden></div>
+        <section class="card factory-window">
+          <div class="card-heading"><div><span class="eyebrow">Factory window</span><h2>Observable dry run</h2></div><span id="observation-stage" class="chip blocked">Intake</span></div>
+          <div class="current-action"><span>Current action</span><strong id="current-action"></strong></div>
+          <div class="observation-metrics">
+            <div><span>Revision</span><strong id="observation-revision">—</strong></div><div><span>Source locks</span><strong id="source-lock-count">0 / 0</strong></div><div><span>Human review</span><strong id="human-review-count">0</strong></div><div><span>Automated time</span><strong id="automated-time">0s</strong></div><div><span>Operator time</span><strong id="manual-time">0s</strong></div><div><span>Result class</span><strong id="result-classification">not assessed</strong></div>
+          </div>
+          <div class="observation-detail-grid">
+            <div><h3>Input and checksum evidence</h3><div id="evidence-list" class="evidence-list"></div></div><div><h3>Outputs and handoff</h3><div id="output-list" class="evidence-list"></div></div><div><h3>Operator decisions</h3><div id="touch-list" class="evidence-list"></div></div>
+          </div>
+          <form id="operator-touch-form" class="touch-form">
+            <label>Activity<select name="activity" required><option value="source_intake">Source intake</option><option value="metadata_review">Metadata / revision review</option><option value="canonical_authoring">Canonical model authoring</option><option value="human_review">Human review</option><option value="phone_check">Phone / layer check</option><option value="source_phone_comparison">Source-to-phone comparison</option><option value="repair">Repair and regression</option><option value="rollback_cleanup">Rollback / cleanup</option></select></label>
+            <label>Minutes<input name="minutes" type="number" min="0.1" step="0.1" required></label>
+            <label>Result classification<select name="result_classification"><option value="not_assessed">Not assessed</option><option value="passed_verifiable_gates">Passed verifiable gates</option><option value="valid_fail_closed_incomplete_plans">Valid fail-closed: incomplete plans</option><option value="pipeline_defect">Pipeline defect</option></select></label>
+            <label class="touch-note">Evidence / decision note<input name="note" required placeholder="What was checked, decided, blocked, or repaired?"></label>
+            <button class="primary" type="submit">Record operator touch</button>
+          </form>
+          <p class="guardrail">Classification records operator judgment; it never clears a validation gate. “100%” means every verifiable in-scope criterion passed and every unknown is explicit—not fabricated certainty.</p>
+        </section>
         <div class="dashboard-grid">
           <section class="card intake-card">
             <div class="card-heading"><div><span class="eyebrow">Source intake</span><h2>Plan-set inputs</h2></div><span id="input-count" class="metric"></span></div>

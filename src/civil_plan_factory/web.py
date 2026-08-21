@@ -1,11 +1,13 @@
 """Local HTTP front door for Model Studio."""
 
 import base64
+from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 import threading
+import time
 from typing import Any
 from urllib.parse import unquote, urlparse
 import uuid
@@ -18,6 +20,7 @@ STATIC_FILES = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
+    "/observability.css": ("observability.css", "text/css; charset=utf-8"),
 }
 
 
@@ -38,6 +41,9 @@ class StudioHTTPServer(ThreadingHTTPServer):
             "status": "queued",
             "stage": "queued",
             "progress_percent": 0,
+            "started_at": None,
+            "elapsed_seconds": 0.0,
+            "_queued_monotonic": time.monotonic(),
         }
         with self.operations_lock:
             self.operations[operation_id] = operation
@@ -45,7 +51,12 @@ class StudioHTTPServer(ThreadingHTTPServer):
         def work() -> None:
             try:
                 with self.operations_lock:
-                    operation.update(status="running", stage="canonical_validation_and_build", progress_percent=25)
+                    operation.update(
+                        status="running",
+                        stage="canonical_validation_and_build",
+                        progress_percent=25,
+                        started_at=operation.get("started_at") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                    )
                 result = self.workspace.run_project(slug)
                 with self.operations_lock:
                     operation.update(
@@ -53,6 +64,7 @@ class StudioHTTPServer(ThreadingHTTPServer):
                         stage=result["stage"],
                         progress_percent=100,
                         result=result,
+                        elapsed_seconds=round(time.monotonic() - operation["_queued_monotonic"], 3),
                     )
             except Exception as error:
                 with self.operations_lock:
@@ -61,6 +73,7 @@ class StudioHTTPServer(ThreadingHTTPServer):
                         stage="failed",
                         progress_percent=100,
                         error=f"{type(error).__name__}: {error}",
+                        elapsed_seconds=round(time.monotonic() - operation["_queued_monotonic"], 3),
                     )
 
         threading.Thread(target=work, name=f"model-studio-{operation_id[:8]}", daemon=True).start()
@@ -69,7 +82,14 @@ class StudioHTTPServer(ThreadingHTTPServer):
     def operation(self, operation_id: str) -> dict[str, Any] | None:
         with self.operations_lock:
             operation = self.operations.get(operation_id)
-            return dict(operation) if operation else None
+            if operation is None:
+                return None
+            result = {key: value for key, value in operation.items() if not key.startswith("_")}
+            if result["status"] in {"queued", "running"}:
+                result["elapsed_seconds"] = round(
+                    time.monotonic() - operation["_queued_monotonic"], 3
+                )
+            return result
 
 
 class StudioRequestHandler(BaseHTTPRequestHandler):
@@ -171,6 +191,16 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                     str(payload.get("issue_key", "")),
                     reviewer=str(payload.get("reviewer", "")),
                     note=str(payload.get("note", "")),
+                )
+                self._send_json(HTTPStatus.CREATED, result)
+                return
+            if len(parts) == 4 and parts[:2] == ["api", "projects"] and parts[3] == "touches":
+                result = self.server.workspace.record_operator_touch(
+                    parts[2],
+                    activity=str(payload.get("activity", "")),
+                    minutes=payload.get("minutes", 0),
+                    note=str(payload.get("note", "")),
+                    result_classification=str(payload.get("result_classification", "not_assessed")),
                 )
                 self._send_json(HTTPStatus.CREATED, result)
                 return

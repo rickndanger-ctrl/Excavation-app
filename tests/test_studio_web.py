@@ -74,6 +74,11 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertIn("/api/projects", javascript)
         self.assertIn("readiness_inventory", javascript)
         self.assertIn("current_run", javascript)
+        self.assertIn("workflow_observation", javascript)
+        self.assertIn('id="current-action"', html)
+        self.assertIn('id="operator-touch-form"', html)
+        self.assertIn('id="evidence-list"', html)
+        self.assertIn("/touches", javascript)
         self.assertIn("--danger", stylesheet)
         self.assertIn("[hidden]", stylesheet)
 
@@ -121,6 +126,30 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertEqual("invalid", progress["result"]["status"])
         self.assertEqual("blocked", progress["result"]["publication_readiness"])
         self.assertEqual("reviewed_not_cleared", review["status"])
+        self.assertIn("elapsed_seconds", progress)
+
+    def test_operator_touch_is_auditable_through_http(self):
+        self.request(
+            "/api/projects", method="POST", payload={"name": "Touch Log", "slug": "touch-log"}
+        )
+
+        status, touch = self.request(
+            "/api/projects/touch-log/touches",
+            method="POST",
+            payload={
+                "activity": "phone_check",
+                "minutes": 3,
+                "note": "Opened the imported package and toggled every expected layer.",
+                "result_classification": "valid_fail_closed_incomplete_plans",
+            },
+        )
+        _, detail = self.request("/api/projects/touch-log")
+
+        self.assertEqual(201, status)
+        self.assertEqual(DISCLAIMER, touch["disclaimer"])
+        observation = detail["workflow_observation"]
+        self.assertEqual(180, observation["timing"]["manual_seconds"])
+        self.assertEqual(touch["touch_id"], observation["operator_touches"][0]["touch_id"])
 
     def test_operator_sees_latest_completion_when_content_ids_sort_the_other_way(self):
         self.request(

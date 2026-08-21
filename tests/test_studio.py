@@ -102,6 +102,62 @@ class ModelStudioModuleTests(unittest.TestCase):
             self.assertIn("system_coverage", inventory["groups"])
             self.assertTrue(all(group["next_action"] for group in inventory["groups"].values()))
 
+    def test_workflow_observation_exposes_evidence_decisions_blockers_outputs_and_timing(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            workspace.create_project("Observable Intake", "observable-intake")
+            source = workspace.add_input(
+                "observable-intake", "source-plan.pdf", b"%PDF-1.7\nobservable source\n%%EOF\n"
+            )
+            touch = workspace.record_operator_touch(
+                "observable-intake",
+                activity="source_intake",
+                minutes=2.5,
+                note="Verified filename and checksum against the intake record.",
+                result_classification="valid_fail_closed_incomplete_plans",
+            )
+            run = workspace.run_project("observable-intake")
+
+            detail = workspace.project_detail("observable-intake")
+            observation = detail["workflow_observation"]
+            self.assertEqual("review_gates", observation["stage"])
+            self.assertIn("authoritative model", observation["current_action"])
+            self.assertEqual("draft-intake-0", observation["job_control"]["revision"])
+            self.assertEqual(1, observation["inputs"]["plan_set_count"])
+            self.assertEqual(source["sha256"], observation["inputs"]["evidence"][0]["sha256"])
+            self.assertEqual("unknown", observation["inputs"]["evidence"][0]["provenance_status"])
+            self.assertGreater(observation["blockers"]["blocker_count"], 0)
+            self.assertIn("validation-report.json", observation["outputs"]["artifacts"])
+            self.assertEqual(run["run_id"], observation["outputs"]["run_id"])
+            self.assertGreaterEqual(observation["timing"]["automated_seconds"], 0)
+            self.assertEqual(150, observation["timing"]["manual_seconds"])
+            self.assertEqual(touch["touch_id"], observation["operator_touches"][0]["touch_id"])
+            self.assertEqual(
+                "valid_fail_closed_incomplete_plans", observation["result_classification"]
+            )
+
+    def test_operator_touch_rejects_invalid_time_and_classification(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            workspace.create_project("Touch Guard", "touch-guard")
+
+            with self.assertRaisesRegex(ValueError, "positive"):
+                workspace.record_operator_touch(
+                    "touch-guard", activity="source_intake", minutes=0, note="No time"
+                )
+            with self.assertRaisesRegex(ValueError, "classification"):
+                workspace.record_operator_touch(
+                    "touch-guard",
+                    activity="source_intake",
+                    minutes=1,
+                    note="Bad classification",
+                    result_classification="green_enough",
+                )
+
     def test_runs_are_ordered_by_completion_time_not_content_address(self):
         with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
             root = Path(repository)

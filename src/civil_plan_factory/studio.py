@@ -9,6 +9,7 @@ from collections import Counter
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 import shutil
@@ -23,10 +24,37 @@ HANDOFF_SCHEMA = "civil-plan-factory.field-map-handoff/v0.1.0"
 FIELD_MAP_SCHEMA = "excavation-field-map.jobsite-package/v0.1.0"
 DEFAULT_QGIS_APP = Path("/Applications/QGIS-final-4_2_1.app")
 _SLUG = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
+OPERATOR_ACTIVITIES = {
+    "source_intake",
+    "metadata_review",
+    "canonical_authoring",
+    "human_review",
+    "phone_check",
+    "source_phone_comparison",
+    "repair",
+    "rollback_cleanup",
+}
+RESULT_CLASSIFICATIONS = {
+    "not_assessed",
+    "passed_verifiable_gates",
+    "valid_fail_closed_incomplete_plans",
+    "pipeline_defect",
+}
 
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _elapsed_seconds(started_at: str | None, completed_at: str | None) -> float:
+    if not started_at or not completed_at:
+        return 0.0
+    try:
+        start = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+        end = datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+    except ValueError:
+        return 0.0
+    return max(0.0, round((end - start).total_seconds(), 3))
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -141,6 +169,42 @@ class StudioWorkspace:
             return {}
         return _read_json(path).get("reviews", {})
 
+    def _touch_file(self, slug: str) -> Path:
+        return self.state_root / "operator-touches" / f"{slug}.json"
+
+    def _operator_touches(self, slug: str) -> list[dict[str, Any]]:
+        path = self._touch_file(slug)
+        if not path.exists():
+            return []
+        return sorted(
+            _read_json(path).get("touches", []),
+            key=lambda touch: (touch.get("recorded_at", ""), touch.get("touch_id", "")),
+            reverse=True,
+        )
+
+    def _latest_publication(self, slug: str) -> dict[str, Any] | None:
+        root = self.state_root / "published" / slug
+        if not root.exists():
+            return None
+        publications = []
+        for path in root.glob("*/handoff-manifest.json"):
+            try:
+                handoff = _read_json(path)
+            except (OSError, ValueError, json.JSONDecodeError):
+                continue
+            publications.append({
+                "publication_id": handoff.get("publication_id"),
+                "published_at": handoff.get("published_at"),
+                "directory": str(path.parent),
+                "import_file": str(path.parent / "semantic-manifest.json"),
+                "handoff_manifest": str(path),
+            })
+        return max(
+            publications,
+            key=lambda item: (item.get("published_at") or "", item.get("publication_id") or ""),
+            default=None,
+        )
+
     def _validation(self, slug: str) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
         try:
             model = load_project_bundle(self._project_file(slug))
@@ -209,6 +273,63 @@ class StudioWorkspace:
             for run in self.list_runs(slug)
         ]
         current_run = next((run for run in runs if run["is_current"]), None)
+        touches = self._operator_touches(slug)
+        latest_publication = self._latest_publication(slug)
+        source_evidence = []
+        for source in (model or {}).get("sources", []):
+            lock = source.get("lock", {})
+            source_evidence.append({
+                "id": source.get("id"),
+                "title": source.get("title"),
+                "provenance_status": source.get("provenance_status", "unknown"),
+                "lock_status": lock.get("status", "unlocked"),
+                "sha256": lock.get("sha256"),
+                "supports": source.get("supports", []),
+            })
+        decision_counts = Counter(
+            decision.get("status", "unknown") for decision in (model or {}).get("decisions", [])
+        )
+        if current_run and current_run.get("publication_readiness") == "ready":
+            stage = "phone_verification" if latest_publication else "publication_readiness"
+            current_action = (
+                "Complete phone layer-toggle and source-to-phone sampling, then record the acceptance result."
+                if latest_publication
+                else "Publish the immutable handoff, then verify it in Field Map on the phone."
+            )
+        elif current_run:
+            stage = "review_gates"
+            current_action = (
+                "Resolve the active blockers in the authoritative model and rerun canonical validation; notes cannot clear gates."
+            )
+        elif runs:
+            stage = "authoritative_inputs_changed"
+            current_action = "Review changed inputs and revision metadata, then rerun the canonical pipeline."
+        else:
+            stage = "intake"
+            current_action = "Lock source plans, verify job metadata and revision, then author the canonical model."
+        explicit_classification = next(
+            (
+                touch.get("result_classification")
+                for touch in touches
+                if touch.get("result_classification") not in {None, "not_assessed"}
+            ),
+            None,
+        )
+        if explicit_classification:
+            result_classification = explicit_classification
+        elif current_run and current_run.get("error"):
+            result_classification = "pipeline_defect"
+        elif current_run and current_run.get("publication_readiness") == "ready":
+            result_classification = "passed_verifiable_gates"
+        else:
+            result_classification = "not_assessed"
+        automated_seconds = (
+            current_run.get("elapsed_seconds", _elapsed_seconds(
+                current_run.get("started_at"), current_run.get("completed_at")
+            ))
+            if current_run else 0.0
+        )
+        input_count = len(list((directory / "inputs").glob("*"))) if (directory / "inputs").exists() else 0
         result: dict[str, Any] = {
             "slug": slug,
             "project_id": project.get("id", slug),
@@ -219,11 +340,48 @@ class StudioWorkspace:
             "issue_count": len(raw_issues),
             "readiness_inventory": _readiness_inventory(raw_issues),
             "provenance": self._provenance_summary(model),
-            "input_count": len(list((directory / "inputs").glob("*"))) if (directory / "inputs").exists() else 0,
+            "input_count": input_count,
             "project_file": str(directory / "project.json"),
             "cleared_reviews": cleared_reviews,
             "runs": runs,
             "current_run": current_run,
+            "workflow_observation": {
+                "stage": stage,
+                "current_action": current_action,
+                "job_control": {
+                    "project_id": project.get("id", slug),
+                    "revision": project.get("revision", "draft"),
+                    "project_fingerprint": current_fingerprint,
+                },
+                "inputs": {
+                    "plan_set_count": input_count,
+                    "source_count": len(source_evidence),
+                    "checksum_locked_count": sum(
+                        evidence["lock_status"] == "checksum_locked" for evidence in source_evidence
+                    ),
+                    "evidence": source_evidence,
+                },
+                "decisions": {
+                    "total": sum(decision_counts.values()),
+                    "by_status": dict(sorted(decision_counts.items())),
+                    "human_review_required": sum(
+                        decision_counts[status] for status in ("reviewed_assumption", "unknown")
+                    ),
+                },
+                "blockers": _readiness_inventory(raw_issues),
+                "outputs": {
+                    "run_id": current_run.get("run_id") if current_run else None,
+                    "artifacts": sorted((current_run or {}).get("artifacts", {})),
+                    "publication": latest_publication,
+                },
+                "timing": {
+                    "automated_seconds": automated_seconds,
+                    "manual_seconds": round(sum(float(touch["duration_seconds"]) for touch in touches), 3),
+                    "operator_touch_count": len(touches),
+                },
+                "result_classification": result_classification,
+                "operator_touches": touches,
+            },
         }
         if include_issues:
             result["issues"] = issues
@@ -352,6 +510,53 @@ class StudioWorkspace:
         })
         return record
 
+    def record_operator_touch(
+        self,
+        slug: str,
+        *,
+        activity: str,
+        minutes: float,
+        note: str,
+        result_classification: str = "not_assessed",
+    ) -> dict[str, Any]:
+        self._project_file(slug)
+        clean_activity = activity.strip()
+        clean_note = note.strip()
+        try:
+            numeric_minutes = float(minutes)
+        except (TypeError, ValueError) as error:
+            raise ValueError("Operator minutes must be a positive number") from error
+        if not math.isfinite(numeric_minutes) or numeric_minutes <= 0:
+            raise ValueError("Operator minutes must be a positive number")
+        if clean_activity not in OPERATOR_ACTIVITIES:
+            raise ValueError("Unknown operator activity")
+        if result_classification not in RESULT_CLASSIFICATIONS:
+            raise ValueError("Unknown result classification")
+        if not clean_note:
+            raise ValueError("Operator touch note is required")
+        recorded_at = _now()
+        basis = f"{slug}\0{recorded_at}\0{clean_activity}\0{clean_note}".encode()
+        record = {
+            "schema_version": "civil-plan-factory.operator-touch/v0.1.0",
+            "disclaimer": DISCLAIMER,
+            "touch_id": hashlib.sha256(basis).hexdigest()[:20],
+            "project_slug": slug,
+            "activity": clean_activity,
+            "duration_seconds": round(numeric_minutes * 60, 3),
+            "note": clean_note,
+            "result_classification": result_classification,
+            "recorded_at": recorded_at,
+        }
+        touches = self._operator_touches(slug)
+        touches.append(record)
+        _write_json(self._touch_file(slug), {
+            "schema_version": "civil-plan-factory.operator-touch-log/v0.1.0",
+            "disclaimer": DISCLAIMER,
+            "project_slug": slug,
+            "touches": touches,
+        })
+        return record
+
     def _fingerprint(self, slug: str) -> str:
         digest = hashlib.sha256()
         project_dir = self._project_dir(slug)
@@ -450,6 +655,9 @@ class StudioWorkspace:
             "return_code": return_code,
             "artifacts": artifacts,
         })
+        metadata["elapsed_seconds"] = _elapsed_seconds(
+            metadata.get("started_at"), metadata.get("completed_at")
+        )
         _write_json(metadata_path, metadata)
         return metadata
 

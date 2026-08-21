@@ -83,6 +83,14 @@ publishable controlled commercial `cascade-commerce` fixture. See
 source checksums, timings, manual interventions, blockers, and the read-only
 Field Map contract result.
 
+Before any multi-case validation program, follow the detailed
+[`docs/dry-run-sop.md`](docs/dry-run-sop.md) and concise
+[`docs/dry-run-operator-checklist.md`](docs/dry-run-operator-checklist.md).
+The factory window exposes stage, current action, revision/fingerprint, source
+locks, human-review load, blockers, outputs, handoff, and separate automated and
+operator time. Operator classifications are audit records and cannot clear a
+fail-closed validation gate.
+
 Console run state and publications live under `.model-studio/` and are ignored
 by git. For persistent unattended use, run the command under a local process
 supervisor such as pm2. A foreground launch is appropriate for an operator

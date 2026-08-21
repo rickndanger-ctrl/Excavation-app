@@ -1,0 +1,135 @@
+.factory-window {
+  margin-bottom: 14px;
+}
+
+.current-action {
+  display: grid;
+  gap: 3px;
+  background: #f3f7f4;
+  border-left: 4px solid var(--green);
+  padding: 11px 13px;
+  margin-top: 13px;
+}
+
+.current-action span,
+.observation-metrics span {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.observation-metrics {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.observation-metrics > div {
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px;
+}
+
+.observation-metrics strong {
+  font-size: 11px;
+  word-break: break-word;
+}
+
+.observation-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.observation-detail-grid h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 0 0 7px;
+}
+
+.evidence-list {
+  display: grid;
+  gap: 6px;
+  max-height: 150px;
+  overflow: auto;
+}
+
+.evidence-list > div {
+  display: grid;
+  border-bottom: 1px solid #edf0ed;
+  padding-bottom: 5px;
+  font-size: 10px;
+}
+
+.evidence-list span,
+.evidence-list p {
+  color: var(--muted);
+  margin: 0;
+  word-break: break-word;
+}
+
+.touch-form {
+  display: grid;
+  grid-template-columns: 1fr 100px 1.2fr 2fr auto;
+  gap: 8px;
+  align-items: end;
+  border-top: 1px solid var(--line);
+  padding-top: 13px;
+  margin-top: 13px;
+}
+
+.touch-form label {
+  display: grid;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.touch-form input,
+.touch-form select {
+  min-width: 0;
+  border: 1px solid #bec8c2;
+  border-radius: 7px;
+  padding: 8px;
+  background: #fff;
+}
+
+.touch-form button {
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  .observation-metrics {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .touch-form {
+    grid-template-columns: 1fr 100px 1fr;
+  }
+
+  .touch-note {
+    grid-column: 1 / 3;
+  }
+
+  .observation-detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .observation-metrics,
+  .observation-detail-grid,
+  .touch-form {
+    grid-template-columns: 1fr;
+  }
+
+  .touch-note {
+    grid-column: auto;
+  }
+}
