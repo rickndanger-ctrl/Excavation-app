@@ -1,7 +1,8 @@
 import { Crosshair, Minus, Plus } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { BlueprintObject, JobsitePackage, ObjectStatus, Point } from '../types/jobsite';
 import { distanceFeet, formatFeet } from '../utils/distance';
+import { GRADING_HIT_RADIUS, layoutGradingLabels, type GradingLabelLayout } from '../lib/gradingLayout';
 import { PdfPlanLayer } from './PdfPlanLayer';
 
 export type ImportedBasePlan = {
@@ -52,12 +53,14 @@ function ObjectIcon({
   selected,
   color,
   status,
+  labelLayout,
   onClick,
 }: {
   obj: BlueprintObject;
   selected: boolean;
   color: string;
   status: ObjectStatus;
+  labelLayout?: GradingLabelLayout;
   onClick: (e: React.MouseEvent) => void;
 }) {
   const { x, y, type } = obj;
@@ -307,13 +310,30 @@ function ObjectIcon({
     );
   }
 
+  const isGrading = obj.layerId === 'grading';
   return (
-    <g className="plan-object" onClick={onClick}>
+    <g
+      className="plan-object"
+      data-object-id={obj.id}
+      data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'}
+      onClick={onClick}
+    >
+      {isGrading && (
+        <circle
+          className="plan-object-hit-target"
+          cx={x}
+          cy={y}
+          r={GRADING_HIT_RADIUS}
+          fill="transparent"
+          pointerEvents="none"
+        />
+      )}
       {icon}
       <StatusBadge x={x} y={y} status={status} />
-      <text
-        x={x}
-        y={y - 5}
+      {(!labelLayout || !labelLayout.suppressed) && <text
+        className={isGrading ? 'grading-map-label' : undefined}
+        x={labelLayout?.labelX ?? x}
+        y={labelLayout?.labelY ?? y - 5}
         textAnchor="middle"
         fontSize="3.2"
         fill={selected ? '#ea4335' : '#202124'}
@@ -322,7 +342,7 @@ function ObjectIcon({
         style={{ pointerEvents: 'none' }}
       >
         {obj.workerLabel ?? obj.label}
-      </text>
+      </text>}
     </g>
   );
 }
@@ -363,6 +383,15 @@ export function PlanCanvas({
   } | null>(null);
 
   const { plan, utilities, objects } = jobsite;
+  const gradingLabels = useMemo(() => new Map(layoutGradingLabels(
+    objects.filter((object) => object.layerId === 'grading').map((object) => ({
+      id: object.id,
+      x: object.x,
+      y: object.y,
+      text: object.workerLabel ?? object.label,
+    })),
+    { width: plan.widthFt, height: plan.heightFt },
+  ).map((label) => [label.id, label])), [objects, plan.heightFt, plan.widthFt]);
   const importedPdf = Boolean(importedBasePlan && (
     importedBasePlan.mimeType === 'application/pdf' || /\.pdf(?:$|[?#])/i.test(importedBasePlan.url)
   ));
@@ -692,12 +721,13 @@ export function PlanCanvas({
               // dim out-of-phase objects rather than hiding them
               const opacity = inPhase ? 1 : 0.22;
               return (
-                <g key={obj.id} opacity={opacity} style={{ pointerEvents: inPhase ? 'auto' : 'none' }}>
+                <g key={obj.id} opacity={opacity} style={{ pointerEvents: obj.layerId === 'grading' ? 'none' : inPhase ? 'auto' : 'none' }}>
                   <ObjectIcon
                     obj={obj}
                     selected={selected}
                     color={layer?.color ?? '#5f6368'}
                     status={getObjectStatus(obj.id)}
+                    labelLayout={gradingLabels.get(obj.id)}
                     onClick={(e) => {
                       e.stopPropagation();
                       onSelectObject(obj.id);

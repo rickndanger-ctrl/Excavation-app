@@ -89,8 +89,10 @@ test('publishes a versioned immutable offline package containing approved gradin
   assert.equal(published.objects.length, 20);
   assert.ok(published.objects.every((object) => object.layerId === 'grading'));
   assert.ok(published.objects.every((object) => object.workerLabel && object.workerLabel.length <= 24));
-  assert.ok(Math.max(...published.objects.map((object) => object.x)) - Math.min(...published.objects.map((object) => object.x)) > 80);
-  assert.ok(Math.max(...published.objects.map((object) => object.y)) - Math.min(...published.objects.map((object) => object.y)) > 50);
+  assert.ok(Math.min(...published.objects.map((object) => object.x)) >= 9);
+  assert.ok(Math.max(...published.objects.map((object) => object.x)) <= 111);
+  assert.ok(Math.min(...published.objects.map((object) => object.y)) >= 9);
+  assert.ok(Math.max(...published.objects.map((object) => object.y)) <= 71);
   assert.ok(published.objects.every((object) => object.provenance?.sourceSha256 === sourceSha256));
   assert.ok(Object.isFrozen(published));
   assert.ok(Object.isFrozen(published.objects));

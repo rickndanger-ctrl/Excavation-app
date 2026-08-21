@@ -38,8 +38,47 @@ test('reviews, publishes, and uses the L2.1 grading layer offline on a phone', a
     const box = object.getBoundingClientRect();
     return box.left >= 0 && box.right <= innerWidth && box.top >= 140 && box.bottom <= innerHeight - 40;
   }).length)).toBeGreaterThanOrEqual(15);
+  const labelLayout = await page.locator('.grading-map-label').evaluateAll((labels) => labels.map((label) => {
+    const box = label.getBoundingClientRect();
+    return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+  }));
+  expect(labelLayout.length).toBeGreaterThanOrEqual(8);
+  expect(labelLayout.length).toBeLessThan(20);
+  for (let left = 0; left < labelLayout.length; left += 1) {
+    expect(labelLayout[left].left).toBeGreaterThanOrEqual(0);
+    expect(labelLayout[left].right).toBeLessThanOrEqual(390);
+    for (let right = left + 1; right < labelLayout.length; right += 1) {
+      const overlaps = labelLayout[left].left < labelLayout[right].right
+        && labelLayout[left].right > labelLayout[right].left
+        && labelLayout[left].top < labelLayout[right].bottom
+        && labelLayout[left].bottom > labelLayout[right].top;
+      expect(overlaps).toBe(false);
+    }
+  }
+  const hitTargets = await page.locator('.plan-object-hit-target').evaluateAll((targets) => targets.map((target) => {
+    const box = target.getBoundingClientRect();
+    return { id: target.parentElement!.getAttribute('data-object-id')!, left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+  }));
+  expect(hitTargets).toHaveLength(20);
+  expect(hitTargets.every((target) => target.right - target.left >= 44 && target.bottom - target.top >= 44)).toBe(true);
+  expect(hitTargets.every((target) => target.left >= 0 && target.right <= 390)).toBe(true);
+
+  const crowdedPair = hitTargets.flatMap((left, leftIndex) => hitTargets.slice(leftIndex + 1).map((right) => ({
+    left,
+    right,
+    distance: Math.hypot((left.left + left.right - right.left - right.right) / 2, (left.top + left.bottom - right.top - right.bottom) / 2),
+  }))).sort((a, b) => a.distance - b.distance)[0];
+  expect(crowdedPair.distance).toBeLessThan(44);
+  for (const target of [crowdedPair.left, crowdedPair.right]) {
+    await page.mouse.click((target.left + target.right) / 2, (target.top + target.bottom) / 2);
+    await expect(page.locator('.foreman-strip__id')).toHaveText(target.id);
+    await page.locator('.field-sheet__handle').click();
+  }
+
+  const suppressedId = await page.locator('.plan-object[data-label-suppressed="true"]').first().getAttribute('data-object-id');
+  expect(suppressedId).toBeTruthy();
   await page.getByRole('button', { name: 'Search objects' }).click();
-  await page.getByPlaceholder(/Search by ID or name/).fill('Slope 4.9%');
+  await page.getByPlaceholder(/Search by ID or name/).fill(suppressedId!);
   await page.getByPlaceholder(/Search by ID or name/).press('Enter');
   await expect(page.getByText('Reference-derived', { exact: true })).toBeVisible();
   await expect(page.getByText('High confidence', { exact: true })).toBeVisible();

@@ -156,8 +156,8 @@ export function buildReadingL21Draft(geometry: PdfPageGeometry, sourceSha256: st
   const maxY = Math.max(...spatialCandidates.map((candidate) => candidate.planPoint.y));
   for (const candidate of candidates) {
     candidate.planPoint = {
-      x: Number(Math.min(115, Math.max(5, 5 + ((candidate.planPoint.x - minX) / (maxX - minX)) * 110)).toFixed(3)),
-      y: Number(Math.min(75, Math.max(5, 5 + ((candidate.planPoint.y - minY) / (maxY - minY)) * 70)).toFixed(3)),
+      x: Number(Math.min(111, Math.max(9, 9 + ((candidate.planPoint.x - minX) / (maxX - minX)) * 102)).toFixed(3)),
+      y: Number(Math.min(71, Math.max(9, 9 + ((candidate.planPoint.y - minY) / (maxY - minY)) * 62)).toFixed(3)),
     };
   }
 
