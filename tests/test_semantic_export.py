@@ -27,13 +27,13 @@ class SemanticExportTests(unittest.TestCase):
         self.assertIn("Model Studio", result.stdout)
         self.assertIn("usage: model-studio", result.stdout)
 
-    def test_skeleton_preserves_app_contract_and_declares_unavailable_design(self):
+    def test_semantic_package_preserves_app_contract_and_declares_unavailable_systems(self):
         semantic = build_semantic_manifest(load_project_bundle(PROJECT))
         self.assertEqual(DISCLAIMER, semantic["disclaimer"])
         self.assertEqual("excavation-field-map.jobsite-package/v0.1.0", semantic["schema_version"])
         for key in ("phases", "layers", "objects", "utilities", "calibrationPoints"):
             self.assertIn(key, semantic)
-        self.assertEqual([], semantic["objects"])
+        self.assertGreater(len(semantic["objects"]), 0)
         self.assertGreater(len(semantic["unavailable"]), 0)
         self.assertNotIn("sheet_count", semantic)
 

@@ -19,6 +19,10 @@ REQUIRED_SYSTEMS = {
     "plans_profiles_sections_schedules", "field_details_workflows_checklists",
     "relationships",
 }
+REQUIRED_INTERFACE_SYSTEMS = {
+    "sanitary", "domestic_water", "fire_water", "roof_drainage",
+    "electric", "telecom_fiber", "gas", "site_lighting",
+}
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*$")
 
 
@@ -80,6 +84,54 @@ def _valid_polygon(coordinates: Any) -> bool:
         a[0] * b[1] - b[0] * a[1] for a, b in zip(coordinates, coordinates[1:])
     )
     return abs(area_twice) > 0
+
+
+def _point_on_ring(point: list[float], ring: list[list[float]], tolerance: float = 0.01) -> bool:
+    px, py = point[:2]
+    for a, b in zip(ring, ring[1:]):
+        ax, ay = a[:2]
+        bx, by = b[:2]
+        cross = (px - ax) * (by - ay) - (py - ay) * (bx - ax)
+        segment_length = math.hypot(bx - ax, by - ay)
+        if segment_length and abs(cross) / segment_length > tolerance:
+            continue
+        dot = (px - ax) * (px - bx) + (py - ay) * (py - by)
+        if dot <= tolerance:
+            return True
+    return False
+
+
+def _point_in_polygon(point: list[float], ring: list[list[float]]) -> bool:
+    x, y = point[:2]
+    inside = False
+    for a, b in zip(ring, ring[1:]):
+        x1, y1 = a[:2]
+        x2, y2 = b[:2]
+        if (y1 > y) != (y2 > y):
+            crossing_x = (x2 - x1) * (y - y1) / (y2 - y1) + x1
+            if x < crossing_x:
+                inside = not inside
+    return inside
+
+
+def _orientation(a: list[float], b: list[float], c: list[float]) -> float:
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+
+def _segments_cross(a: list[float], b: list[float], c: list[float], d: list[float]) -> bool:
+    return _orientation(a, b, c) * _orientation(a, b, d) < 0 and _orientation(c, d, a) * _orientation(c, d, b) < 0
+
+
+def _polygons_overlap(first: list[list[float]], second: list[list[float]]) -> bool:
+    if any(_point_in_polygon(point, second) for point in first[:-1]):
+        return True
+    if any(_point_in_polygon(point, first) for point in second[:-1]):
+        return True
+    return any(
+        _segments_cross(a, b, c, d)
+        for a, b in zip(first, first[1:])
+        for c, d in zip(second, second[1:])
+    )
 
 
 def _validate_provenance(path: str, entity: dict[str, Any]) -> list[ValidationIssue]:
@@ -181,10 +233,42 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
             for referenced_id in provenance.get(key, []):
                 if referenced_id not in known_ids:
                     issues.append(_issue("reference.unresolved", f"{path}.provenance.{key}", f"Unknown reference: {referenced_id}"))
-        for key in ("layer_id", "phase_id", "geometry_feature_id"):
+        for key in ("layer_id", "phase_id", "geometry_feature_id", "wall_association_id"):
             referenced_id = entity.get(key)
             if referenced_id is not None and referenced_id not in known_ids:
                 issues.append(_issue("reference.unresolved", f"{path}.{key}", f"Unknown reference: {referenced_id}"))
+
+    polygon_by_id = {feature.get("id"): feature for feature in features.get("polygons", [])}
+    interfaces = [
+        feature for feature in features.get("points", [])
+        if feature.get("feature_type") == "wall_penetration"
+    ]
+    interface_systems = {feature.get("system") for feature in interfaces}
+    for system in sorted(REQUIRED_INTERFACE_SYSTEMS - interface_systems):
+        issues.append(_issue("interface.missing_system", "features.points", f"Missing permanent building terminal for: {system}"))
+    for index, interface in enumerate(interfaces):
+        building = polygon_by_id.get(interface.get("wall_association_id"))
+        if building and not _point_on_ring(interface.get("coordinates", []), building.get("coordinates", [])):
+            issues.append(_issue("interface.off_wall", f"features.points[{index}].coordinates", "Wall penetration is not on its associated building perimeter"))
+        if interface.get("network_terminal_id") != interface.get("id"):
+            issues.append(_issue("interface.terminal_id_invalid", f"features.points[{index}].network_terminal_id", "Permanent terminal reference must equal the stable feature ID"))
+
+    design_polygons = [
+        feature for feature in features.get("polygons", [])
+        if feature.get("feature_type") in {"building", "building_pad"}
+    ]
+    constraint_polygons = [
+        feature for feature in features.get("polygons", [])
+        if str(feature.get("id", "")).startswith("constraint-")
+    ]
+    for design in design_polygons:
+        for constraint in constraint_polygons:
+            if _polygons_overlap(design["coordinates"], constraint["coordinates"]):
+                issues.append(_issue(
+                    "design.constraint_overlap",
+                    f"features.polygons.{design['id']}",
+                    f"{design['id']} overlaps {constraint['id']}",
+                ))
 
     coverage = {row.get("system") for row in model.get("contract_coverage", [])}
     for system in sorted(REQUIRED_SYSTEMS - coverage):

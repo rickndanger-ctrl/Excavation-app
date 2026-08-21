@@ -34,10 +34,24 @@ model-studio doctor
 model-studio validate projects/hilyard/project.json --output-dir outputs/hilyard-foundation
 ```
 
-The current `validate` command emits only a deterministic semantic skeleton and
-validation report. Empty collections are intentional and paired with explicit
-unavailable reasons. It does not create final civil plans or imply that a design
-exists.
+The `validate` command emits a deterministic semantic package and validation
+report. The current site-layout slice can also be generated with:
+
+```bash
+model-studio build projects/hilyard/project.json \
+  --output-dir outputs/hilyard-site-layout
+```
+
+This produces one vector site-layout PDF, a true-geometry GeoPackage, the
+semantic Excavation Field Map package, and validation/parity reports from one
+canonical model. It does not create sanitary routing, grading, cut/fill, final
+FFE, or utility capacity claims.
+
+The four City GIS taxlots are explicitly reference-derived and not survey
+authority. They are the first geometry to replace when a real boundary survey
+arrives. The fictional building/pad is separately marked as a reviewed
+assumption, and every wall penetration has a permanent stable ID reserved for
+later utility-network endpoint references.
 
 ## Repository layout
 

@@ -13,6 +13,58 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         for row in model["contract_coverage"]
         if row["availability"] != "modeled"
     ]
+    points = [
+        {
+            "id": feature["id"],
+            "type": feature["feature_type"],
+            "system": feature.get("system"),
+            "layerId": feature["layer_id"],
+            "phase": feature["phase_id"],
+            "x": feature["coordinates"][0],
+            "y": feature["coordinates"][1],
+            "label": feature["label"],
+            "searchable": feature.get("field_detail", {}).get("searchable", True),
+            "clickable": True,
+            "mapTarget": feature.get("field_detail", {}).get("map_target", feature["id"]),
+            "fieldDetail": feature.get("field_detail", {}),
+            "wallAssociationId": feature.get("wall_association_id"),
+            "networkTerminalId": feature.get("network_terminal_id"),
+            "provenance": feature["provenance"],
+        }
+        for feature in model["features"]["points"]
+    ]
+    areas = [
+        {
+            "id": feature["id"],
+            "type": feature["feature_type"],
+            "layerId": feature["layer_id"],
+            "phase": feature["phase_id"],
+            "label": feature["label"],
+            "coordinates": feature["coordinates"],
+            "searchable": feature.get("field_detail", {}).get("searchable", True),
+            "clickable": True,
+            "mapTarget": feature.get("field_detail", {}).get("map_target", feature["id"]),
+            "fieldDetail": feature.get("field_detail", {}),
+            "provenance": feature["provenance"],
+        }
+        for feature in model["features"]["polygons"]
+    ]
+    linear_features = [
+        {
+            "id": feature["id"],
+            "type": feature["feature_type"],
+            "layerId": feature["layer_id"],
+            "phase": feature["phase_id"],
+            "label": feature["label"],
+            "coordinates": feature["coordinates"],
+            "searchable": feature.get("field_detail", {}).get("searchable", True),
+            "clickable": True,
+            "mapTarget": feature.get("field_detail", {}).get("map_target", feature["id"]),
+            "fieldDetail": feature.get("field_detail", {}),
+            "provenance": feature["provenance"],
+        }
+        for feature in model["features"]["lines"]
+    ]
     return {
         "schema_version": "excavation-field-map.jobsite-package/v0.1.0",
         "canonical_model_version": model["schema_version"],
@@ -20,15 +72,17 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         "projectName": model["project"]["name"],
         "disclaimer": DISCLAIMER,
         "plan": {
-            "availability": "unavailable",
-            "imageUrl": None,
-            "widthFt": None,
-            "heightFt": None,
-            "reason": "No plan sheet or surveyed site extent exists in the foundation slice.",
+            "availability": "generated_vector_pdf",
+            "imageUrl": "hilyard-site-layout.pdf",
+            "widthFt": 178.59,
+            "heightFt": 291.97,
+            "coordinateBasis": "EPSG:6823 reference-derived site geometry; not surveyed",
         },
         "phases": model["phases"],
         "layers": model["layers"],
-        "objects": [],
+        "objects": points,
+        "areas": areas,
+        "linearFeatures": linear_features,
         "utilities": [],
         "userLocation": None,
         "userHeading": None,

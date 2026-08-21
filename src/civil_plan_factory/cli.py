@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 from .export import build_semantic_manifest
+from .build import build_project
 from .io import load_project_bundle
 from .toolchain import smoke_check
 from .validation import DISCLAIMER, validate_model
@@ -28,6 +29,14 @@ def main(argv: list[str] | None = None) -> int:
         default=Path("/Applications/QGIS-final-4_2_1.app"),
     )
     doctor.add_argument("--output", type=Path)
+    build = subparsers.add_parser("build", help="validate and generate coordinated site-layout artifacts")
+    build.add_argument("project", type=Path)
+    build.add_argument("--output-dir", required=True, type=Path)
+    build.add_argument(
+        "--qgis-app",
+        type=Path,
+        default=Path("/Applications/QGIS-final-4_2_1.app"),
+    )
     args = parser.parse_args(argv)
 
     if args.command == "doctor":
@@ -37,6 +46,9 @@ def main(argv: list[str] | None = None) -> int:
             _write_json(args.output, report)
         print(json.dumps(report, sort_keys=True))
         return 0
+
+    if args.command == "build":
+        return build_project(load_project_bundle(args.project), args.output_dir, args.qgis_app)
 
     model = load_project_bundle(args.project)
     issues = validate_model(model)

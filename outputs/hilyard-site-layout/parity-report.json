@@ -1,0 +1,27 @@
+{
+  "canonical_geometry_sha256": "0e81862cba27d5bf5ccb23aab4cf3b66d291c51fa3b0e9767283beae2046c883",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "feature_count": 25,
+  "geopackage": {
+    "feature_count": 25,
+    "layers": [
+      "canonical_points",
+      "canonical_lines",
+      "canonical_polygons"
+    ]
+  },
+  "horizontal_tolerance_ft": 0.01,
+  "mismatches": [],
+  "pdf": {
+    "embedded_image_count": 0,
+    "geometry_sha256": "0e81862cba27d5bf5ccb23aab4cf3b66d291c51fa3b0e9767283beae2046c883",
+    "text_extractable": true,
+    "vector_paths_present": true
+  },
+  "schema_version": "civil-plan-factory.parity-report/v0.1.0",
+  "semantic": {
+    "feature_count": 25
+  },
+  "status": "valid",
+  "tolerance_note": "Output-to-output numeric equality tolerance; not survey/source accuracy."
+}

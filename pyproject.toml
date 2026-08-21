@@ -9,7 +9,7 @@ description = "Semantic civil-job test-data factory foundation"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-dependencies = []
+dependencies = ["reportlab>=4.4", "pypdf>=6.0"]
 
 [project.scripts]
 model-studio = "civil_plan_factory.cli:main"

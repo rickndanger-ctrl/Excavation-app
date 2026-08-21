@@ -8,7 +8,10 @@
       "status": "reviewed_assumption",
       "value": "EPSG:6823",
       "rationale": "Selected project workflow CRS; City GIS EPSG:2914 inputs will be transformed once at ingestion.",
-      "source_ids": ["src-design-constraints", "src-project-brief"]
+      "source_ids": [
+        "src-design-constraints",
+        "src-project-brief"
+      ]
     },
     {
       "id": "decision-benchmark",
@@ -16,7 +19,9 @@
       "status": "unknown",
       "value": null,
       "rationale": "No surveyed project benchmark has been supplied; no test elevation is invented in this foundation slice.",
-      "source_ids": ["src-design-constraints"]
+      "source_ids": [
+        "src-design-constraints"
+      ]
     },
     {
       "id": "decision-site-design",
@@ -24,7 +29,10 @@
       "status": "unknown",
       "value": null,
       "rationale": "The research brief's concept is not a locked engineering design. East 34th Avenue is the confirmed access basis, but exact geometry requires later review.",
-      "source_ids": ["src-rfp-appendix", "src-project-brief"]
+      "source_ids": [
+        "src-rfp-appendix",
+        "src-project-brief"
+      ]
     },
     {
       "id": "decision-utility-tie-ins",
@@ -32,7 +40,10 @@
       "status": "unknown",
       "value": null,
       "rationale": "Agency-approved tie-ins and capacities are not established; gas and non-EWEB telecom locations are also unknown.",
-      "source_ids": ["src-design-constraints", "src-project-brief"]
+      "source_ids": [
+        "src-design-constraints",
+        "src-project-brief"
+      ]
     },
     {
       "id": "decision-stormwater",
@@ -40,7 +51,10 @@
       "status": "unknown",
       "value": null,
       "rationale": "Geotechnical, groundwater, infiltration, downstream HGL, and final sizing inputs remain unavailable.",
-      "source_ids": ["src-design-constraints", "src-project-brief"]
+      "source_ids": [
+        "src-design-constraints",
+        "src-project-brief"
+      ]
     },
     {
       "id": "decision-materials",
@@ -48,7 +62,88 @@
       "status": "unknown",
       "value": null,
       "rationale": "Research defaults are not adopted as final engineering choices in this foundation slice.",
-      "source_ids": ["src-design-constraints"]
+      "source_ids": [
+        "src-design-constraints"
+      ]
+    },
+    {
+      "id": "decision-reference-geometry",
+      "subject": "Reference geometry derivation for ROW, easements, wetland, and street edges",
+      "status": "reviewed_assumption",
+      "value": {
+        "method": "dimensioned and visually digitized from City Appendix A maps against City GIS taxlot coordinates",
+        "coordinate_precision_ft": 0.000001,
+        "source_accuracy": "reference-scale; not surveyed",
+        "output_parity_tolerance_ft": 0.01
+      },
+      "rationale": "The official appendix confirms location and dimensions but expressly labels mapped GIS data imprecise/general-reference. Geometry is frozen for repeatable test data without claiming survey authority.",
+      "source_ids": [
+        "src-rfp-appendix",
+        "src-eugene-taxlots-gis"
+      ]
+    },
+    {
+      "id": "decision-building-footprint",
+      "subject": "Reviewed-assumption apartment building and pad footprint",
+      "status": "reviewed_assumption",
+      "value": {
+        "building_dimensions_ft": [
+          45.0,
+          90.0
+        ],
+        "building_area_sf": 4050.0,
+        "orientation": "long axis north-south",
+        "location": "southeast usable-area test placement",
+        "pad_dimensions_ft": [
+          55.0,
+          100.0
+        ],
+        "minimum_modeled_clearances_ft": {
+          "row_dedication": 8.0,
+          "eweb_west": 63.0,
+          "eweb_south": 6.0,
+          "sanitary_easement": 18.75,
+          "wetland": 14.0
+        },
+        "finished_floor_elevation_ft": null,
+        "finished_floor_elevation_status": "unknown",
+        "pad_elevation_ft": null,
+        "pad_elevation_status": "unknown"
+      },
+      "rationale": "A compact 45-by-90-foot bar follows the prior research concept, fits east of the reference wetland and west of the reference ROW, and avoids all modeled constraints. Clearances prove geometry separation only; they are not code setbacks or approvals.",
+      "source_ids": [
+        "src-rfp-appendix",
+        "src-project-brief",
+        "src-eugene-taxlots-gis"
+      ]
+    },
+    {
+      "id": "decision-building-interfaces",
+      "subject": "Exterior entries and future utility wall terminals",
+      "status": "reviewed_assumption",
+      "value": {
+        "entries": [
+          "south primary",
+          "east service",
+          "north pedestrian"
+        ],
+        "terminal_systems": [
+          "sanitary",
+          "domestic_water",
+          "fire_water",
+          "roof_drainage",
+          "electric",
+          "telecom_fiber",
+          "gas",
+          "site_lighting"
+        ],
+        "routing_status": "not designed",
+        "elevation_status": "unknown"
+      },
+      "rationale": "Stable wall interfaces let later systems connect to one building contract without implying routes, sizes, capacities, inverts, or approved penetrations.",
+      "source_ids": [
+        "src-project-brief"
+      ]
     }
   ]
 }
