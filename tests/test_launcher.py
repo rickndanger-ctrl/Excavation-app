@@ -107,6 +107,37 @@ class ModelStudioLauncherTests(unittest.TestCase):
             self.assertTrue(any(event.startswith("osascript ") for event in events))
             self.assertFalse(any(event.startswith("open ") for event in events))
 
+    def test_restricted_app_shell_finds_pm2_in_the_user_local_bin(self):
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            commands = temp / "bin"
+            commands.mkdir()
+            user_bin = temp / ".local/bin"
+            user_bin.mkdir(parents=True)
+            trace = temp / "trace"
+            ready = temp / "ready"
+            self._write_command(
+                commands,
+                "curl",
+                'if [[ -f "$READY_FILE" ]]; then echo \'{"service": "model-studio", "status": "ok"}\'; else exit 22; fi\n',
+            )
+            self._write_command(commands, "open", 'echo "open $*" >> "$TRACE_FILE"\n')
+            self._write_command(commands, "osascript", 'echo "osascript $*" >> "$TRACE_FILE"\n')
+            self._write_command(
+                user_bin,
+                "pm2",
+                'echo "pm2 $*" >> "$TRACE_FILE"\ntouch "$READY_FILE"\n',
+            )
+            environment = self._environment(temp, commands, trace)
+            environment["READY_FILE"] = str(ready)
+
+            result = subprocess.run(
+                ["/bin/bash", str(LAUNCHER)], env=environment, text=True, capture_output=True
+            )
+
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertTrue(trace.read_text().splitlines()[0].startswith("pm2 start "))
+
     def test_installer_builds_a_user_app_and_desktop_link_reproducibly(self):
         self.assertTrue(INSTALLER.is_file(), "The reproducible macOS app installer must exist")
         with tempfile.TemporaryDirectory() as directory:

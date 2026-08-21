@@ -20,6 +20,24 @@ fi
 
 ECOSYSTEM="$REPOSITORY/ops/model-studio-ecosystem.config.cjs"
 
+resolve_pm2() {
+  if [[ -n "${MODEL_STUDIO_PM2_COMMAND:-}" && -x "$MODEL_STUDIO_PM2_COMMAND" ]]; then
+    echo "$MODEL_STUDIO_PM2_COMMAND"
+    return
+  fi
+  if command -v pm2 >/dev/null 2>&1; then
+    command -v pm2
+    return
+  fi
+  for candidate in "$HOME/.local/bin/pm2" /opt/homebrew/bin/pm2 /usr/local/bin/pm2; do
+    if [[ -x "$candidate" ]]; then
+      echo "$candidate"
+      return
+    fi
+  done
+  return 1
+}
+
 show_error() {
   local message="$1"
   if [[ "${MODEL_STUDIO_APP_HANDLES_ERRORS:-0}" != "1" ]] && command -v osascript >/dev/null 2>&1; then
@@ -48,9 +66,10 @@ if health_ok; then
 fi
 
 [[ -f "$ECOSYSTEM" ]] || fail "Supervisor configuration is missing. Reinstall Model Studio from the repository. $DISCLAIMER"
-command -v pm2 >/dev/null 2>&1 || fail "pm2 is not installed or is not available to the launcher. $DISCLAIMER"
+PM2_COMMAND="$(resolve_pm2 || true)"
+[[ -n "$PM2_COMMAND" ]] || fail "pm2 is not installed or is not available to the launcher. $DISCLAIMER"
 
-if ! pm2 start "$ECOSYSTEM" --only "$SERVICE_NAME" --update-env >/dev/null 2>&1; then
+if ! "$PM2_COMMAND" start "$ECOSYSTEM" --only "$SERVICE_NAME" --update-env >/dev/null 2>&1; then
   fail "The supervised Model Studio service could not be started. Run 'pm2 logs $SERVICE_NAME' for details. $DISCLAIMER"
 fi
 
