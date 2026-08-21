@@ -6,7 +6,7 @@ export const SEMANTIC_PUBLICATIONS_KEY = 'excavation-field-map:semantic-publicat
 const MAX_MANIFEST_BYTES = 20 * 1024 * 1024;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const IDENTITY_PART_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/;
-const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
 
 export type SemanticPublicationEnvelope = {
   publication_schema: typeof PUBLICATION_SCHEMA;

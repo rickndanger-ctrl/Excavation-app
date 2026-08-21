@@ -44,6 +44,13 @@ test('accepts an exact, checksum-bound package only after the existing semantic 
   assert.equal(parsed.envelope.content_sha256, await sha256Hex(manifestJson));
 });
 
+test('preserves producer timestamps with PostgreSQL microsecond precision', async () => {
+  const parsed = await parseSemanticPublication(await envelope({
+    created_at: '2026-08-21T21:48:26.819270Z',
+  }));
+  assert.equal(parsed.envelope.created_at, '2026-08-21T21:48:26.819270Z');
+});
+
 test('rejects incomplete, incompatible, checksum-mismatched, and cross-project envelopes', async () => {
   await assert.rejects(
     parseSemanticPublication({ ...(await envelope()), content_sha256: '0'.repeat(64) }),

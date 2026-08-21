@@ -11,6 +11,30 @@ npm run dev
 
 Open the local dev URL in your browser.
 
+## Physical iPhone acceptance on the local network
+
+The current app is a browser app, not an offline-installable PWA: it has no web
+app manifest or service worker. The supported first-phone route is Safari over a
+trusted local Wi-Fi network. The PM2 configuration exposes Vite only through the
+Mac's network interfaces; it does not create a public deployment or tunnel.
+
+```bash
+pm2 startOrReload ecosystem.config.cjs --only evesite-joint-review
+ipconfig getifaddr en0
+```
+
+On an iPhone connected to the same trusted Wi-Fi, open
+`http://<the-Mac-IP>:4175` in Safari. Open **Menu**, open the project selector,
+and choose the published package. Wait for **Immutable package · offline** before
+testing layers or enabling Airplane Mode.
+
+**Airplane Mode limitation:** the selected semantic package is cached in Safari
+and remains usable in the already-open tab after the network is removed. Do not
+close or reload the tab during this acceptance. A home-screen shortcut is
+optional convenience only; without HTTPS plus a service worker it is not a
+reliable cold-start offline install. Reopening the app while offline is not yet a
+supported acceptance criterion.
+
 ## Prototype features
 
 - **Offline Mode Ready** — badge activates after downloading the sample jobsite package to `localStorage`
