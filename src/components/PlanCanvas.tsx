@@ -28,6 +28,10 @@ type PlanCanvasProps = {
 
 const HIT_RADIUS_FT = 8;
 
+function isSemanticObject(object: BlueprintObject): boolean {
+  return Boolean(object.geometry) || ['grading', 'sanitary', 'storm', 'water', 'dry-utility'].includes(object.layerId);
+}
+
 function StatusBadge({ x, y, status }: { x: number; y: number; status: ObjectStatus }) {
   if (status === 'not_started') return null;
   const bx = x + 3;
@@ -326,7 +330,7 @@ function ObjectIcon({
     );
   }
 
-  const isSemantic = ['grading', 'sanitary', 'storm', 'water', 'dry-utility'].includes(obj.layerId);
+  const isSemantic = isSemanticObject(obj);
   return (
     <g
       className="plan-object"
@@ -347,7 +351,7 @@ function ObjectIcon({
       )}
       {icon}
       <StatusBadge x={x} y={y} status={status} />
-      {(!labelLayout || !labelLayout.suppressed) && <text
+      {(selected || !labelLayout || !labelLayout.suppressed) && <text
         className={isSemantic ? 'grading-map-label' : undefined}
         data-label-priority={obj.labelPriority ?? 0}
         x={labelLayout?.labelX ?? x}
@@ -408,8 +412,8 @@ export function PlanCanvas({
     .map((obj) => ({ obj, distance: distanceToFeature(point, obj) }))
     .filter(({ distance }) => distance <= HIT_RADIUS_FT)
     .sort((left, right) => left.distance - right.distance)[0]?.obj, [isLayerVisible, isPhaseVisible, objects]);
-  const gradingLabels = useMemo(() => new Map(layoutGradingLabels(
-    objects.filter((object) => ['grading', 'sanitary', 'storm', 'water', 'dry-utility'].includes(object.layerId) && isLayerVisible(object.layerId)).map((object) => ({
+  const semanticLabels = useMemo(() => new Map(layoutGradingLabels(
+    objects.filter((object) => isSemanticObject(object) && isLayerVisible(object.layerId) && isPhaseVisible(object.phase)).map((object) => ({
       id: object.id,
       x: object.x,
       y: object.y,
@@ -417,7 +421,7 @@ export function PlanCanvas({
       priority: object.labelPriority,
     })),
     { width: plan.widthFt, height: plan.heightFt },
-  ).map((label) => [label.id, label])), [isLayerVisible, objects, plan.heightFt, plan.widthFt]);
+  ).map((label) => [label.id, label])), [isLayerVisible, isPhaseVisible, objects, plan.heightFt, plan.widthFt]);
   const importedPdf = Boolean(importedBasePlan && (
     importedBasePlan.mimeType === 'application/pdf' || /\.pdf(?:$|[?#])/i.test(importedBasePlan.url)
   ));
@@ -752,20 +756,21 @@ export function PlanCanvas({
               const opacity = inPhase ? 1 : 0.22;
               const color = layer?.color ?? '#5f6368';
               const geometry = obj.geometry;
+              const labelLayout = semanticLabels.get(obj.id);
               if (geometry?.type === 'Polygon') {
-                return <g key={obj.id} className="semantic-feature semantic-feature--polygon" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="Polygon" opacity={opacity}>
+                return <g key={obj.id} className="semantic-feature semantic-feature--polygon" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="Polygon" data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'} opacity={opacity}>
                   <polygon points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill={color} fillOpacity={selected ? 0.28 : 0.12} stroke={selected ? '#ea4335' : color} strokeWidth={selected ? 1.2 : 0.7} onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
-                  <text x={obj.x} y={obj.y} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>
+                  {(selected || !labelLayout?.suppressed) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y : labelLayout?.labelY ?? obj.y} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
                 </g>;
               }
               if (geometry?.type === 'LineString') {
-                return <g key={obj.id} className="semantic-feature semantic-feature--line" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="LineString" opacity={opacity}>
+                return <g key={obj.id} className="semantic-feature semantic-feature--line" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="LineString" data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'} opacity={opacity}>
                   <polyline points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" stroke={selected ? '#ea4335' : color} strokeWidth={selected ? 2.2 : 1.4} strokeLinecap="round" onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
-                  <text x={obj.x} y={obj.y - 2} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>
+                  {(selected || !labelLayout?.suppressed) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y - 2 : labelLayout?.labelY ?? obj.y - 2} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
                 </g>;
               }
               return <g key={obj.id} opacity={opacity} data-geometry-type="Point" style={{ pointerEvents: inPhase ? 'auto' : 'none' }}>
-                <ObjectIcon obj={obj} selected={selected} color={color} status={getObjectStatus(obj.id)} labelLayout={gradingLabels.get(obj.id)} onClick={(e) => { e.stopPropagation(); onSelectObject(obj.id); }} />
+                <ObjectIcon obj={obj} selected={selected} color={color} status={getObjectStatus(obj.id)} labelLayout={labelLayout} onClick={(e) => { e.stopPropagation(); onSelectObject(obj.id); }} />
               </g>;
             })}
 
