@@ -28,9 +28,9 @@ if [[ -L "$REPOSITORY_LINK" ]]; then
 fi
 printf '%s\n' "$REPOSITORY" > "$REPOSITORY_PATH"
 /bin/cp "$REPOSITORY/scripts/launch-model-studio.sh" "$RUNTIME_DIR/launch-model-studio.sh"
-/bin/cp "$REPOSITORY/scripts/run-model-studio-service.sh" "$RUNTIME_DIR/run-model-studio-service.sh"
 /bin/cp "$REPOSITORY/ops/model-studio-ecosystem.config.cjs" "$RUNTIME_DIR/model-studio-ecosystem.config.cjs"
-chmod 755 "$RUNTIME_DIR/launch-model-studio.sh" "$RUNTIME_DIR/run-model-studio-service.sh"
+/bin/rm -f "$RUNTIME_DIR/run-model-studio-service.sh"
+chmod 755 "$RUNTIME_DIR/launch-model-studio.sh"
 
 /usr/bin/osacompile -o "$STAGING_DIR/Model Studio.app" "$REPOSITORY/macos/Model Studio.applescript"
 /usr/bin/plutil -replace CFBundleIdentifier -string "local.civil-plan-factory.model-studio" "$STAGING_DIR/Model Studio.app/Contents/Info.plist"

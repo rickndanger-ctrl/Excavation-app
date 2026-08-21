@@ -20,7 +20,7 @@ This reproducibly creates:
 - `~/Applications/Model Studio.app` — the generated application bundle;
 - `~/Desktop/Model Studio.app` — a symlink with the normal application icon;
 - `~/Library/Application Support/Model Studio/runtime` — installed copies of
-  the committed launcher and supervisor entrypoints; and
+  the committed launcher and supervisor configuration; and
 - `~/Library/Application Support/Model Studio/repository-path` — the installer-
   managed path to the authoritative repository.
 

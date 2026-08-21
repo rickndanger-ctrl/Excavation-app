@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER = ROOT / "scripts/launch-model-studio.sh"
 INSTALLER = ROOT / "scripts/install-model-studio-app.sh"
 APPLESCRIPT = ROOT / "macos/Model Studio.applescript"
+ECOSYSTEM = ROOT / "ops/model-studio-ecosystem.config.cjs"
 
 
 class ModelStudioLauncherTests(unittest.TestCase):
@@ -180,12 +181,31 @@ class ModelStudioLauncherTests(unittest.TestCase):
             self.assertEqual(str(ROOT), (support / "repository-path").read_text().strip())
             self.assertEqual(LAUNCHER.read_bytes(), (runtime / LAUNCHER.name).read_bytes())
             self.assertTrue((runtime / "model-studio-ecosystem.config.cjs").is_file())
-            self.assertTrue((runtime / "run-model-studio-service.sh").is_file())
+            self.assertFalse((runtime / "run-model-studio-service.sh").exists())
 
     def test_applet_executes_installed_runtime_outside_documents(self):
         source = APPLESCRIPT.read_text()
         self.assertIn("Model Studio/runtime/launch-model-studio.sh", source)
         self.assertNotIn("repository/scripts/launch-model-studio.sh", source)
+
+    def test_installed_ecosystem_runs_repository_service_without_space_splitting(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = Path(directory) / "Application Support/Model Studio/runtime"
+            runtime.mkdir(parents=True)
+            installed_config = runtime / ECOSYSTEM.name
+            installed_config.write_bytes(ECOSYSTEM.read_bytes())
+            (runtime / "run-model-studio-service.sh").touch()
+            environment = {**os.environ, "MODEL_STUDIO_REPOSITORY": str(ROOT)}
+
+            result = subprocess.run(
+                ["node", "-e", "process.stdout.write(require(process.argv[1]).apps[0].script)", str(installed_config)],
+                env=environment,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual(str(ROOT / "scripts/run-model-studio-service.sh"), result.stdout)
 
 
 if __name__ == "__main__":
