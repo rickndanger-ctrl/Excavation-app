@@ -312,6 +312,81 @@
         98585.0
       ],
       "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186353.5,
+        98490.0
+      ],
+      "expected_distance_ft": 18.5,
+      "id": "building_sw_to_south_walk",
+      "label": "Building SW corner to west edge of south entry walk",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "sidewalk-south-entry",
+          "vertex_index": 3
+        },
+        "start": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 0
+        }
+      },
+      "start": [
+        186335.0,
+        98490.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186353.5,
+        98580.0
+      ],
+      "expected_distance_ft": 18.5,
+      "id": "building_nw_to_north_walk",
+      "label": "Building NW corner to west edge of north entry walk",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "sidewalk-north-entry",
+          "vertex_index": 0
+        },
+        "start": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 3
+        }
+      },
+      "start": [
+        186335.0,
+        98580.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186392.5,
+        98531.0
+      ],
+      "expected_distance_ft": 12.5,
+      "id": "building_east_to_service_walk",
+      "label": "Building east wall to east edge of service walk",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "sidewalk-east-service",
+          "vertex_index": 1
+        },
+        "start": {
+          "feature_id": "sidewalk-east-service",
+          "vertex_index": 0
+        }
+      },
+      "start": [
+        186380.0,
+        98531.0
+      ],
+      "withheld_from_app_import": true
     }
   ],
   "source_basis": {

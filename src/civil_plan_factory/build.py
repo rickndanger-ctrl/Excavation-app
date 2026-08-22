@@ -44,6 +44,9 @@ def build_calibration_benchmark(model: dict[str, Any]) -> dict[str, Any] | None:
     site = polygons["property-site-boundary"]["coordinates"]
     building = polygons["building-apartment-1"]["coordinates"]
     pad = polygons["pad-apartment-1"]["coordinates"]
+    south_walk = polygons.get("sidewalk-south-entry", {}).get("coordinates")
+    north_walk = polygons.get("sidewalk-north-entry", {}).get("coordinates")
+    service_walk = polygons.get("sidewalk-east-service", {}).get("coordinates")
 
     controls = [
         ("CAL-1", "Southwest parcel corner", site[0]),
@@ -87,6 +90,12 @@ def build_calibration_benchmark(model: dict[str, Any]) -> dict[str, Any] | None:
         check("building_ne_to_parcel_ne", "Building NE to parcel NE", building[2], site[2], ("building-apartment-1", 2), ("property-site-boundary", 2)),
         check("pad_ne_to_parcel_ne", "Pad NE to parcel NE", pad[2], site[2], ("pad-apartment-1", 2), ("property-site-boundary", 2)),
     ]
+    if south_walk and north_walk and service_walk:
+        checks.extend([
+            check("building_sw_to_south_walk", "Building SW corner to west edge of south entry walk", building[0], south_walk[3], ("building-apartment-1", 0), ("sidewalk-south-entry", 3)),
+            check("building_nw_to_north_walk", "Building NW corner to west edge of north entry walk", building[3], north_walk[0], ("building-apartment-1", 3), ("sidewalk-north-entry", 0)),
+            check("building_east_to_service_walk", "Building east wall to east edge of service walk", service_walk[0], service_walk[1], ("sidewalk-east-service", 0), ("sidewalk-east-service", 1)),
+        ])
     spatial = model["spatial_reference"]
     return {
         "schema_version": "civil-plan-factory.calibration-benchmark/v0.1.0",
@@ -258,6 +267,11 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     storm_polygons = [feature for feature in model["features"]["polygons"] if feature.get("system") == "storm"]
     dry_polygons = [feature for feature in model["features"]["polygons"] if feature.get("system") == "dry_utilities"]
     grading_polygons = [feature for feature in model["features"]["polygons"] if feature.get("system") in {"grading", "construction_erosion"}]
+    finished_site_polygons = [
+        feature for feature in model["features"]["polygons"]
+        if feature.get("layer_id") == "site"
+        and feature["id"] not in {pad_id, building_id}
+    ]
 
     constraint_colors = {
         "constraint-row-dedication": colors.HexColor("#fca5a5"),
@@ -298,6 +312,23 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         pdf.setStrokeColor(colors.HexColor("#166534"))
         pdf.setLineWidth(0.25)
         path_ring(pdf, surface["boundary"], feature_id=surface["id"], fill=0)
+        pdf.restoreState()
+
+    finished_site_colors = {
+        "pedestrian_flatwork": colors.HexColor("#f1f5f9"),
+        "pavement_area": colors.HexColor("#94a3b8"),
+        "landscape_area": colors.HexColor("#bbf7d0"),
+    }
+    for feature in finished_site_polygons:
+        pdf.saveState()
+        pdf.setFillColor(finished_site_colors.get(feature["feature_type"], colors.HexColor("#e2e8f0")))
+        pdf.setStrokeColor(colors.HexColor("#475569"))
+        pdf.setLineWidth(0.9)
+        path_ring(pdf, feature["coordinates"], feature_id=feature["id"], fill=1)
+        label_x, label_y = xy(list(_centroid(feature["coordinates"])))
+        pdf.setFillColor(colors.HexColor("#0f172a"))
+        pdf.setFont("Helvetica-Bold", 4.5)
+        pdf.drawCentredString(label_x, label_y, feature["id"])
         pdf.restoreState()
 
     pdf.setFillColor(colors.white)

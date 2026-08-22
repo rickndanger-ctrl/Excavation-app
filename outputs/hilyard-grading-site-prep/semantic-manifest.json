@@ -722,6 +722,378 @@
       "clickable": true,
       "coordinates": [
         [
+          186353.5,
+          98479.5
+        ],
+        [
+          186361.5,
+          98479.5
+        ],
+        [
+          186361.5,
+          98490.0
+        ],
+        [
+          186353.5,
+          98490.0
+        ],
+        [
+          186353.5,
+          98479.5
+        ]
+      ],
+      "fieldDetail": {
+        "ada_compliance_status": "not evaluated",
+        "dimensions_ft": [
+          8.0,
+          10.5
+        ],
+        "map_target": "sidewalk-south-entry",
+        "measurement_tips": [
+          {
+            "distance_ft": 18.5,
+            "from": {
+              "feature_id": "building-apartment-1",
+              "vertex_index": 0
+            },
+            "id": "tip-building-sw-to-south-walk-west",
+            "label": "West edge of south entry walk is 18.5 FT east of the building southwest corner.",
+            "method": "horizontal_plan_distance",
+            "staking_authority": false,
+            "to": {
+              "feature_id": "sidewalk-south-entry",
+              "vertex_index": 3
+            }
+          }
+        ],
+        "searchable": true,
+        "surface_status": "fictional finished-layout test geometry"
+      },
+      "id": "sidewalk-south-entry",
+      "label": "South entry walk — fictional finished layout",
+      "layerId": "site",
+      "mapTarget": "sidewalk-south-entry",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-finished-site-layout"
+        ],
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": null,
+      "type": "pedestrian_flatwork"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186353.5,
+          98580.0
+        ],
+        [
+          186361.5,
+          98580.0
+        ],
+        [
+          186361.5,
+          98603.5
+        ],
+        [
+          186353.5,
+          98603.5
+        ],
+        [
+          186353.5,
+          98580.0
+        ]
+      ],
+      "fieldDetail": {
+        "ada_compliance_status": "not evaluated",
+        "dimensions_ft": [
+          8.0,
+          23.5
+        ],
+        "map_target": "sidewalk-north-entry",
+        "measurement_tips": [
+          {
+            "distance_ft": 18.5,
+            "from": {
+              "feature_id": "building-apartment-1",
+              "vertex_index": 3
+            },
+            "id": "tip-building-nw-to-north-walk-west",
+            "label": "West edge of north entry walk is 18.5 FT east of the building northwest corner.",
+            "method": "horizontal_plan_distance",
+            "staking_authority": false,
+            "to": {
+              "feature_id": "sidewalk-north-entry",
+              "vertex_index": 0
+            }
+          }
+        ],
+        "searchable": true,
+        "surface_status": "fictional finished-layout test geometry"
+      },
+      "id": "sidewalk-north-entry",
+      "label": "North entry walk — fictional finished layout",
+      "layerId": "site",
+      "mapTarget": "sidewalk-north-entry",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-finished-site-layout"
+        ],
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": null,
+      "type": "pedestrian_flatwork"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186380.0,
+          98531.0
+        ],
+        [
+          186392.5,
+          98531.0
+        ],
+        [
+          186392.5,
+          98539.0
+        ],
+        [
+          186380.0,
+          98539.0
+        ],
+        [
+          186380.0,
+          98531.0
+        ]
+      ],
+      "fieldDetail": {
+        "ada_compliance_status": "not evaluated",
+        "dimensions_ft": [
+          12.5,
+          8.0
+        ],
+        "map_target": "sidewalk-east-service",
+        "measurement_tips": [
+          {
+            "distance_ft": 12.5,
+            "from": {
+              "feature_id": "sidewalk-east-service",
+              "vertex_index": 0
+            },
+            "id": "tip-building-east-to-row-side-walk",
+            "label": "East edge of service walk is 12.5 FT east of the building wall.",
+            "method": "horizontal_plan_distance",
+            "staking_authority": false,
+            "to": {
+              "feature_id": "sidewalk-east-service",
+              "vertex_index": 1
+            }
+          }
+        ],
+        "searchable": true,
+        "surface_status": "fictional finished-layout test geometry"
+      },
+      "id": "sidewalk-east-service",
+      "label": "East service walk — fictional finished layout",
+      "layerId": "site",
+      "mapTarget": "sidewalk-east-service",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-finished-site-layout"
+        ],
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": null,
+      "type": "pedestrian_flatwork"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186329.0,
+          98480.0
+        ],
+        [
+          186353.5,
+          98480.0
+        ],
+        [
+          186353.5,
+          98485.0
+        ],
+        [
+          186329.0,
+          98485.0
+        ],
+        [
+          186329.0,
+          98480.0
+        ]
+      ],
+      "fieldDetail": {
+        "ada_compliance_status": "not evaluated",
+        "dimensions_ft": [
+          24.5,
+          5.0
+        ],
+        "map_target": "sidewalk-arrival-link",
+        "searchable": true,
+        "surface_status": "fictional finished-layout test geometry"
+      },
+      "id": "sidewalk-arrival-link",
+      "label": "Arrival court sidewalk link — fictional finished layout",
+      "layerId": "site",
+      "mapTarget": "sidewalk-arrival-link",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-finished-site-layout"
+        ],
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": null,
+      "type": "pedestrian_flatwork"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186267.0,
+          98480.0
+        ],
+        [
+          186329.0,
+          98480.0
+        ],
+        [
+          186329.0,
+          98519.0
+        ],
+        [
+          186267.0,
+          98519.0
+        ],
+        [
+          186267.0,
+          98480.0
+        ]
+      ],
+      "fieldDetail": {
+        "area_sf": 2418.0,
+        "dimensions_ft": [
+          62.0,
+          39.0
+        ],
+        "map_target": "paving-arrival-court",
+        "parking_layout_status": "concept only; stalls and code compliance not evaluated",
+        "searchable": true,
+        "surface_status": "fictional finished-layout test geometry",
+        "utility_crossing_status": "south access crosses reference EWEB corridor; owner review required"
+      },
+      "id": "paving-arrival-court",
+      "label": "Arrival and parking court — fictional finished layout",
+      "layerId": "site",
+      "mapTarget": "paving-arrival-court",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-finished-site-layout"
+        ],
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": null,
+      "type": "pavement_area"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
+          186362.0,
+          98580.0
+        ],
+        [
+          186392.5,
+          98580.0
+        ],
+        [
+          186392.5,
+          98603.5
+        ],
+        [
+          186362.0,
+          98603.5
+        ],
+        [
+          186362.0,
+          98580.0
+        ]
+      ],
+      "fieldDetail": {
+        "area_sf": 716.75,
+        "dimensions_ft": [
+          30.5,
+          23.5
+        ],
+        "map_target": "landscape-north-court",
+        "planting_irrigation_status": "not designed",
+        "searchable": true,
+        "surface_status": "fictional finished-layout test geometry"
+      },
+      "id": "landscape-north-court",
+      "label": "North landscape court — fictional finished layout",
+      "layerId": "site",
+      "mapTarget": "landscape-north-court",
+      "phase": "proposed",
+      "provenance": {
+        "decision_ids": [
+          "decision-finished-site-layout"
+        ],
+        "source_ids": [
+          "src-rfp-appendix",
+          "src-project-brief"
+        ],
+        "status": "reviewed_assumption"
+      },
+      "searchable": true,
+      "system": null,
+      "type": "landscape_area"
+    },
+    {
+      "clickable": true,
+      "coordinates": [
+        [
           186340.0,
           98588.0
         ],
@@ -5242,6 +5614,7 @@
       "decision-reference-geometry",
       "decision-building-footprint",
       "decision-building-interfaces",
+      "decision-finished-site-layout",
       "decision-sanitary-vertical-basis",
       "decision-sanitary-alignment",
       "decision-storm-hydrology",
@@ -5701,16 +6074,6 @@
       "provenance_status": "unknown",
       "reason": "No site design is locked.",
       "system": "curbs"
-    },
-    {
-      "provenance_status": "unknown",
-      "reason": "No site design is locked.",
-      "system": "sidewalks"
-    },
-    {
-      "provenance_status": "unknown",
-      "reason": "No pavement layout or section is locked.",
-      "system": "paving"
     },
     {
       "provenance_status": "unknown",

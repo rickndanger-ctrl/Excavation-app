@@ -155,7 +155,7 @@ class SanitaryBuildTests(unittest.TestCase):
                 result = subprocess.run(command, cwd=ROOT, env=env, text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)
             gpkg_path = Path(directory) / "hilyard-site-layout.gpkg"
-            expected_counts = {"canonical_points": 50, "canonical_lines": 47, "canonical_polygons": 21, "canonical_surfaces": 5}
+            expected_counts = {"canonical_points": 50, "canonical_lines": 47, "canonical_polygons": 27, "canonical_surfaces": 5}
             for layer, expected in expected_counts.items():
                 result = subprocess.run(
                     [str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(gpkg_path), layer],

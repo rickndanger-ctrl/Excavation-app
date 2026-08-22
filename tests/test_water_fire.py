@@ -179,7 +179,7 @@ class WaterFireBuildTests(unittest.TestCase):
             self.assertEqual([], parity["mismatches"])
             self.assertEqual(0.0, parity["pdf_vs_geopackage"]["maximum_delta_ft"])
 
-            expected_counts = {"canonical_points": 50, "canonical_lines": 47, "canonical_polygons": 21, "canonical_surfaces": 5}
+            expected_counts = {"canonical_points": 50, "canonical_lines": 47, "canonical_polygons": 27, "canonical_surfaces": 5}
             for layer, expected in expected_counts.items():
                 result = subprocess.run([str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(output / "hilyard-site-layout.gpkg"), layer], text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)

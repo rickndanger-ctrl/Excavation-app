@@ -123,6 +123,39 @@ class SiteLayoutModelTests(unittest.TestCase):
         self.assertEqual("reviewed_assumption", building["field_detail"]["finished_floor_elevation_status"])
         self.assertTrue(building["field_detail"]["finished_floor_elevation_provisional"])
 
+    def test_finished_job_base_contains_flatwork_paving_landscape_and_location_tips(self):
+        required = {
+            "sidewalk-south-entry",
+            "sidewalk-north-entry",
+            "sidewalk-east-service",
+            "sidewalk-arrival-link",
+            "paving-arrival-court",
+            "landscape-north-court",
+        }
+        self.assertTrue(required.issubset(self.polygons))
+        for feature_id in required:
+            feature = self.polygons[feature_id]
+            self.assertEqual("site", feature["layer_id"])
+            self.assertEqual("proposed", feature["phase_id"])
+            self.assertEqual("reviewed_assumption", feature["provenance"]["status"])
+            self.assertIn("decision-finished-site-layout", feature["provenance"]["decision_ids"])
+            self.assertTrue(feature["field_detail"]["searchable"])
+            self.assertEqual(feature_id, feature["field_detail"]["map_target"])
+
+        south_walk = self.polygons["sidewalk-south-entry"]
+        self.assertEqual([8.0, 10.5], south_walk["field_detail"]["dimensions_ft"])
+        tips = south_walk["field_detail"]["measurement_tips"]
+        self.assertEqual(1, len(tips))
+        self.assertEqual("building-apartment-1", tips[0]["from"]["feature_id"])
+        self.assertEqual("sidewalk-south-entry", tips[0]["to"]["feature_id"])
+        self.assertEqual(18.5, tips[0]["distance_ft"])
+        self.assertEqual("horizontal_plan_distance", tips[0]["method"])
+        self.assertFalse(tips[0]["staking_authority"])
+
+        coverage = {row["system"]: row for row in self.model["contract_coverage"]}
+        self.assertEqual("modeled", coverage["sidewalks"]["availability"])
+        self.assertEqual("modeled", coverage["paving"]["availability"])
+
     def test_entries_and_system_penetrations_are_stable_wall_bound_interfaces(self):
         self.assertIn("building-apartment-1", self.polygons)
         building_ring = self.polygons["building-apartment-1"]["coordinates"]
@@ -214,7 +247,7 @@ class SiteLayoutBuildTests(unittest.TestCase):
             self.assertEqual("international_foot", benchmark["coordinate_basis"]["units"])
             self.assertEqual("reference-scale; not surveyed", benchmark["coordinate_basis"]["authority"])
             self.assertEqual(3, len(benchmark["visible_controls"]))
-            self.assertGreaterEqual(len(benchmark["sealed_checks"]), 10)
+            self.assertEqual(15, len(benchmark["sealed_checks"]))
             checks = {row["id"]: row for row in benchmark["sealed_checks"]}
             self.assertTrue(
                 {"building_width", "building_length", "building_diagonal"}.issubset(checks),
@@ -222,6 +255,9 @@ class SiteLayoutBuildTests(unittest.TestCase):
             self.assertAlmostEqual(45.0, checks["building_width"]["expected_distance_ft"], places=6)
             self.assertAlmostEqual(90.0, checks["building_length"]["expected_distance_ft"], places=6)
             self.assertAlmostEqual(math.hypot(45.0, 90.0), checks["building_diagonal"]["expected_distance_ft"], places=6)
+            self.assertEqual(18.5, checks["building_sw_to_south_walk"]["expected_distance_ft"])
+            self.assertEqual(18.5, checks["building_nw_to_north_walk"]["expected_distance_ft"])
+            self.assertEqual(12.5, checks["building_east_to_service_walk"]["expected_distance_ft"])
             self.assertTrue(all(row["withheld_from_app_import"] for row in benchmark["sealed_checks"]))
 
             from pypdf import PdfReader
@@ -232,6 +268,9 @@ class SiteLayoutBuildTests(unittest.TestCase):
             self.assertIn("penetration-sanitary", text)
             self.assertIn("E 34TH AVENUE - ACCESS BASIS", text)
             self.assertIn("HILYARD STREET - NO DRIVEWAY", text)
+            self.assertIn("sidewalk-south-entry", text)
+            self.assertIn("paving-arrival-court", text)
+            self.assertIn("landscape-north-court", text)
             self.assertIn("DRAWING GRID ORIGIN: E 186225.00 / N 98450.00", text)
             content = b"\n".join(page.get_contents().get_data() for page in reader.pages)
             self.assertRegex(content, rb"\b(?:m|l|re)\b")

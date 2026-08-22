@@ -146,6 +146,34 @@
       ]
     },
     {
+      "id": "decision-finished-site-layout",
+      "subject": "Fictional finished-job flatwork, arrival court, and landscape layout",
+      "status": "reviewed_assumption",
+      "value": {
+        "finished_base_features": [
+          "building and pad",
+          "south, north, and east entry walks",
+          "arrival-court sidewalk link",
+          "arrival and parking court",
+          "north landscape court"
+        ],
+        "controlling_plan_distances_ft": {
+          "building_sw_to_south_walk_west_edge": 18.5,
+          "building_nw_to_north_walk_west_edge": 18.5,
+          "building_east_wall_to_service_walk_east_edge": 12.5
+        },
+        "ada_compliance_status": "not evaluated",
+        "pavement_and_flatwork_sections_status": "not designed",
+        "survey_and_staking_authority": false
+      },
+      "rationale": "A complete, easy-to-read finished-job base is required to test worker orientation, layer context, calibrated pre-measurements, and location tips. Geometry is exact inside the fictional model while remaining explicitly unapproved and not for field staking.",
+      "source_ids": [
+        "src-rfp-appendix",
+        "src-project-brief",
+        "src-eugene-taxlots-gis"
+      ]
+    },
+    {
       "id": "decision-sanitary-vertical-basis",
       "subject": "Minimum fictional vertical basis for the sanitary gravity envelope",
       "status": "reviewed_assumption",
