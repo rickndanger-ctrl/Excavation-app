@@ -447,11 +447,11 @@ export function PlanCanvas({
     });
   }, [userLocation, plan.widthFt, plan.heightFt]);
 
-  // Refit whenever a newly published semantic package changes the plan extent.
-  useEffect(() => {
+  const fitPlanToContainer = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
     const s = Math.min(rect.width / plan.widthFt, rect.height / plan.heightFt) * 0.95;
     const fittedScale = Math.max(0.3, s);
     setScale(fittedScale);
@@ -460,6 +460,16 @@ export function PlanCanvas({
       y: (rect.height - plan.heightFt * fittedScale) / 2,
     });
   }, [plan.heightFt, plan.widthFt]);
+
+  // Refit whenever the package extent or the actual map viewport changes.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    fitPlanToContainer();
+    const observer = new ResizeObserver(fitPlanToContainer);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [fitPlanToContainer]);
 
   useEffect(() => {
     if (recenterToken > 0) recenterOnUser();

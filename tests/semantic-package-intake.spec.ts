@@ -2,11 +2,41 @@ import { expect, test } from '@playwright/test';
 
 const manifestPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-sanitary/semantic-manifest.json';
 const planPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-sanitary/hilyard-site-layout.pdf';
+const readingFinishedSitePath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/.model-studio/published/reading-public-library-demo/cc059b6394db2c7b6a330b69f7235f1f626638c5d21bfee168f0409fa7fcf798/semantic-publication.json';
 
 test('opens on the model instead of covering it with a preselected sample detail sheet', async ({ page }) => {
   await page.goto('http://127.0.0.1:4175');
 
   await expect(page.locator('.field-sheet')).not.toHaveClass(/open/);
+});
+
+test('refits a published 2D model when the viewport changes to phone size', async ({ page }) => {
+  await page.setViewportSize({ width: 974, height: 844 });
+  await page.goto('http://127.0.0.1:4175');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Import Model Package' }).click();
+  await (await chooser).setFiles(readingFinishedSitePath);
+  await expect(page.getByRole('status')).toContainText('reading-reviewed-v3-3c5e7581dcafdade');
+  await expect(page.locator('[data-object-id="reading-proposed-unit-paver-terrace"]')).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await expect.poll(async () => {
+    const box = await page.locator('.semantic-plan-background').boundingBox();
+    return box && {
+      left: Math.round(box.x),
+      right: Math.round(box.x + box.width),
+      top: Math.round(box.y),
+      bottom: Math.round(box.y + box.height),
+    };
+  }).toEqual(expect.objectContaining({ left: expect.any(Number), right: expect.any(Number) }));
+  const box = await page.locator('.semantic-plan-background').boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(844);
 });
 
 test('imports, searches, and clicks the real Hilyard point, line, and polygon package', async ({ page }) => {
