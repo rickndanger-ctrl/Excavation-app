@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const manifestPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-sanitary/semantic-manifest.json';
 const planPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-sanitary/hilyard-site-layout.pdf';
-const readingFinishedSitePath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/.model-studio/published/reading-public-library-demo/cc059b6394db2c7b6a330b69f7235f1f626638c5d21bfee168f0409fa7fcf798/semantic-publication.json';
+const readingFinishedSitePath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/.model-studio/published/reading-public-library-demo/434b20cfeb845231c98d25dd4949df013c9d921b6179191f29f6f06e762b40cc/semantic-publication.json';
 
 test('opens on the model instead of covering it with a preselected sample detail sheet', async ({ page }) => {
   await page.goto('http://127.0.0.1:4175');
@@ -17,7 +17,7 @@ test('refits a published 2D model when the viewport changes to phone size', asyn
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Import Model Package' }).click();
   await (await chooser).setFiles(readingFinishedSitePath);
-  await expect(page.getByRole('status')).toContainText('reading-reviewed-v3-3c5e7581dcafdade');
+  await expect(page.getByRole('status')).toContainText('reading-reviewed-v4-cbff78ff3ef7100a');
   await expect(page.locator('[data-object-id="reading-proposed-unit-paver-terrace"]')).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -37,6 +37,31 @@ test('refits a published 2D model when the viewport changes to phone size', asyn
   expect(box!.x + box!.width).toBeLessThanOrEqual(390);
   expect(box!.y).toBeGreaterThanOrEqual(0);
   expect(box!.y + box!.height).toBeLessThanOrEqual(844);
+});
+
+test('renders the recognizable finished job as a material-styled base beneath work layers', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4175');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Import Model Package' }).click();
+  await (await chooser).setFiles(readingFinishedSitePath);
+  await expect(page.getByRole('status')).toContainText('reading-reviewed-v4-cbff78ff3ef7100a');
+
+  const building = page.locator('[data-object-id="reading-library-footprint"]');
+  const sidewalk = page.locator('[data-object-id="reading-existing-south-sidewalk"]');
+  const lawn = page.locator('[data-object-id="reading-existing-south-lawn"]');
+  const sanitary = page.locator('[data-object-id="survey-smh-west"]');
+
+  await expect(building.locator('polygon')).toHaveAttribute('fill', '#334155');
+  await expect(building.locator('polygon')).toHaveAttribute('fill-opacity', '0.82');
+  await expect(sidewalk.locator('polygon')).toHaveAttribute('fill', '#d6d3d1');
+  await expect(lawn.locator('polygon')).toHaveAttribute('fill', '#a7c99a');
+  await expect(building.locator('text')).toHaveText('Reading Public Library');
+
+  const basePrecedesOverlay = await building.evaluate((element, overlay) => Boolean(
+    element.compareDocumentPosition(overlay) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ), await sanitary.elementHandle());
+  expect(basePrecedesOverlay).toBe(true);
 });
 
 test('imports, searches, and clicks the real Hilyard point, line, and polygon package', async ({ page }) => {

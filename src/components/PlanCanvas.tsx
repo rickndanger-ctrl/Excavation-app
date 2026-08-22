@@ -373,6 +373,36 @@ function midpoint(a: Point, b: Point): Point {
   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
 }
 
+function semanticPolygonStyle(obj: BlueprintObject, fallbackColor: string, selected: boolean) {
+  if (obj.layerId !== 'finished-site') {
+    return {
+      fill: fallbackColor,
+      fillOpacity: selected ? 0.28 : 0.12,
+      stroke: selected ? '#ea4335' : fallbackColor,
+      strokeWidth: selected ? 1.2 : 0.7,
+      labelColor: selected ? '#ea4335' : fallbackColor,
+    };
+  }
+
+  const styles: Record<string, { fill: string; stroke: string; fillOpacity: number; labelColor: string }> = {
+    building_footprint: { fill: '#334155', stroke: '#0f172a', fillOpacity: 0.82, labelColor: '#ffffff' },
+    existing_concrete_walk: { fill: '#d6d3d1', stroke: '#78716c', fillOpacity: 0.88, labelColor: '#44403c' },
+    existing_concrete_sidewalk: { fill: '#d6d3d1', stroke: '#78716c', fillOpacity: 0.88, labelColor: '#44403c' },
+    cement_concrete_pavement: { fill: '#e7e5e4', stroke: '#78716c', fillOpacity: 0.92, labelColor: '#44403c' },
+    unit_paver_area: { fill: '#d6b98c', stroke: '#8b6f47', fillOpacity: 0.92, labelColor: '#5c452b' },
+    planting_area: { fill: '#7fa36b', stroke: '#527146', fillOpacity: 0.84, labelColor: '#294325' },
+    existing_lawn_area: { fill: '#a7c99a', stroke: '#64845a', fillOpacity: 0.78, labelColor: '#36522f' },
+  };
+  const style = styles[obj.type] ?? { fill: '#94a3b8', stroke: '#475569', fillOpacity: 0.48, labelColor: '#334155' };
+  return {
+    ...style,
+    fillOpacity: selected ? Math.min(1, style.fillOpacity + 0.1) : style.fillOpacity,
+    stroke: selected ? '#ea4335' : style.stroke,
+    strokeWidth: selected ? 1.5 : 0.9,
+    labelColor: selected ? '#ea4335' : style.labelColor,
+  };
+}
+
 export function PlanCanvas({
   jobsite,
   userLocation,
@@ -407,6 +437,13 @@ export function PlanCanvas({
   } | null>(null);
 
   const { plan, utilities, objects } = jobsite;
+  const renderObjects = useMemo(() => [...objects].sort((left, right) => {
+    const rank = (object: BlueprintObject) => {
+      if (object.layerId !== 'finished-site') return 2;
+      return object.geometry?.type === 'Polygon' ? 0 : 1;
+    };
+    return rank(left) - rank(right);
+  }), [objects]);
   const nearestVisibleObject = useCallback((point: Point) => objects
     .filter((obj) => isLayerVisible(obj.layerId) && isPhaseVisible(obj.phase))
     .map((obj) => ({ obj, distance: distanceToFeature(point, obj) }))
@@ -757,7 +794,7 @@ export function PlanCanvas({
               </>
             )}
 
-            {renderSemanticOverlays && objects.map((obj) => {
+            {renderSemanticOverlays && renderObjects.map((obj) => {
               if (!isLayerVisible(obj.layerId)) return null;
               const inPhase = isPhaseVisible(obj.phase);
               const layer = jobsite.layers.find((l) => l.id === obj.layerId);
@@ -768,9 +805,10 @@ export function PlanCanvas({
               const geometry = obj.geometry;
               const labelLayout = semanticLabels.get(obj.id);
               if (geometry?.type === 'Polygon') {
+                const style = semanticPolygonStyle(obj, color, selected);
                 return <g key={obj.id} className="semantic-feature semantic-feature--polygon" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="Polygon" data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'} opacity={opacity}>
-                  <polygon points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill={color} fillOpacity={selected ? 0.28 : 0.12} stroke={selected ? '#ea4335' : color} strokeWidth={selected ? 1.2 : 0.7} onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
-                  {(selected || !labelLayout?.suppressed) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y : labelLayout?.labelY ?? obj.y} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
+                  <polygon points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill={style.fill} fillOpacity={style.fillOpacity} stroke={style.stroke} strokeWidth={style.strokeWidth} onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
+                  {(selected || obj.type === 'building_footprint' || !labelLayout?.suppressed) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y : labelLayout?.labelY ?? obj.y} textAnchor="middle" fontSize={obj.type === 'building_footprint' ? '3.7' : '3.2'} fontWeight={obj.type === 'building_footprint' ? '700' : undefined} fill={style.labelColor} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
                 </g>;
               }
               if (geometry?.type === 'LineString') {
