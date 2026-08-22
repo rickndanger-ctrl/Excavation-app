@@ -25,6 +25,11 @@ test('discovers a directly published immutable package in the phone project flow
   await page.route('**/semantic-publications.local.json', (route) => route.fulfill({
     status: 200,
     contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('**/model-studio-api/publications', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
     body: JSON.stringify([envelope]),
   }));
 
@@ -70,6 +75,8 @@ test('discovers a directly published immutable package in the phone project flow
 
   await page.unroute('**/semantic-publications.local.json');
   await page.route('**/semantic-publications.local.json', (route) => route.abort('internetdisconnected'));
+  await page.unroute('**/model-studio-api/publications');
+  await page.route('**/model-studio-api/publications', (route) => route.abort('internetdisconnected'));
   await page.reload();
   await expect(page.locator('[data-object-id]')).toHaveCount(129);
   await expect(page.getByText('FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION', { exact: true })).toBeVisible();

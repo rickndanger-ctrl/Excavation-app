@@ -8,6 +8,7 @@ import { fetchSemanticPublications } from '../lib/supabase';
 
 const ACTIVE_PUBLICATION_KEY = 'excavation-field-map:activeSemanticPublication:v1';
 const LOCAL_INBOX_URL = '/semantic-publications.local.json';
+const MODEL_STUDIO_FEED_URL = '/model-studio-api/publications';
 
 export type SemanticPublicationsState = {
   publications: ParsedSemanticPublication[];
@@ -29,6 +30,21 @@ async function localInbox(): Promise<unknown[]> {
   return parsed;
 }
 
+async function modelStudioInbox(): Promise<unknown[]> {
+  if (!import.meta.env.DEV) return [];
+  try {
+    const response = await fetch(MODEL_STUDIO_FEED_URL, { cache: 'no-store' });
+    if (response.status === 404 || response.status === 502) return [];
+    if (!response.ok) throw new Error(`Model Studio publication feed returned HTTP ${response.status}.`);
+    const parsed = await response.json() as unknown;
+    if (!Array.isArray(parsed)) throw new Error('Model Studio publication feed must contain a JSON array.');
+    return parsed;
+  } catch (cause) {
+    if (cause instanceof TypeError) return [];
+    throw cause;
+  }
+}
+
 export function useSemanticPublications(): SemanticPublicationsState {
   const [publications, setPublications] = useState<ParsedSemanticPublication[]>([]);
   const [activePublication, setActivePublication] = useState<ParsedSemanticPublication | null>(null);
@@ -46,9 +62,11 @@ export function useSemanticPublications(): SemanticPublicationsState {
       setActivePublication(cachedActive);
       if (cachedActive) localStorage.setItem(ACTIVE_PUBLICATION_KEY, cachedActive.identity);
 
-      const [inbox, remote] = await Promise.all([localInbox(), fetchSemanticPublications()]);
-      for (const envelope of [...inbox, ...remote]) await ingestSemanticPublication(localStorage, envelope);
-      if (inbox.length === 0 && remote.length === 0) return;
+      const [inbox, studio, remote] = await Promise.all([
+        localInbox(), modelStudioInbox(), fetchSemanticPublications(),
+      ]);
+      for (const envelope of [...inbox, ...studio, ...remote]) await ingestSemanticPublication(localStorage, envelope);
+      if (inbox.length === 0 && studio.length === 0 && remote.length === 0) return;
       const next = await loadSemanticPublications(localStorage);
       const active = next.find((item) => item.identity === activeIdentity) ?? null;
       setPublications(next);
