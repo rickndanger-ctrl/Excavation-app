@@ -1,0 +1,49 @@
+{
+  "schema_version": "civil-plan-factory.design-slice/v0.1.0",
+  "project_revision": "golden-apartment-v1",
+  "model_updates": {
+    "phases": [
+      {"id": "phase-01-existing-control-erosion", "name": "Existing conditions, control, and initial erosion protection", "summary": "Reference context, project limits, control, protected features, and first-stage erosion measures."},
+      {"id": "phase-02-clearing-site-prep", "name": "Clearing, stripping, demolition, and site preparation", "summary": "Disturbance limits, clearing and stripping, temporary access, stockpile, and active erosion controls."},
+      {"id": "phase-03-earthwork-rough-grading", "name": "Mass excavation, rough grading, and building pad", "summary": "Cut/fill concepts, building pad, rough grades, and temporary drainage."},
+      {"id": "phase-04-storm", "name": "Storm drainage", "summary": "Roof drainage, inlets, structures, conveyance, and conceptual treatment/detention assets."},
+      {"id": "phase-05-sanitary", "name": "Sanitary sewer", "summary": "Building service, cleanout, gravity profile, and fictional connection context."},
+      {"id": "phase-06-water-dry-utilities", "name": "Water, fire service, and dry-utility trenching", "summary": "Domestic/fire water and coordinated electric, communications, gas, and lighting routes."},
+      {"id": "phase-07-finish-site", "name": "Fine grading and finished site", "summary": "Building, paving, curbs, sidewalks, ramps, parking, landscape, and final restoration."}
+    ],
+    "plan_conventions": {
+      "template": "generic_oregon_style_test_plan",
+      "units": "feet",
+      "north_arrow": "true_north",
+      "coordinate_authority": "reference-scale test basis; not survey or staking control",
+      "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"
+    },
+    "deliverables": {
+      "plans": [
+        {"id": "sheet-cover-index", "sheet_number": "G0.00", "title": "Cover, basis, legend, abbreviations, and sheet index", "asset_ids": ["property-site-boundary"], "phase_id": null, "written_scale": "NOT TO SCALE", "graphic_scale_ft": [0, 20, 40], "units": "feet", "north_arrow": "true north", "legend_ids": ["legend-general", "legend-civil-systems"], "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+        {"id": "sheet-existing-control-erosion", "sheet_number": "C1.00", "title": "Existing conditions, reference control, and initial erosion protection", "asset_ids": ["property-site-boundary", "constraint-row-dedication", "constraint-eweb-west", "constraint-eweb-south", "constraint-sanitary-easement", "constraint-wetland"], "phase_id": "phase-01-existing-control-erosion", "written_scale": "1 inch = 20 feet", "graphic_scale_ft": [0, 20, 40, 80], "units": "feet", "north_arrow": "true north", "legend_ids": ["legend-existing", "legend-control", "legend-erosion"], "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+        {"id": "sheet-clearing-site-prep", "sheet_number": "C2.00", "title": "Clearing, stripping, temporary access, and site preparation", "asset_ids": ["site-prep-disturbance-limit-01", "site-prep-construction-entrance-01", "site-prep-stockpile-01", "erosion-silt-fence-01"], "phase_id": "phase-02-clearing-site-prep", "written_scale": "1 inch = 20 feet", "graphic_scale_ft": [0, 20, 40, 80], "units": "feet", "north_arrow": "true north", "legend_ids": ["legend-site-prep", "legend-erosion"], "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+        {"id": "sheet-earthwork-rough-grading", "sheet_number": "C3.00", "title": "Mass excavation, building pad, earthwork, and rough grading", "asset_ids": ["pad-apartment-1", "surface-existing-grade-reference", "surface-proposed-grade", "surface-building-subgrade", "earthwork-fill-pad-01", "earthwork-cut-east-01", "grading-limit-01"], "phase_id": "phase-03-earthwork-rough-grading", "written_scale": "1 inch = 20 feet", "graphic_scale_ft": [0, 20, 40, 80], "units": "feet", "north_arrow": "true north", "legend_ids": ["legend-grading", "legend-earthwork"], "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+        {"id": "sheet-storm-plan-profile", "sheet_number": "C4.00", "title": "Storm and roof drainage plan, profile, structures, and schedule", "asset_ids": ["penetration-roof-drainage", "roof-leader-north-01", "roof-leader-south-01", "storm-planter-01", "storm-flow-control-01", "storm-site-drop-mh-01", "storm-public-main-4183"], "phase_id": "phase-04-storm", "written_scale": "1 inch = 20 feet", "graphic_scale_ft": [0, 20, 40, 80], "units": "feet", "north_arrow": "true north", "legend_ids": ["legend-storm", "legend-profile"], "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+        {"id": "sheet-sanitary-plan-profile", "sheet_number": "C5.00", "title": "Sanitary sewer plan, profile, structures, and schedule", "asset_ids": ["penetration-sanitary", "sanitary-cleanout-01", "sanitary-tie-in-01", "sanitary-service-seg-01", "sanitary-service-seg-02"], "phase_id": "phase-05-sanitary", "written_scale": "1 inch = 20 feet", "graphic_scale_ft": [0, 20, 40, 80], "units": "feet", "north_arrow": "true north", "legend_ids": ["legend-sanitary", "legend-profile"], "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+        {"id": "sheet-water-dry-utilities", "sheet_number": "C6.00", "title": "Domestic water, fire service, and coordinated dry utilities", "asset_ids": ["domestic-water-meter-01", "domestic-water-rpba-01", "fire-service-valve-01", "fire-service-ddcva-01", "fire-service-fdc-01", "dry-shared-trench-corridor-01"], "phase_id": "phase-06-water-dry-utilities", "written_scale": "1 inch = 20 feet", "graphic_scale_ft": [0, 20, 40, 80], "units": "feet", "north_arrow": "true north", "legend_ids": ["legend-water-fire", "legend-dry-utilities"], "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+        {"id": "sheet-finish-site", "sheet_number": "C7.00", "title": "Fine grading, building, paving, curbs, sidewalks, ramps, parking, and landscape", "asset_ids": ["building-apartment-1", "paving-arrival-court", "sidewalk-south-entry", "sidewalk-north-entry", "sidewalk-east-service", "sidewalk-arrival-link", "landscape-north-court"], "phase_id": "phase-07-finish-site", "written_scale": "1 inch = 20 feet", "graphic_scale_ft": [0, 20, 40, 80], "units": "feet", "north_arrow": "true north", "legend_ids": ["legend-finished-site", "legend-accessibility"], "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+        {"id": "sheet-details-schedules", "sheet_number": "C8.00", "title": "Civil details, sections, and asset schedules", "asset_ids": ["building-apartment-1", "network-sanitary", "network-storm", "network-domestic-water", "network-fire-water"], "phase_id": null, "written_scale": "AS NOTED", "graphic_scale_ft": [0, 5, 10], "units": "feet", "north_arrow": "not applicable to details", "legend_ids": ["legend-details", "legend-schedules"], "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"}
+      ]
+    }
+  },
+  "phase_assignment": {
+    "default_by_current_phase": {"existing": "phase-01-existing-control-erosion", "temporary": "phase-02-clearing-site-prep", "proposed": "phase-07-finish-site"},
+    "protected_current_phases": ["existing", "temporary"],
+    "by_layer": {"construction-erosion": "phase-02-clearing-site-prep", "grading": "phase-03-earthwork-rough-grading", "site": "phase-07-finish-site"},
+    "by_system": {"grading": "phase-03-earthwork-rough-grading", "storm": "phase-04-storm", "roof_drainage": "phase-04-storm", "sanitary": "phase-05-sanitary", "domestic_water": "phase-06-water-dry-utilities", "fire_water": "phase-06-water-dry-utilities", "power": "phase-06-water-dry-utilities", "telecom_fiber": "phase-06-water-dry-utilities", "gas": "phase-06-water-dry-utilities", "site_lighting": "phase-06-water-dry-utilities"},
+    "by_feature_id": {"pad-apartment-1": "phase-03-earthwork-rough-grading", "building-apartment-1": "phase-07-finish-site"}
+  },
+  "deliverables": {
+    "sections": [
+      {"id": "section-utility-trench", "title": "Conceptual wet/dry utility trench coordination section", "asset_ids": ["dry-shared-trench-corridor-01"], "status": "fictional_test_detail_not_for_design", "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+      {"id": "section-paving-curb-walk", "title": "Conceptual paving, curb, and sidewalk relationship", "asset_ids": ["paving-arrival-court", "sidewalk-arrival-link"], "status": "fictional_test_detail_not_for_design", "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"},
+      {"id": "section-building-pad", "title": "Conceptual building pad and finish-grade relationship", "asset_ids": ["pad-apartment-1", "building-apartment-1"], "status": "fictional_test_detail_not_for_design", "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"}
+    ]
+  }
+}

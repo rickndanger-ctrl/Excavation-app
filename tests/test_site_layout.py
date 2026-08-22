@@ -136,7 +136,7 @@ class SiteLayoutModelTests(unittest.TestCase):
         for feature_id in required:
             feature = self.polygons[feature_id]
             self.assertEqual("site", feature["layer_id"])
-            self.assertEqual("proposed", feature["phase_id"])
+            self.assertEqual("phase-07-finish-site", feature["phase_id"])
             self.assertEqual("reviewed_assumption", feature["provenance"]["status"])
             self.assertIn("decision-finished-site-layout", feature["provenance"]["decision_ids"])
             self.assertTrue(feature["field_detail"]["searchable"])

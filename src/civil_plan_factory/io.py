@@ -72,6 +72,21 @@ def _deep_update(target: dict[str, Any], patch: dict[str, Any]) -> None:
 def _apply_design_slice(model: dict[str, Any], design: dict[str, Any]) -> None:
     model["project"]["revision"] = design["project_revision"]
     _deep_update(model, design.get("model_updates", {}))
+    if assignment := design.get("phase_assignment"):
+        defaults = assignment.get("default_by_current_phase", {})
+        by_layer = assignment.get("by_layer", {})
+        by_system = assignment.get("by_system", {})
+        by_feature_id = assignment.get("by_feature_id", {})
+        protected = set(assignment.get("protected_current_phases", []))
+        for group in ("points", "lines", "polygons", "surfaces"):
+            for feature in model["features"][group]:
+                current = feature["phase_id"]
+                phase_id = defaults.get(current, current)
+                if current not in protected:
+                    phase_id = by_layer.get(feature.get("layer_id"), phase_id)
+                    phase_id = by_system.get(feature.get("system"), phase_id)
+                    phase_id = by_feature_id.get(feature["id"], phase_id)
+                feature["phase_id"] = phase_id
     for group, updates in design.get("feature_updates", {}).items():
         by_id = {row["id"]: row for row in model["features"][group]}
         for update in updates:

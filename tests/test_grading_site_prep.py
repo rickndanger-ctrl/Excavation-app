@@ -93,8 +93,8 @@ class GradingSitePrepModelTests(unittest.TestCase):
 
     def test_site_prep_uses_temporary_phase_and_separate_areas(self):
         for feature_id in ("site-prep-disturbance-limit-01", "site-prep-construction-entrance-01", "site-prep-stockpile-01"):
-            self.assertEqual("temporary", self.polygons[feature_id]["phase_id"])
-        self.assertEqual("temporary", self.lines["erosion-silt-fence-01"]["phase_id"])
+            self.assertEqual("phase-02-clearing-site-prep", self.polygons[feature_id]["phase_id"])
+        self.assertEqual("phase-02-clearing-site-prep", self.lines["erosion-silt-fence-01"]["phase_id"])
 
     def test_validator_rejects_missing_surface_samples_bad_volume_and_fake_survey_claim(self):
         missing = copy.deepcopy(self.model)
