@@ -1,9 +1,9 @@
 {
-  "canonical_geometry_sha256": "bfe1a79b40a2fef8660ed6e9cc159b28bcf076b21a131694a5b9b6b36e3c32a9",
+  "canonical_geometry_sha256": "e404ce39c02e7c16d24ccee9e57e5aaad5cdc6c445e12b918e243426726fbbba",
   "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
-  "feature_count": 123,
+  "feature_count": 129,
   "geopackage": {
-    "feature_count": 123,
+    "feature_count": 129,
     "layers": [
       "canonical_points",
       "canonical_lines",
@@ -15,19 +15,19 @@
   "mismatches": [],
   "pdf": {
     "embedded_image_count": 0,
-    "geometry_sha256": "bfe1a79b40a2fef8660ed6e9cc159b28bcf076b21a131694a5b9b6b36e3c32a9",
+    "geometry_sha256": "e404ce39c02e7c16d24ccee9e57e5aaad5cdc6c445e12b918e243426726fbbba",
     "text_extractable": true,
     "vector_paths_present": true
   },
   "pdf_vs_geopackage": {
-    "compared_feature_count": 123,
+    "compared_feature_count": 129,
     "maximum_delta_ft": 0.0,
     "method": "pdf_content_stream_geometry_markers_vs_gpkg",
     "note": "Coordinates decoded from geometry markers in the actual PDF page content stream and compared to geometry read back from GeoPackage; tolerance is output parity only, not source accuracy."
   },
   "schema_version": "civil-plan-factory.parity-report/v0.1.0",
   "semantic": {
-    "feature_count": 123
+    "feature_count": 129
   },
   "status": "valid",
   "tolerance_note": "Output-to-output numeric equality tolerance; not survey/source accuracy."
