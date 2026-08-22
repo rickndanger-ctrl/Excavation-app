@@ -133,6 +133,21 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertEqual(DISCLAIMER, health["disclaimer"])
         self.assertEqual(str(self.server.workspace.repository), health["repository"])
 
+    def test_publication_feed_is_available_to_the_local_field_app(self):
+        envelope = {
+            "publication_schema": "excavation-field-map.semantic-publication/v1",
+            "package_id": "feed-test",
+            "package_version": "v1",
+            "content_sha256": "a" * 64,
+            "created_at": "2026-08-22T12:00:00Z",
+            "manifest_json": "{}",
+        }
+        with patch.object(self.workspace, "publication_feed", return_value=[envelope]):
+            status, feed = self.request("/api/publications")
+
+        self.assertEqual(200, status)
+        self.assertEqual([envelope], feed)
+
     def test_missing_source_ledger_stays_visible_as_an_invalid_project_over_http(self):
         self.request(
             "/api/projects",

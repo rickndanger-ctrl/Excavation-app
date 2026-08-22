@@ -281,9 +281,16 @@ class ModelStudioModuleTests(unittest.TestCase):
                 (Path(publication["directory"]) / "calibration-benchmark.json").exists()
             )
 
+            feed = workspace.publication_feed()
+            self.assertEqual(1, len(feed))
+            self.assertEqual("excavation-field-map.semantic-publication/v1", feed[0]["publication_schema"])
+            self.assertEqual("hilyard-apartment-test", feed[0]["package_id"])
+            self.assertNotIn("sealedChecks", feed[0]["manifest_json"])
+
             import_file.write_text("{}\n")
             with self.assertRaisesRegex(ValueError, "Immutable publication"):
                 workspace.publish("hilyard", run["run_id"])
+            self.assertEqual([], workspace.publication_feed())
 
     def test_publish_rejects_a_ready_run_after_authoritative_bundle_changes(self):
         with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:

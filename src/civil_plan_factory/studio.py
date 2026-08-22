@@ -350,6 +350,33 @@ class StudioWorkspace:
             default=None,
         )
 
+    def publication_feed(self) -> list[dict[str, Any]]:
+        """Return the newest integrity-verified offline envelope per project.
+
+        This is the read-only seam used by the local field app. Producer paths,
+        QA-only calibration benchmarks, and invalid publications never cross it.
+        """
+        root = self.state_root / "published"
+        if not root.exists():
+            return []
+        envelopes: list[dict[str, Any]] = []
+        for project_root in sorted(path for path in root.iterdir() if path.is_dir()):
+            publication = self._latest_publication(project_root.name)
+            if publication is None:
+                continue
+            try:
+                envelope = _read_json(Path(publication["offline_import_file"]))
+            except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
+                continue
+            if envelope.get("publication_schema") != SEMANTIC_PUBLICATION_SCHEMA:
+                continue
+            envelopes.append(envelope)
+        return sorted(
+            envelopes,
+            key=lambda item: (item.get("created_at") or "", item.get("package_id") or ""),
+            reverse=True,
+        )
+
     def _publication_contract(
         self,
         slug: str,

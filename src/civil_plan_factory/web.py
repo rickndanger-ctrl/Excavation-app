@@ -217,6 +217,9 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
             if parts == ["api", "projects"]:
                 self._send_json(HTTPStatus.OK, self.server.workspace.list_projects())
                 return
+            if parts == ["api", "publications"]:
+                self._send_json(HTTPStatus.OK, self.server.workspace.publication_feed())
+                return
             if len(parts) == 3 and parts[:2] == ["api", "projects"]:
                 self._send_json(HTTPStatus.OK, self.server.workspace.project_detail(parts[2]))
                 return
