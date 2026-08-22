@@ -22,6 +22,7 @@ type PlanCanvasProps = {
   selectedObjectId: string | null;
   onSelectObject: (id: string) => void;
   recenterToken: number;
+  fitRequestToken: number;
   importedBasePlan?: ImportedBasePlan | null;
   showSemanticOverlaysWithBasePlan?: boolean;
 };
@@ -60,6 +61,7 @@ function ObjectIcon({
   color,
   status,
   labelLayout,
+  renderScale,
   onClick,
 }: {
   obj: BlueprintObject;
@@ -67,6 +69,7 @@ function ObjectIcon({
   color: string;
   status: ObjectStatus;
   labelLayout?: GradingLabelLayout;
+  renderScale: number;
   onClick: (e: React.MouseEvent) => void;
 }) {
   const { x, y, type } = obj;
@@ -338,13 +341,14 @@ function ObjectIcon({
       data-layer-id={obj.layerId}
       data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'}
       onClick={onClick}
+      style={{ pointerEvents: isSemantic ? 'none' : 'auto' }}
     >
       {isSemantic && (
         <circle
           className="plan-object-hit-target"
           cx={x}
           cy={y}
-          r={GRADING_HIT_RADIUS}
+          r={Math.max(GRADING_HIT_RADIUS, 22.25 / renderScale)}
           fill="transparent"
           pointerEvents="none"
         />
@@ -427,6 +431,7 @@ export function PlanCanvas({
   selectedObjectId,
   onSelectObject,
   recenterToken,
+  fitRequestToken,
   importedBasePlan,
   showSemanticOverlaysWithBasePlan = false,
 }: PlanCanvasProps) {
@@ -440,6 +445,7 @@ export function PlanCanvas({
   const [showSourcePdf, setShowSourcePdf] = useState(true);
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
   const mouseMoved = useRef(false);
+  const manualCameraRef = useRef(false);
 
   // Touch state stored in ref to avoid stale closures in the passive-false listener
   const touchRef = useRef<{
@@ -480,6 +486,28 @@ export function PlanCanvas({
   const selectedObject = objects.find((o) => o.id === selectedObjectId) ?? null;
   const distance = selectedObject ? distanceFeet(userLocation, selectedObject) : null;
 
+  const modelExtent = useMemo(() => {
+    if (importedBasePlan) {
+      return { minX: 0, minY: 0, maxX: plan.widthFt, maxY: plan.heightFt };
+    }
+
+    const points: Point[] = [];
+    for (const object of objects) {
+      if (object.geometry?.type === 'Point') points.push(object.geometry.coordinates);
+      else if (object.geometry) points.push(...object.geometry.coordinates);
+      else points.push({ x: object.x, y: object.y });
+    }
+    for (const utility of utilities) points.push(...utility.points);
+    const finite = points.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+    if (finite.length === 0) return { minX: 0, minY: 0, maxX: plan.widthFt, maxY: plan.heightFt };
+    return {
+      minX: Math.min(0, ...finite.map((point) => point.x)),
+      minY: Math.min(0, ...finite.map((point) => point.y)),
+      maxX: Math.max(plan.widthFt, ...finite.map((point) => point.x)),
+      maxY: Math.max(plan.heightFt, ...finite.map((point) => point.y)),
+    };
+  }, [importedBasePlan, objects, plan.heightFt, plan.widthFt, utilities]);
+
   const handlePdfDocumentLoaded = useCallback((pageCount: number) => {
     setPdfPageCount(pageCount);
     setPdfPage((page) => Math.min(page, pageCount));
@@ -488,6 +516,7 @@ export function PlanCanvas({
   const recenterOnUser = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
+    manualCameraRef.current = true;
     const rect = container.getBoundingClientRect();
     // Zoom to 1.5× so field markers are clearly visible but context is still readable
     const s = Math.max(1.0, Math.min(rect.width / plan.widthFt, rect.height / plan.heightFt) * 1.5); // plan is destructured above
@@ -503,24 +532,35 @@ export function PlanCanvas({
     if (!container) return;
     const rect = container.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
-    const s = Math.min(rect.width / plan.widthFt, rect.height / plan.heightFt) * 0.95;
-    const fittedScale = Math.max(0.3, s);
+    // Keep the fitted model clear of the persistent top bar and package-status card.
+    const padding = { left: 24, right: 24, top: 156, bottom: 24 };
+    const availableWidth = Math.max(1, rect.width - padding.left - padding.right);
+    const availableHeight = Math.max(1, rect.height - padding.top - padding.bottom);
+    const extentWidth = Math.max(1, modelExtent.maxX - modelExtent.minX);
+    const extentHeight = Math.max(1, modelExtent.maxY - modelExtent.minY);
+    const fittedScale = Math.min(8, Math.max(0.02, Math.min(
+      availableWidth / extentWidth,
+      availableHeight / extentHeight,
+    )));
     setScale(fittedScale);
     setOffset({
-      x: (rect.width - plan.widthFt * fittedScale) / 2,
-      y: (rect.height - plan.heightFt * fittedScale) / 2,
+      x: padding.left + (availableWidth - extentWidth * fittedScale) / 2 - modelExtent.minX * fittedScale,
+      y: padding.top + (availableHeight - extentHeight * fittedScale) / 2 - modelExtent.minY * fittedScale,
     });
-  }, [plan.heightFt, plan.widthFt]);
+  }, [modelExtent]);
 
   // Refit whenever the package extent or the actual map viewport changes.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    manualCameraRef.current = false;
     fitPlanToContainer();
-    const observer = new ResizeObserver(fitPlanToContainer);
+    const observer = new ResizeObserver(() => {
+      if (!manualCameraRef.current) fitPlanToContainer();
+    });
     observer.observe(container);
     return () => observer.disconnect();
-  }, [fitPlanToContainer]);
+  }, [fitPlanToContainer, fitRequestToken]);
 
   useEffect(() => {
     if (recenterToken > 0) recenterOnUser();
@@ -540,7 +580,10 @@ export function PlanCanvas({
       if (ts.length === 1) {
         const dx = ts[0].x - touchRef.current.touches[0].x;
         const dy = ts[0].y - touchRef.current.touches[0].y;
-        if (Math.hypot(dx, dy) > 4) touchRef.current.moved = true;
+        if (Math.hypot(dx, dy) > 4) {
+          touchRef.current.moved = true;
+          manualCameraRef.current = true;
+        }
         setOffset({
           x: touchRef.current.startOffset.x + dx,
           y: touchRef.current.startOffset.y + dy,
@@ -550,8 +593,9 @@ export function PlanCanvas({
         const factor = dist / touchRef.current.initialDist;
         setScale(() => {
           const next = touchRef.current!.initialScale * factor;
-          return Math.min(8, Math.max(1.5, next));
+          return Math.min(8, Math.max(0.02, next));
         });
+        manualCameraRef.current = true;
         touchRef.current.moved = true;
       }
     };
@@ -562,8 +606,9 @@ export function PlanCanvas({
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
+    manualCameraRef.current = true;
     const delta = e.deltaY > 0 ? -0.2 : 0.2;
-    setScale((s) => Math.min(8, Math.max(1.5, s + delta)));
+    setScale((s) => Math.min(8, Math.max(0.02, s + delta)));
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -575,7 +620,10 @@ export function PlanCanvas({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!dragging) return;
-    if (Math.hypot(e.clientX - dragStart.current.x, e.clientY - dragStart.current.y) > 4) mouseMoved.current = true;
+    if (Math.hypot(e.clientX - dragStart.current.x, e.clientY - dragStart.current.y) > 4) {
+      mouseMoved.current = true;
+      manualCameraRef.current = true;
+    }
     setOffset({
       x: dragStart.current.offsetX + (e.clientX - dragStart.current.x),
       y: dragStart.current.offsetY + (e.clientY - dragStart.current.y),
@@ -832,7 +880,7 @@ export function PlanCanvas({
                 </g>;
               }
               return <g key={obj.id} opacity={opacity} data-geometry-type="Point" style={{ pointerEvents: inPhase ? 'auto' : 'none' }}>
-                <ObjectIcon obj={obj} selected={selected} color={color} status={getObjectStatus(obj.id)} labelLayout={labelLayout} onClick={(e) => { e.stopPropagation(); onSelectObject(obj.id); }} />
+                <ObjectIcon obj={obj} selected={selected} color={color} status={getObjectStatus(obj.id)} labelLayout={labelLayout} renderScale={scale} onClick={(e) => { e.stopPropagation(); onSelectObject(obj.id); }} />
               </g>;
             })}
 
@@ -854,7 +902,7 @@ export function PlanCanvas({
         <button
           type="button"
           className="map-controls__btn"
-          onClick={() => setScale((s) => Math.min(8, s + 0.4))}
+          onClick={() => { manualCameraRef.current = true; setScale((s) => Math.min(8, s + 0.4)); }}
           aria-label="Zoom in"
         >
           <Plus size={18} />
@@ -862,7 +910,7 @@ export function PlanCanvas({
         <button
           type="button"
           className="map-controls__btn"
-          onClick={() => setScale((s) => Math.max(1.5, s - 0.4))}
+          onClick={() => { manualCameraRef.current = true; setScale((s) => Math.max(0.02, s - 0.4)); }}
           aria-label="Zoom out"
         >
           <Minus size={18} />

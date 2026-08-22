@@ -40,7 +40,7 @@ import { buildReadingDryUtilityDraft, publishApprovedDryUtilityPackage, type Dry
 import { buildCalibration } from '../utils/calibration';
 import { bearingLabel, distanceFeet } from '../utils/distance';
 import { getCalibrationPoints, saveCalibrationPoints } from '../utils/storage';
-import { Layers, Navigation, Search, X } from 'lucide-react';
+import { Expand, Layers, Navigation, Search, X } from 'lucide-react';
 
 export function FieldMapPage() {
   const auth = useAuth();
@@ -54,6 +54,7 @@ export function FieldMapPage() {
   const { setStatus, getStatus } = useObjectStatus();
   const [selectedObjectId, setSelectedObjectId] = useState('');
   const [recenterToken, setRecenterToken] = useState(0);
+  const [fitPlanToken, setFitPlanToken] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSidebarUpload, setShowSidebarUpload] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -105,6 +106,7 @@ export function FieldMapPage() {
       return { url: URL.createObjectURL(file), name: file.name, mimeType: 'application/pdf' };
     });
     setSelectedObjectId('');
+    setFitPlanToken((token) => token + 1);
     setDrawerOpen(false);
     setPublishedNotice(null);
     void file.arrayBuffer().then(async (buffer) => {
@@ -137,6 +139,7 @@ export function FieldMapPage() {
         setImportedSemanticPackage(null);
         setPublishedPackage(null);
         setSelectedObjectId('');
+        setFitPlanToken((token) => token + 1);
         setPublishedNotice(`${publication.jobsite.projectName} · ${publication.envelope.package_version} · checksum verified · offline ready`);
         setDrawerOpen(false);
         return;
@@ -146,6 +149,7 @@ export function FieldMapPage() {
       setImportedSemanticPackage(parsed);
       setPublishedPackage(null);
       setSelectedObjectId('');
+      setFitPlanToken((token) => token + 1);
       setPublishedNotice(`${parsed.projectName} · ${parsed.objects.length} semantic features · ${parsed.disclaimer}`);
       setDrawerOpen(false);
     }).catch((error: unknown) => {
@@ -321,6 +325,7 @@ export function FieldMapPage() {
             setDrawerOpen(false);
           }}
           recenterToken={recenterToken}
+          fitRequestToken={fitPlanToken}
           importedBasePlan={importedBasePlan}
           showSemanticOverlaysWithBasePlan={Boolean(importedSemanticPackage || publishedPackage)}
         />
@@ -336,8 +341,22 @@ export function FieldMapPage() {
           <Layers size={20} />
         </button>
         <span className="field-topbar__title">
-          {importedBasePlan ? `${displayPackage.projectName} · ${importedBasePlan.name}` : displayPackage.projectName}
+          <strong>{importedBasePlan ? `${displayPackage.projectName} · ${importedBasePlan.name}` : displayPackage.projectName}</strong>
+          {(semanticPublications.activePublication || importedSemanticPackage || publishedPackage) && (
+            <small>Model loaded: {displayPackage.projectName}</small>
+          )}
         </span>
+        {(semanticPublications.activePublication || importedSemanticPackage || publishedPackage || importedBasePlan) && (
+          <button
+            className="field-topbar__fit"
+            type="button"
+            onClick={() => setFitPlanToken((token) => token + 1)}
+            aria-label="Fit full plan"
+          >
+            <Expand size={16} />
+            <span>Fit full plan</span>
+          </button>
+        )}
         <button
           className="field-topbar__search"
           onClick={() => {

@@ -117,6 +117,44 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.field-topbar__title strong,
+.field-topbar__title small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.field-topbar__title small {
+  color: #9ec5ff;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.field-topbar__fit {
+  min-height: 38px;
+  padding: 0 0.65rem;
+  border: 1px solid rgba(158, 197, 255, 0.42);
+  border-radius: 8px;
+  background: rgba(26, 115, 232, 0.2);
+  color: #d8e8ff;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .field-topbar { gap: 0.4rem; padding-inline: 0.5rem; }
+  .field-topbar__fit span { display: none; }
+  .field-topbar__fit { width: 38px; padding: 0; justify-content: center; }
+  .field-topbar__search { display: none; }
 }
 
 /* ── GPS dot ─────────────────────────────────────────────── */
@@ -304,9 +342,11 @@ body {
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding-bottom: env(safe-area-inset-bottom, 12px);
+  pointer-events: none;
 }
 .field-sheet.open {
   transform: translateY(0);
+  pointer-events: auto;
 }
 
 .field-sheet__handle {
