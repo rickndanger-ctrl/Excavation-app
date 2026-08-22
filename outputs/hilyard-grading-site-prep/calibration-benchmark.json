@@ -1,0 +1,352 @@
+{
+  "acceptance": {
+    "maximum_absolute_error_ft": 0.25,
+    "maximum_relative_error_percent": 0.5,
+    "note": "Product QA tolerance for the generated vector plan; not a survey or construction tolerance."
+  },
+  "coordinate_basis": {
+    "authority": "reference-scale; not surveyed",
+    "horizontal_crs": "EPSG:6823",
+    "units": "international_foot"
+  },
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "purpose": "Sealed QA oracle for testing plan calibration; not an app import and not construction control.",
+  "schema_version": "civil-plan-factory.calibration-benchmark/v0.1.0",
+  "sealed_checks": [
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186380.0,
+        98490.0
+      ],
+      "expected_distance_ft": 45.0,
+      "id": "building_width",
+      "label": "Building south wall",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 1
+        },
+        "start": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 0
+        }
+      },
+      "start": [
+        186335.0,
+        98490.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186380.0,
+        98580.0
+      ],
+      "expected_distance_ft": 90.0,
+      "id": "building_length",
+      "label": "Building east wall",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 2
+        },
+        "start": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 1
+        }
+      },
+      "start": [
+        186380.0,
+        98490.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186380.0,
+        98580.0
+      ],
+      "expected_distance_ft": 100.623059,
+      "id": "building_diagonal",
+      "label": "Building diagonal",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 2
+        },
+        "start": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 0
+        }
+      },
+      "start": [
+        186335.0,
+        98490.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186385.0,
+        98485.0
+      ],
+      "expected_distance_ft": 55.0,
+      "id": "pad_width",
+      "label": "Building pad south edge",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "pad-apartment-1",
+          "vertex_index": 1
+        },
+        "start": {
+          "feature_id": "pad-apartment-1",
+          "vertex_index": 0
+        }
+      },
+      "start": [
+        186330.0,
+        98485.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186385.0,
+        98585.0
+      ],
+      "expected_distance_ft": 100.0,
+      "id": "pad_length",
+      "label": "Building pad east edge",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "pad-apartment-1",
+          "vertex_index": 2
+        },
+        "start": {
+          "feature_id": "pad-apartment-1",
+          "vertex_index": 1
+        }
+      },
+      "start": [
+        186385.0,
+        98485.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186385.0,
+        98585.0
+      ],
+      "expected_distance_ft": 114.127122,
+      "id": "pad_diagonal",
+      "label": "Building pad diagonal",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "pad-apartment-1",
+          "vertex_index": 2
+        },
+        "start": {
+          "feature_id": "pad-apartment-1",
+          "vertex_index": 0
+        }
+      },
+      "start": [
+        186330.0,
+        98485.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186415.312443,
+        98464.475611
+      ],
+      "expected_distance_ft": 178.576584,
+      "id": "south_frontage",
+      "label": "South parcel frontage",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "property-site-boundary",
+          "vertex_index": 1
+        },
+        "start": {
+          "feature_id": "property-site-boundary",
+          "vertex_index": 0
+        }
+      },
+      "start": [
+        186236.737402,
+        98463.73314
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186415.323411,
+        98621.509356
+      ],
+      "expected_distance_ft": 157.033745,
+      "id": "east_frontage",
+      "label": "East parcel frontage",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "property-site-boundary",
+          "vertex_index": 2
+        },
+        "start": {
+          "feature_id": "property-site-boundary",
+          "vertex_index": 1
+        }
+      },
+      "start": [
+        186415.312443,
+        98464.475611
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186236.737402,
+        98463.73314
+      ],
+      "expected_distance_ft": 101.712763,
+      "id": "building_sw_to_parcel_sw",
+      "label": "Building SW to parcel SW",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "property-site-boundary",
+          "vertex_index": 0
+        },
+        "start": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 0
+        }
+      },
+      "start": [
+        186335.0,
+        98490.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186415.312443,
+        98464.475611
+      ],
+      "expected_distance_ft": 43.571356,
+      "id": "building_se_to_parcel_se",
+      "label": "Building SE to parcel SE",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "property-site-boundary",
+          "vertex_index": 1
+        },
+        "start": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 1
+        }
+      },
+      "start": [
+        186380.0,
+        98490.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186415.323411,
+        98621.509356
+      ],
+      "expected_distance_ft": 54.50477,
+      "id": "building_ne_to_parcel_ne",
+      "label": "Building NE to parcel NE",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "property-site-boundary",
+          "vertex_index": 2
+        },
+        "start": {
+          "feature_id": "building-apartment-1",
+          "vertex_index": 2
+        }
+      },
+      "start": [
+        186380.0,
+        98580.0
+      ],
+      "withheld_from_app_import": true
+    },
+    {
+      "distance_type": "horizontal_plan_distance",
+      "end": [
+        186415.323411,
+        98621.509356
+      ],
+      "expected_distance_ft": 47.459902,
+      "id": "pad_ne_to_parcel_ne",
+      "label": "Pad NE to parcel NE",
+      "pdf_geometry_refs": {
+        "end": {
+          "feature_id": "property-site-boundary",
+          "vertex_index": 2
+        },
+        "start": {
+          "feature_id": "pad-apartment-1",
+          "vertex_index": 2
+        }
+      },
+      "start": [
+        186385.0,
+        98585.0
+      ],
+      "withheld_from_app_import": true
+    }
+  ],
+  "source_basis": {
+    "design_status": "Exact fictional finished-site geometry on the source-locked parcel.",
+    "parcel_authority": "City GIS reference geometry; not a boundary survey or staking authority.",
+    "parcel_feature_id": "property-site-boundary",
+    "taxlot_source_id": "src-eugene-taxlots-gis"
+  },
+  "visible_controls": [
+    {
+      "coordinates": [
+        186236.737402,
+        98463.73314
+      ],
+      "id": "CAL-1",
+      "label": "Southwest parcel corner",
+      "status": "reference_scale_test_control_not_for_staking"
+    },
+    {
+      "coordinates": [
+        186415.312443,
+        98464.475611
+      ],
+      "id": "CAL-2",
+      "label": "Southeast parcel corner",
+      "status": "reference_scale_test_control_not_for_staking"
+    },
+    {
+      "coordinates": [
+        186415.323411,
+        98621.509356
+      ],
+      "id": "CAL-3",
+      "label": "Northeast parcel bend",
+      "status": "reference_scale_test_control_not_for_staking"
+    }
+  ]
+}

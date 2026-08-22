@@ -143,7 +143,7 @@ endobj
 17 0 obj
 <<
 /Author (Model Studio) /CreationDate (D:20000101000000+00'00') /Creator (anonymous) /Keywords () /ModDate (D:20000101000000+00'00') /Producer (ReportLab PDF Library - \(opensource\)) 
-  /Subject (Canonical geometry SHA-256 bfe1a79b40a2fef8660ed6e9cc159b28bcf076b21a131694a5b9b6b36e3c32a9) /Title (Model Studio - Hilyard Civil Plan Set) /Trapped /False
+  /Subject (Canonical geometry SHA-256 bfe1a79b40a2fef8660ed6e9cc159b28bcf076b21a131694a5b9b6b36e3c32a9) /Title (Model Studio - Hilyard Apartment Civil Plan Test Civil Plan Set) /Trapped /False
 >>
 endobj
 18 0 obj
@@ -154,7 +154,7 @@ endobj
 endobj
 19 0 obj
 <<
-/Length 60270
+/Length 62131
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -163,7 +163,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD SITE LAYOUT / BUILDING INTERFACES) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST SITE LAYOUT / BUILDING INTERFACES) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Product-development test data only - no survey, engineering, capacity, approval, or code-compliance claim) Tj T* ET
 q
@@ -319,6 +319,63 @@ BT /F2 4.8 Tf 5.76 TL ET
 BT 1 0 0 1 208.932 199.4 Tm (building-apartment-1) Tj T* ET
 BT /F1 5.5 Tf 6.6 TL ET
 BT 1 0 0 1 179.4582 189.4 Tm (45 FT x 90 FT / FFE 445.00 PROVISIONAL) Tj T* ET
+q
+.058824 .090196 .164706 RG
+.996078 .952941 .780392 rg
+1 w
+n
+62.90186 91.77572 m
+62.90186 93.98486 61.111 95.77572 58.90186 95.77572 c
+56.69272 95.77572 54.90186 93.98486 54.90186 91.77572 c
+54.90186 89.56658 56.69272 87.77572 58.90186 87.77572 c
+61.111 87.77572 62.90186 89.56658 62.90186 91.77572 c
+B*
+n 52.90186 91.77572 m 64.90186 91.77572 l S
+n 58.90186 85.77572 m 58.90186 97.77572 l S
+0 0 0 rg
+BT /F2 5.5 Tf 6.6 TL ET
+BT 1 0 0 1 65.90186 95.77572 Tm (CAL-1) Tj T* ET
+BT /F1 4.8 Tf 5.76 TL ET
+BT 1 0 0 1 65.90186 88.77572 Tm (E 186236.737 / N 98463.733) Tj T* ET
+Q
+q
+.058824 .090196 .164706 RG
+.996078 .952941 .780392 rg
+1 w
+n
+320.0499 92.84488 m
+320.0499 95.05402 318.2591 96.84488 316.0499 96.84488 c
+313.8408 96.84488 312.0499 95.05402 312.0499 92.84488 c
+312.0499 90.63574 313.8408 88.84488 316.0499 88.84488 c
+318.2591 88.84488 320.0499 90.63574 320.0499 92.84488 c
+B*
+n 310.0499 92.84488 m 322.0499 92.84488 l S
+n 316.0499 86.84488 m 316.0499 98.84488 l S
+0 0 0 rg
+BT /F2 5.5 Tf 6.6 TL ET
+BT 1 0 0 1 323.0499 96.84488 Tm (CAL-2) Tj T* ET
+BT /F1 4.8 Tf 5.76 TL ET
+BT 1 0 0 1 323.0499 89.84488 Tm (E 186415.312 / N 98464.476) Tj T* ET
+Q
+q
+.058824 .090196 .164706 RG
+.996078 .952941 .780392 rg
+1 w
+n
+320.0657 318.9735 m
+320.0657 321.1826 318.2749 322.9735 316.0657 322.9735 c
+313.8566 322.9735 312.0657 321.1826 312.0657 318.9735 c
+312.0657 316.7643 313.8566 314.9735 316.0657 314.9735 c
+318.2749 314.9735 320.0657 316.7643 320.0657 318.9735 c
+B*
+n 310.0657 318.9735 m 322.0657 318.9735 l S
+n 316.0657 312.9735 m 316.0657 324.9735 l S
+0 0 0 rg
+BT /F2 5.5 Tf 6.6 TL ET
+BT 1 0 0 1 323.0657 322.9735 Tm (CAL-3) Tj T* ET
+BT /F1 4.8 Tf 5.76 TL ET
+BT 1 0 0 1 323.0657 315.9735 Tm (E 186415.323 / N 98621.509) Tj T* ET
+Q
 %MS_GEOM eyJpZCI6ImFjY2Vzcy1lZGdlLWVhc3QtMzR0aCIsImdlb21ldHJ5X3R5cGUiOiJMaW5lU3RyaW5nIiwicGFnZV9jb29yZGluYXRlcyI6W1s1OC45MDE4NTg4Nzk5OTgzMyw5MS43NzU3MjE1OTk5OTUxN10sWzMxNi4wNDk5MTc5MjAwMDM2LDkyLjg0NDg3OTg0MDAwMjM5XV0sInRyYW5zZm9ybSI6eyJsZWZ0Ijo0Mi4wLCJib3R0b20iOjcyLjAsInNjYWxlIjoxLjQ0LCJtaW5feCI6MTg2MjI1LjAsIm1pbl95Ijo5ODQ1MC4wfX0=
 .745098 .070588 .235294 RG
 2.2 w
@@ -796,6 +853,8 @@ BT 1 0 0 1 390 462 Tm (Taxlots: City GIS reference-derived; NOT A SURVEY) Tj T* 
 BT 1 0 0 1 390 451 Tm (Replace taxlot geometry first when a boundary survey arrives) Tj T* ET
 BT 1 0 0 1 390 440 Tm (Constraints: dimensioned/digitized reference geometry) Tj T* ET
 BT 1 0 0 1 390 429 Tm (Utility routing is on discipline sheets; capacity/approval unknown) Tj T* ET
+BT /F2 6.2 Tf 7.44 TL ET
+BT 1 0 0 1 390 281 Tm (CAL-1/2/3: REFERENCE-SCALE TEST CONTROL \227 NOT FOR STAKING) Tj T* ET
 BT /F2 9 Tf 10.8 TL ET
 BT 1 0 0 1 390 418 Tm (BUILDING INTERFACES - PERMANENT TERMINAL IDS) Tj T* ET
 BT /F1 6.4 Tf 7.68 TL ET
@@ -838,14 +897,14 @@ BT /F2 10 Tf 12 TL ET
 BT 1 0 0 1 261.555 31 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F1 6 Tf 7.2 TL ET
-BT 1 0 0 1 32 17 Tm (Sheet MS-01 | Hilyard Street, Eugene, Oregon | Composite site context | Page 1 of 12) Tj T* ET
+BT 1 0 0 1 32 17 Tm (Sheet MS-01 | City of Eugene, Oregon | Composite site context | Page 1 of 12) Tj T* ET
 BT 1 0 0 1 637.594 17 Tm (Geometry SHA-256: bfe1a79b40a2fef8660e...) Tj T* ET
  
 endstream
 endobj
 20 0 obj
 <<
-/Length 6052
+/Length 6078
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -854,7 +913,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD SANITARY SEWER PLAN) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST SANITARY SEWER PLAN) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Reference GIS context plus reviewed-assumption fictional service; no survey, capacity, tie-in approval, or final grading claim) Tj T* ET
 q
@@ -1032,7 +1091,7 @@ endstream
 endobj
 21 0 obj
 <<
-/Length 4632
+/Length 4658
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -1041,7 +1100,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD SANITARY SEWER PROFILE) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST SANITARY SEWER PROFILE) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Stations follow penetration-sanitary to TI-1; all proposed vertical values are provisional test assumptions) Tj T* ET
 .796078 .835294 .882353 RG
@@ -1184,7 +1243,7 @@ endstream
 endobj
 22 0 obj
 <<
-/Length 7046
+/Length 7072
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -1193,7 +1252,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD STORM / ROOF DRAINAGE PLAN) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST STORM / ROOF DRAINAGE PLAN) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Roof-only fictional treatment/conveyance system; final grading, capacity, HGL, infiltration, outfall approval, and survey are unresolved) Tj T* ET
 .972549 .980392 .988235 rg
@@ -1412,7 +1471,7 @@ endstream
 endobj
 23 0 obj
 <<
-/Length 6235
+/Length 6261
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -1421,7 +1480,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD STORM / ROOF DRAINAGE PROFILE) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST STORM / ROOF DRAINAGE PROFILE) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Stations run from permanent roof terminal through planter/flow control/drop manhole to assumed City tie; elevations are test-basis values) Tj T* ET
 .796078 .835294 .882353 RG
@@ -1607,7 +1666,7 @@ endstream
 endobj
 24 0 obj
 <<
-/Length 6095
+/Length 6121
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -1616,7 +1675,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD STORM ASSET SCHEDULE / TEST DETAILS) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST STORM ASSET SCHEDULE / TEST DETAILS) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Stable IDs, numeric test basis, field hold points, and explicit unknowns from the canonical semantic model) Tj T* ET
 BT /F2 8 Tf 9.6 TL ET
@@ -1739,7 +1798,7 @@ endstream
 endobj
 25 0 obj
 <<
-/Length 7536
+/Length 7562
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -1748,7 +1807,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD DOMESTIC WATER / FIRE SERVICE PLAN) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST DOMESTIC WATER / FIRE SERVICE PLAN) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Separate fictional pressure networks from reference GIS context; no pressure, flow, capacity, hydrant-test, tie, meter, backflow, or Fire Marshal approval claim) Tj T* ET
 .945098 .960784 .976471 rg
@@ -1987,7 +2046,7 @@ endstream
 endobj
 26 0 obj
 <<
-/Length 8271
+/Length 8297
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -1996,7 +2055,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 14 Tf 16.8 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD WATER / FIRE SEPARATION SCHEDULE / TEST DETAILS) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST WATER / FIRE SEPARATION SCHEDULE / TEST DETAILS) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Stable pressure-network IDs, horizontal coordination checks, restraint notes, field workflow, and explicit hydraulic/approval unknowns) Tj T* ET
 BT /F2 8 Tf 9.6 TL ET
@@ -2176,7 +2235,7 @@ endstream
 endobj
 27 0 obj
 <<
-/Length 7693
+/Length 7719
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -2185,7 +2244,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD DRY UTILITIES / JOINT TRENCH PLAN) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST DRY UTILITIES / JOINT TRENCH PLAN) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (ALL PROPOSED DRY ROUTES ARE DASHED REVIEWED ASSUMPTIONS - NOT LOCATED UTILITIES OR OWNER-APPROVED DESIGNS) Tj T* ET
 .945098 .960784 .976471 rg
@@ -2460,7 +2519,7 @@ endstream
 endobj
 28 0 obj
 <<
-/Length 6277
+/Length 6303
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -2469,7 +2528,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 14 Tf 16.8 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD DRY UTILITY SCHEDULE / COORDINATION DETAILS) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST DRY UTILITY SCHEDULE / COORDINATION DETAILS) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Stable network IDs, joint-trench relationships, owner gates, field workflow, and explicit unresolved service inputs) Tj T* ET
 BT /F2 8 Tf 9.6 TL ET
@@ -2603,7 +2662,7 @@ endstream
 endobj
 29 0 obj
 <<
-/Length 8485
+/Length 8511
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -2612,7 +2671,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD GRADING / DRAINAGE PLAN) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST GRADING / DRAINAGE PLAN) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (City 1999 reference contours explicitly converted NGVD29 to NAVD88; proposed grading is a fictional reviewed assumption) Tj T* ET
 q
@@ -2865,7 +2924,7 @@ endstream
 endobj
 30 0 obj
 <<
-/Length 3344
+/Length 3370
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -2874,7 +2933,7 @@ BT /F2 13 Tf 15.6 TL ET
 BT 1 0 0 1 32 585 Tm (FICTIONAL \227 TEST DATA \227 NOT FOR CONSTRUCTION) Tj T* ET
 0 0 0 rg
 BT /F2 15 Tf 18 TL ET
-BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD EARTHWORK / SITE PREPARATION PLAN) Tj T* ET
+BT 1 0 0 1 32 563 Tm (MODEL STUDIO - HILYARD APARTMENT CIVIL PLAN TEST EARTHWORK / SITE PREPARATION PLAN) Tj T* ET
 BT /F1 7 Tf 8.4 TL ET
 BT 1 0 0 1 32 551 Tm (Screening-only cut/fill and temporary construction geometry; no survey-to-surface volumes or approved erosion-control plan) Tj T* ET
 q
@@ -2975,23 +3034,23 @@ xref
 0000002471 00000 n 
 0000002667 00000 n 
 0000002737 00000 n 
-0000003111 00000 n 
-0000003247 00000 n 
-0000063570 00000 n 
-0000069674 00000 n 
-0000074358 00000 n 
-0000081456 00000 n 
-0000087743 00000 n 
-0000093890 00000 n 
-0000101478 00000 n 
-0000109801 00000 n 
-0000117546 00000 n 
-0000123875 00000 n 
-0000132412 00000 n 
+0000003137 00000 n 
+0000003273 00000 n 
+0000065457 00000 n 
+0000071587 00000 n 
+0000076297 00000 n 
+0000083421 00000 n 
+0000089734 00000 n 
+0000095907 00000 n 
+0000103521 00000 n 
+0000111870 00000 n 
+0000119641 00000 n 
+0000125996 00000 n 
+0000134559 00000 n 
 trailer
 <<
 /ID 
-[<1c763f0ce112089f628456cf26c95023><1c763f0ce112089f628456cf26c95023>]
+[<4011145c54dc14bdf2ca47947e914b85><4011145c54dc14bdf2ca47947e914b85>]
 % ReportLab generated PDF document -- digest (opensource)
 
 /Info 17 0 R
@@ -2999,5 +3058,5 @@ trailer
 /Size 31
 >>
 startxref
-135808
+137981
 %%EOF

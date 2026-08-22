@@ -53,6 +53,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "taxlot"
     },
     {
@@ -108,6 +109,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "taxlot"
     },
     {
@@ -159,6 +161,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "taxlot"
     },
     {
@@ -230,6 +233,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "taxlot"
     },
     {
@@ -303,6 +307,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": null,
       "type": "property_limit"
     },
     {
@@ -348,6 +353,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "utility_easement"
     },
     {
@@ -393,6 +399,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "utility_easement"
     },
     {
@@ -439,6 +446,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "sanitary_easement"
     },
     {
@@ -493,6 +501,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "right_of_way_dedication"
     },
     {
@@ -586,6 +595,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "wetland_resource_area"
     },
     {
@@ -643,6 +653,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": null,
       "type": "building_pad"
     },
     {
@@ -704,6 +715,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": null,
       "type": "building"
     },
     {
@@ -774,6 +786,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "storm",
       "type": "stormwater_facility"
     },
     {
@@ -836,6 +849,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "dry_utilities",
       "type": "shared_dry_utility_trench"
     },
     {
@@ -896,6 +910,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "dry_utilities",
       "type": "dry_utility_coordination_zone"
     },
     {
@@ -942,6 +957,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "grading",
       "type": "grading_limit"
     },
     {
@@ -991,6 +1007,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "grading",
       "type": "earthwork_fill_area"
     },
     {
@@ -1040,6 +1057,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "grading",
       "type": "earthwork_cut_area"
     },
     {
@@ -1090,6 +1108,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "construction_erosion",
       "type": "temporary_disturbance_limit"
     },
     {
@@ -1140,6 +1159,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "construction_erosion",
       "type": "temporary_construction_entrance"
     },
     {
@@ -1190,6 +1210,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "construction_erosion",
       "type": "temporary_stockpile"
     }
   ],
@@ -1285,6 +1306,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "street_access_edge"
     },
     {
@@ -1322,6 +1344,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "street_edge"
     },
     {
@@ -1356,6 +1379,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "sanitary",
       "type": "sanitary_service"
     },
     {
@@ -1391,6 +1415,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "sanitary",
       "type": "sanitary_service"
     },
     {
@@ -1435,6 +1460,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "sanitary",
       "type": "sanitary_main_existing"
     },
     {
@@ -1471,6 +1497,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "sanitary",
       "type": "sanitary_main_existing"
     },
     {
@@ -1504,6 +1531,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "roof_drainage",
       "type": "roof_leader"
     },
     {
@@ -1537,6 +1565,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "roof_drainage",
       "type": "roof_leader"
     },
     {
@@ -1571,6 +1600,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "storm",
       "type": "storm_lateral"
     },
     {
@@ -1605,6 +1635,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "storm",
       "type": "storm_lateral"
     },
     {
@@ -1638,6 +1669,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "storm",
       "type": "storm_underdrain"
     },
     {
@@ -1672,6 +1704,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "storm",
       "type": "storm_main"
     },
     {
@@ -1707,6 +1740,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "storm",
       "type": "storm_main"
     },
     {
@@ -1744,6 +1778,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "storm",
       "type": "storm_main_existing"
     },
     {
@@ -1794,6 +1829,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "domestic_water",
       "type": "water_main_existing"
     },
     {
@@ -1828,6 +1864,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "domestic_water",
       "type": "domestic_water_service"
     },
     {
@@ -1861,6 +1898,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "domestic_water",
       "type": "domestic_water_service"
     },
     {
@@ -1894,6 +1932,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "domestic_water",
       "type": "domestic_water_service"
     },
     {
@@ -1928,6 +1967,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "fire_water",
       "type": "fire_service"
     },
     {
@@ -1961,6 +2001,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "fire_water",
       "type": "fire_service"
     },
     {
@@ -1994,6 +2035,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "fire_water",
       "type": "fire_service"
     },
     {
@@ -2027,6 +2069,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "fire_water",
       "type": "fire_service"
     },
     {
@@ -2060,6 +2103,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "fire_water",
       "type": "fire_department_connection_branch"
     },
     {
@@ -2110,6 +2154,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "dry_utilities",
       "type": "shared_dry_utility_trench_centerline"
     },
     {
@@ -2147,6 +2192,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "power",
       "type": "electric_conduit_bank_assumption"
     },
     {
@@ -2184,6 +2230,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "power",
       "type": "electric_conduit_bank_assumption"
     },
     {
@@ -2221,6 +2268,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "power",
       "type": "electric_service_conduit_assumption"
     },
     {
@@ -2259,6 +2307,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "telecom_fiber",
       "type": "telecom_conduit_bank_assumption"
     },
     {
@@ -2301,6 +2350,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "telecom_fiber",
       "type": "telecom_conduit_bank_assumption"
     },
     {
@@ -2338,6 +2388,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "gas",
       "type": "gas_service_assumption"
     },
     {
@@ -2379,6 +2430,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "gas",
       "type": "gas_service_assumption"
     },
     {
@@ -2416,6 +2468,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "site_lighting",
       "type": "site_lighting_conduit_assumption"
     },
     {
@@ -2453,6 +2506,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "site_lighting",
       "type": "site_lighting_conduit_assumption"
     },
     {
@@ -2495,6 +2549,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "grading",
       "type": "existing_contour_reference"
     },
     {
@@ -2533,6 +2588,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "grading",
       "type": "existing_contour_reference"
     },
     {
@@ -2603,6 +2659,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "grading",
       "type": "existing_contour_reference"
     },
     {
@@ -2685,6 +2742,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "grading",
       "type": "existing_contour_reference"
     },
     {
@@ -2803,6 +2861,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "grading",
       "type": "existing_contour_reference"
     },
     {
@@ -2845,6 +2904,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": "grading",
       "type": "existing_contour_reference"
     },
     {
@@ -2889,6 +2949,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "grading",
       "type": "proposed_contour"
     },
     {
@@ -2949,6 +3010,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "grading",
       "type": "proposed_contour"
     },
     {
@@ -2997,6 +3059,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "grading",
       "type": "proposed_contour"
     },
     {
@@ -3043,6 +3106,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "grading",
       "type": "grade_break"
     },
     {
@@ -3076,6 +3140,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "grading",
       "type": "surface_drainage_arrow"
     },
     {
@@ -3109,6 +3174,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "grading",
       "type": "surface_drainage_arrow"
     },
     {
@@ -3142,6 +3208,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": "grading",
       "type": "surface_drainage_arrow"
     },
     {
@@ -3184,6 +3251,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": "construction_erosion",
       "type": "silt_fence"
     }
   ],
@@ -5276,6 +5344,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": null,
       "type": "existing_reference_surface",
       "verticalDatum": "NAVD88"
     },
@@ -5359,6 +5428,7 @@
         "status": "generated"
       },
       "searchable": true,
+      "system": null,
       "type": "existing_reference_surface",
       "verticalDatum": "NAVD88"
     },
@@ -5437,6 +5507,7 @@
         "status": "reference-derived"
       },
       "searchable": true,
+      "system": null,
       "type": "existing_reference_surface",
       "verticalDatum": "NAVD88"
     },
@@ -5528,6 +5599,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": null,
       "type": "proposed_grade_surface",
       "verticalDatum": "NAVD88"
     },
@@ -5579,6 +5651,7 @@
         "status": "reviewed_assumption"
       },
       "searchable": true,
+      "system": null,
       "type": "building_subgrade_surface",
       "verticalDatum": "NAVD88"
     }

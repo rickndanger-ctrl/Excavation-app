@@ -34,6 +34,93 @@ def geometry_digest(model: dict[str, Any]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def build_calibration_benchmark(model: dict[str, Any]) -> dict[str, Any] | None:
+    """Build a QA-only distance oracle that is never included in app imports."""
+    polygons = {row["id"]: row for row in model["features"]["polygons"]}
+    required = {"property-site-boundary", "building-apartment-1", "pad-apartment-1"}
+    if not required.issubset(polygons):
+        return None
+
+    site = polygons["property-site-boundary"]["coordinates"]
+    building = polygons["building-apartment-1"]["coordinates"]
+    pad = polygons["pad-apartment-1"]["coordinates"]
+
+    controls = [
+        ("CAL-1", "Southwest parcel corner", site[0]),
+        ("CAL-2", "Southeast parcel corner", site[1]),
+        ("CAL-3", "Northeast parcel bend", site[2]),
+    ]
+
+    def check(
+        check_id: str,
+        label: str,
+        start: list[float],
+        end: list[float],
+        start_ref: tuple[str, int],
+        end_ref: tuple[str, int],
+    ) -> dict[str, Any]:
+        return {
+            "id": check_id,
+            "label": label,
+            "start": start,
+            "end": end,
+            "expected_distance_ft": round(math.dist(start, end), 6),
+            "distance_type": "horizontal_plan_distance",
+            "withheld_from_app_import": True,
+            "pdf_geometry_refs": {
+                "start": {"feature_id": start_ref[0], "vertex_index": start_ref[1]},
+                "end": {"feature_id": end_ref[0], "vertex_index": end_ref[1]},
+            },
+        }
+
+    checks = [
+        check("building_width", "Building south wall", building[0], building[1], ("building-apartment-1", 0), ("building-apartment-1", 1)),
+        check("building_length", "Building east wall", building[1], building[2], ("building-apartment-1", 1), ("building-apartment-1", 2)),
+        check("building_diagonal", "Building diagonal", building[0], building[2], ("building-apartment-1", 0), ("building-apartment-1", 2)),
+        check("pad_width", "Building pad south edge", pad[0], pad[1], ("pad-apartment-1", 0), ("pad-apartment-1", 1)),
+        check("pad_length", "Building pad east edge", pad[1], pad[2], ("pad-apartment-1", 1), ("pad-apartment-1", 2)),
+        check("pad_diagonal", "Building pad diagonal", pad[0], pad[2], ("pad-apartment-1", 0), ("pad-apartment-1", 2)),
+        check("south_frontage", "South parcel frontage", site[0], site[1], ("property-site-boundary", 0), ("property-site-boundary", 1)),
+        check("east_frontage", "East parcel frontage", site[1], site[2], ("property-site-boundary", 1), ("property-site-boundary", 2)),
+        check("building_sw_to_parcel_sw", "Building SW to parcel SW", building[0], site[0], ("building-apartment-1", 0), ("property-site-boundary", 0)),
+        check("building_se_to_parcel_se", "Building SE to parcel SE", building[1], site[1], ("building-apartment-1", 1), ("property-site-boundary", 1)),
+        check("building_ne_to_parcel_ne", "Building NE to parcel NE", building[2], site[2], ("building-apartment-1", 2), ("property-site-boundary", 2)),
+        check("pad_ne_to_parcel_ne", "Pad NE to parcel NE", pad[2], site[2], ("pad-apartment-1", 2), ("property-site-boundary", 2)),
+    ]
+    spatial = model["spatial_reference"]
+    return {
+        "schema_version": "civil-plan-factory.calibration-benchmark/v0.1.0",
+        "disclaimer": DISCLAIMER,
+        "purpose": "Sealed QA oracle for testing plan calibration; not an app import and not construction control.",
+        "source_basis": {
+            "parcel_feature_id": "property-site-boundary",
+            "taxlot_source_id": "src-eugene-taxlots-gis",
+            "parcel_authority": "City GIS reference geometry; not a boundary survey or staking authority.",
+            "design_status": "Exact fictional finished-site geometry on the source-locked parcel.",
+        },
+        "coordinate_basis": {
+            "horizontal_crs": spatial["horizontal_crs"],
+            "units": spatial["horizontal_units"],
+            "authority": spatial["tolerances"]["source_geometry_accuracy"],
+        },
+        "visible_controls": [
+            {
+                "id": control_id,
+                "label": label,
+                "coordinates": coordinates,
+                "status": "reference_scale_test_control_not_for_staking",
+            }
+            for control_id, label, coordinates in controls
+        ],
+        "acceptance": {
+            "maximum_absolute_error_ft": 0.25,
+            "maximum_relative_error_percent": 0.5,
+            "note": "Product QA tolerance for the generated vector plan; not a survey or construction tolerance.",
+        },
+        "sealed_checks": checks,
+    }
+
+
 def _geojson_collection(features: list[dict[str, Any]], geometry_type: str) -> dict[str, Any]:
     rows = []
     for feature in features:
@@ -249,6 +336,28 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
         artifact.get("building_annotation", "45 FT x 90 FT / FFE 445.00 PROVISIONAL"),
     )
 
+    benchmark = build_calibration_benchmark(model)
+    if benchmark:
+        for control in benchmark["visible_controls"]:
+            x, y = xy(control["coordinates"])
+            pdf.saveState()
+            pdf.setStrokeColor(colors.HexColor("#0f172a"))
+            pdf.setFillColor(colors.HexColor("#fef3c7"))
+            pdf.setLineWidth(1.0)
+            pdf.circle(x, y, 4.0, fill=1, stroke=1)
+            pdf.line(x - 6, y, x + 6, y)
+            pdf.line(x, y - 6, x, y + 6)
+            pdf.setFillColor(colors.black)
+            pdf.setFont("Helvetica-Bold", 5.5)
+            pdf.drawString(x + 7, y + 4, control["id"])
+            pdf.setFont("Helvetica", 4.8)
+            pdf.drawString(
+                x + 7,
+                y - 3,
+                f"E {control['coordinates'][0]:.3f} / N {control['coordinates'][1]:.3f}",
+            )
+            pdf.restoreState()
+
     for line in model["features"]["lines"]:
         mark_geometry(pdf, line["id"], "LineString", line["coordinates"], xy)
         if line.get("system") in {"domestic_water", "fire_water", "power", "telecom_fiber", "gas", "site_lighting", "dry_utilities", "grading", "construction_erosion"}:
@@ -335,6 +444,9 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     ])
     for offset, note in enumerate(basis):
         pdf.drawString(notes_x, 506 - offset * 11, note)
+    if benchmark:
+        pdf.setFont("Helvetica-Bold", 6.2)
+        pdf.drawString(notes_x, 281, "CAL-1/2/3: REFERENCE-SCALE TEST CONTROL — NOT FOR STAKING")
 
     pdf.setFont("Helvetica-Bold", 9)
     pdf.drawString(notes_x, 418, "BUILDING INTERFACES - PERMANENT TERMINAL IDS")
@@ -2120,6 +2232,9 @@ def build_project(model: dict[str, Any], output_dir: Path, qgis_app: Path) -> in
     create_geopackage(model, gpkg_path, qgis_app)
     digest = geometry_digest(model)
     create_vector_plan(model, pdf_path, digest)
+    benchmark = build_calibration_benchmark(model)
+    if benchmark:
+        _write_json(output_dir / "calibration-benchmark.json", benchmark)
     parity = verify_parity(model, semantic, pdf_path, gpkg_path, qgis_app)
     _write_json(output_dir / "parity-report.json", parity)
     return 0 if parity["status"] == "valid" else 1

@@ -203,8 +203,26 @@ class SiteLayoutBuildTests(unittest.TestCase):
             expected = {
                 "hilyard-site-layout.pdf", "hilyard-site-layout.gpkg",
                 "semantic-manifest.json", "validation-report.json", "parity-report.json",
+                "calibration-benchmark.json",
             }
             self.assertEqual(expected, {path.name for path in output.iterdir()})
+
+            benchmark = json.loads((output / "calibration-benchmark.json").read_text())
+            self.assertEqual("civil-plan-factory.calibration-benchmark/v0.1.0", benchmark["schema_version"])
+            self.assertEqual(DISCLAIMER, benchmark["disclaimer"])
+            self.assertEqual("EPSG:6823", benchmark["coordinate_basis"]["horizontal_crs"])
+            self.assertEqual("international_foot", benchmark["coordinate_basis"]["units"])
+            self.assertEqual("reference-scale; not surveyed", benchmark["coordinate_basis"]["authority"])
+            self.assertEqual(3, len(benchmark["visible_controls"]))
+            self.assertGreaterEqual(len(benchmark["sealed_checks"]), 10)
+            checks = {row["id"]: row for row in benchmark["sealed_checks"]}
+            self.assertTrue(
+                {"building_width", "building_length", "building_diagonal"}.issubset(checks),
+            )
+            self.assertAlmostEqual(45.0, checks["building_width"]["expected_distance_ft"], places=6)
+            self.assertAlmostEqual(90.0, checks["building_length"]["expected_distance_ft"], places=6)
+            self.assertAlmostEqual(math.hypot(45.0, 90.0), checks["building_diagonal"]["expected_distance_ft"], places=6)
+            self.assertTrue(all(row["withheld_from_app_import"] for row in benchmark["sealed_checks"]))
 
             from pypdf import PdfReader
             reader = PdfReader(output / "hilyard-site-layout.pdf")
