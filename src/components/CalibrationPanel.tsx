@@ -34,7 +34,7 @@ export function CalibrationPanel({
   return (
     <section className="calibration-panel">
       <div className="calibration-panel__header">
-        <h3>Plan Calibration</h3>
+        <h3>Field GPS Alignment</h3>
         {count > 0 && (
           <button
             type="button"
@@ -49,7 +49,7 @@ export function CalibrationPanel({
 
       <p className={`calibration-panel__status${isCalibrated ? ' calibration-panel__status--active' : ''}`}>
         {isCalibrated
-          ? `Calibration active — ${count} control point${count !== 1 ? 's' : ''}`
+          ? `GPS alignment active — ${count} control point${count !== 1 ? 's' : ''}`
           : `${count}/2 control points set`}
       </p>
 

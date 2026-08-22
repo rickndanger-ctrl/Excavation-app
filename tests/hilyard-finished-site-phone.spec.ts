@@ -12,6 +12,8 @@ test('shows the complete Hilyard finished-job base and preloaded measurement tip
   await (await chooser).setFiles(manifest);
 
   await expect(page.getByRole('status')).toContainText('Hilyard Apartment Civil Plan Test');
+  await expect(page.getByRole('status')).toContainText('Plan calibration verified · 15/15 checks');
+  await expect(page.getByRole('status')).toContainText('Reference-scale product QA · not survey or staking control');
   await expect(page.locator('[data-layer-id="finished-site"]')).toHaveCount(11);
   await expect(page.locator('[data-object-id="building-apartment-1"]')).toBeVisible();
   await expect(page.locator('[data-object-id="paving-arrival-court"]')).toBeVisible();

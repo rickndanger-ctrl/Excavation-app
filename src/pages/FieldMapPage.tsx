@@ -301,6 +301,8 @@ export function FieldMapPage() {
     saveCalibrationPoints([]);
   }, []);
 
+  const calibrationSummary = displayPackage.planCalibration;
+
   return (
     <div className="field-app">
 
@@ -358,12 +360,28 @@ export function FieldMapPage() {
       {publishedNotice && (
         <div className="published-package-status" role="status">
           <strong>{publishedNotice}</strong>
+          {calibrationSummary && (
+            <>
+              <span className="published-package-status__calibration">
+                Plan calibration verified · {calibrationSummary.passedCheckCount}/{calibrationSummary.checkCount} checks
+              </span>
+              <span>Reference-scale product QA · not survey or staking control</span>
+            </>
+          )}
           <span>Source PDF excluded from offline package</span>
         </div>
       )}
       {!publishedNotice && displayPackage.disclaimer && (
         <div className="published-package-status" role="status">
           <strong>{displayPackage.disclaimer}</strong>
+          {calibrationSummary && (
+            <>
+              <span className="published-package-status__calibration">
+                Plan calibration verified · {calibrationSummary.passedCheckCount}/{calibrationSummary.checkCount} checks
+              </span>
+              <span>Reference-scale product QA · not survey or staking control</span>
+            </>
+          )}
           <span>Immutable semantic package · verify field conditions and survey control</span>
         </div>
       )}

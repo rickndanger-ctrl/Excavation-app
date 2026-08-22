@@ -188,6 +188,17 @@ export type JobsitePhase = {
   summary?: string;
 };
 
+export type PlanCalibrationSummary = {
+  status: 'passed_product_qa';
+  controlCount: number;
+  checkCount: number;
+  passedCheckCount: number;
+  maximumAbsoluteErrorFt: number;
+  maximumRelativeErrorPercent: number;
+  controlRmsResidualFt: number;
+  authority: string;
+};
+
 /** Field-tracked completion state for a single blueprint object, set by the crew on site. */
 export type ObjectStatus = 'not_started' | 'in_progress' | 'done';
 
@@ -200,6 +211,7 @@ export type JobsitePackage = {
   schemaVersion?: string;
   canonicalModelVersion?: string;
   disclaimer?: string;
+  planCalibration?: PlanCalibrationSummary;
   unavailable?: Array<Record<string, unknown>>;
   phases: JobsitePhase[];
   downloadedAt?: string;

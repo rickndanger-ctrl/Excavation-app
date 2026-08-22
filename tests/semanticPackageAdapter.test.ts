@@ -6,6 +6,7 @@ import { parseSemanticJobsiteManifest } from '../src/lib/semanticPackageAdapter'
 const manifestPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-sanitary/semantic-manifest.json';
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as unknown;
 const combinedManifestPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-water-fire/semantic-manifest.json';
+const calibratedManifestPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-grading-site-prep/semantic-manifest.json';
 type Fixture = {
   schema_version: string;
   disclaimer: string;
@@ -84,4 +85,21 @@ test('splits combined producer water geometry into independent domestic, fire, a
   assert.equal(jobsite.objects.find((feature) => feature.id === 'domestic-water-seg-02')?.layerId, 'domestic-water');
   assert.equal(jobsite.objects.find((feature) => feature.id === 'fire-water-seg-03')?.layerId, 'fire-water');
   assert.equal(jobsite.objects.find((feature) => feature.id === 'water-public-main-34th-reference')?.layerId, 'water-reference');
+});
+
+test('imports only the publish-safe plan calibration summary without sealed answers', () => {
+  const calibrated = JSON.parse(fs.readFileSync(calibratedManifestPath, 'utf8')) as Record<string, unknown>;
+  const jobsite = parseSemanticJobsiteManifest(calibrated);
+
+  assert.deepEqual(jobsite.planCalibration, {
+    status: 'passed_product_qa',
+    controlCount: 3,
+    checkCount: 15,
+    passedCheckCount: 15,
+    maximumAbsoluteErrorFt: 0.000000499,
+    maximumRelativeErrorPercent: 0.000000799,
+    controlRmsResidualFt: 0,
+    authority: 'Product QA on reference-scale test geometry; not survey or staking control.',
+  });
+  assert.equal('sealedChecks' in (calibrated.planCalibration as Record<string, unknown>), false);
 });

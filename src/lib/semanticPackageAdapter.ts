@@ -1,4 +1,4 @@
-import type { BlueprintObject, FeatureGeometry, JobsitePackage, Point } from '../types/jobsite';
+import type { BlueprintObject, FeatureGeometry, JobsitePackage, PlanCalibrationSummary, Point } from '../types/jobsite';
 
 const SUPPORTED_SCHEMA = 'excavation-field-map.jobsite-package/v0.1.0';
 const REQUIRED_DISCLAIMER = 'NOT FOR CONSTRUCTION';
@@ -28,6 +28,7 @@ type UnknownRecord = Record<string, unknown> & {
   layers?: unknown[];
   phases?: unknown[];
   plan?: { widthFt?: number; heightFt?: number };
+  planCalibration?: unknown;
   unavailable?: Array<Record<string, unknown>>;
   userHeading?: number;
   geometryFeatureId?: string;
@@ -36,6 +37,45 @@ type UnknownRecord = Record<string, unknown> & {
   terminalFeatureId?: string | null;
   verticalDatum?: string;
 };
+
+function planCalibration(value: unknown): PlanCalibrationSummary | undefined {
+  if (value === undefined) return undefined;
+  const summary = record(value, 'planCalibration');
+  if ('sealedChecks' in summary) {
+    throw new Error('planCalibration must not include sealed benchmark answers');
+  }
+  if (summary.status !== 'passed_product_qa') {
+    throw new Error('planCalibration status must be passed_product_qa');
+  }
+  const numericKeys = [
+    'controlCount', 'checkCount', 'passedCheckCount', 'maximumAbsoluteErrorFt',
+    'maximumRelativeErrorPercent', 'controlRmsResidualFt',
+  ] as const;
+  for (const key of numericKeys) {
+    if (!Number.isFinite(summary[key]) || Number(summary[key]) < 0) {
+      throw new Error(`planCalibration ${key} must be a non-negative finite number`);
+    }
+  }
+  if (![summary.controlCount, summary.checkCount, summary.passedCheckCount].every(Number.isInteger)) {
+    throw new Error('planCalibration counts must be integers');
+  }
+  if (summary.passedCheckCount !== summary.checkCount || Number(summary.checkCount) === 0) {
+    throw new Error('planCalibration must report all checks passed');
+  }
+  if (typeof summary.authority !== 'string' || !summary.authority.trim()) {
+    throw new Error('planCalibration authority is required');
+  }
+  return {
+    status: 'passed_product_qa',
+    controlCount: Number(summary.controlCount),
+    checkCount: Number(summary.checkCount),
+    passedCheckCount: Number(summary.passedCheckCount),
+    maximumAbsoluteErrorFt: Number(summary.maximumAbsoluteErrorFt),
+    maximumRelativeErrorPercent: Number(summary.maximumRelativeErrorPercent),
+    controlRmsResidualFt: Number(summary.controlRmsResidualFt),
+    authority: summary.authority,
+  };
+}
 
 function record(value: unknown, name: string): UnknownRecord {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${name} must be an object`);
@@ -303,6 +343,7 @@ export function parseSemanticJobsiteManifest(input: unknown): JobsitePackage {
     schemaVersion: source.schema_version,
     canonicalModelVersion: source.canonical_model_version,
     disclaimer: source.disclaimer,
+    planCalibration: planCalibration(source.planCalibration),
     unavailable: structuredClone(source.unavailable ?? []),
     phases: structuredClone(sourcePhases) as JobsitePackage['phases'],
     layers: consumerLayers(sourceLayers),
