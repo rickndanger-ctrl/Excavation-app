@@ -3,6 +3,12 @@ import { expect, test } from '@playwright/test';
 const manifestPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-sanitary/semantic-manifest.json';
 const planPath = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-sanitary/hilyard-site-layout.pdf';
 
+test('opens on the model instead of covering it with a preselected sample detail sheet', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4175');
+
+  await expect(page.locator('.field-sheet')).not.toHaveClass(/open/);
+});
+
 test('imports, searches, and clicks the real Hilyard point, line, and polygon package', async ({ page }) => {
   await page.goto('http://127.0.0.1:4175');
   await page.getByRole('button', { name: 'Menu' }).click();

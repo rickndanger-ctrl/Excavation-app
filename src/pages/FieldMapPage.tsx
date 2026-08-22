@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { defaultSelectedObjectId } from '../data/sampleWillowCreek';
 import { ForemanNotes } from '../components/ForemanNotes';
 import { LeftSidebar } from '../components/LeftSidebar';
 import { ObjectDetailsPanel } from '../components/ObjectDetailsPanel';
@@ -53,7 +52,7 @@ export function FieldMapPage() {
   const modelPackageInputRef = useRef<HTMLInputElement>(null);
 
   const { setStatus, getStatus } = useObjectStatus();
-  const [selectedObjectId, setSelectedObjectId] = useState(defaultSelectedObjectId);
+  const [selectedObjectId, setSelectedObjectId] = useState('');
   const [recenterToken, setRecenterToken] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSidebarUpload, setShowSidebarUpload] = useState(false);
