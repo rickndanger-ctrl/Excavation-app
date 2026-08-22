@@ -82,17 +82,17 @@ class ReviewedSourceAuthoringTests(unittest.TestCase):
         )
 
         self.assertEqual("available", availability["status"])
-        self.assertEqual("reading-public-library-reviewed-v3", availability["adapter_id"])
+        self.assertEqual("reading-public-library-reviewed-v4", availability["adapter_id"])
         self.assertEqual(
             READING_SHA256,
             adapter_for_checksum(READING_SHA256).source_sha256,
         )
         self.assertEqual("complete", result["status"])
-        self.assertEqual(50, result["authored_feature_count"])
+        self.assertEqual(58, result["authored_feature_count"])
         self.assertEqual(
             {
                 "dry-utilities": 2,
-                "finished-site": 9,
+                "finished-site": 17,
                 "grading": 24,
                 "sanitary": 4,
                 "storm": 9,
@@ -102,7 +102,7 @@ class ReviewedSourceAuthoringTests(unittest.TestCase):
         )
         self.assertEqual([], [issue.to_dict() for issue in validate_model(model)])
         self.assertEqual(DISCLAIMER, model["project"]["disclaimer"])
-        self.assertEqual("reading-reviewed-v3", model["project"]["revision"])
+        self.assertEqual("reading-reviewed-v4", model["project"]["revision"])
         self.assertEqual([], model["networks"], "unknown connectivity must not become a network")
         self.assertEqual("display_unit", model["spatial_reference"]["horizontal_units"])
         self.assertNotIn(
@@ -176,6 +176,23 @@ class ReviewedSourceAuthoringTests(unittest.TestCase):
             "reviewed_finished_site_model",
             model["artifact_contract"]["plan_availability"],
         )
+        self.assertEqual(
+            "Show field employees the recognizable finished job before technical layers are enabled.",
+            model["artifact_contract"]["experience_goal"],
+        )
+        self.assertEqual("visual_base", model["artifact_contract"]["base_layer_role"])
+        self.assertEqual(
+            "approximate_plan_measurement",
+            model["artifact_contract"].get("measurement_contract", {}).get("mode"),
+        )
+        self.assertEqual(
+            "Verify in field - not for construction staking.",
+            model["artifact_contract"].get("measurement_contract", {}).get("warning"),
+        )
+        self.assertEqual(
+            "unavailable_until_sheet_scale_calibration",
+            model["artifact_contract"].get("measurement_contract", {}).get("status"),
+        )
         self.assertNotIn(
             "semantic_review_grid",
             model["artifact_contract"]["plan_availability"],
@@ -187,10 +204,14 @@ class ReviewedSourceAuthoringTests(unittest.TestCase):
         self.assertEqual(
             {
                 "reading-library-footprint",
+                "reading-existing-west-concrete-walk",
                 "reading-proposed-concrete-walk",
                 "reading-proposed-unit-paver-terrace",
                 "reading-proposed-planting-bed-north",
                 "reading-proposed-planting-bed-south",
+                "reading-existing-south-lawn",
+                "reading-existing-south-sidewalk",
+                "reading-existing-east-sidewalk",
             },
             set(polygons),
         )
@@ -199,10 +220,27 @@ class ReviewedSourceAuthoringTests(unittest.TestCase):
             "reading-seat-wall-upper",
             "reading-seat-wall-middle",
             "reading-seat-wall-lower",
+            "reading-east-granite-curb",
+            "reading-south-granite-curb",
+            "reading-terrace-stair-upper",
+            "reading-terrace-stair-lower",
             "reading-proposed-contour-155",
             "reading-proposed-contour-156",
             "reading-proposed-contour-157",
         }.issubset(lines))
+        building = polygons["reading-library-footprint"]["field_detail"]["source_review_coordinates"]
+        self.assertGreater(max(point[0] for point in building) - min(point[0] for point in building), 35)
+        self.assertLess(max(point[1] for point in building) - min(point[1] for point in building), 25)
+        self.assertLess(
+            max(point[0] for point in building),
+            min(point[0] for point in polygons["reading-proposed-unit-paver-terrace"]["field_detail"]["source_review_coordinates"]),
+            "the terrace must sit east of the library like L1.1",
+        )
+        self.assertLess(
+            max(point[1] for point in building),
+            min(point[1] for point in polygons["reading-existing-south-sidewalk"]["field_detail"]["source_review_coordinates"]),
+            "the School Street sidewalk must sit south of the library",
+        )
         self.assertEqual(
             {"reading-proposed-terrace-finish-grade"},
             set(surfaces),
@@ -233,7 +271,7 @@ class ReviewedSourceAuthoringTests(unittest.TestCase):
         )
 
         semantic = build_semantic_manifest(model)
-        self.assertEqual(5, len(semantic["areas"]))
+        self.assertEqual(9, len(semantic["areas"]))
         self.assertEqual(1, len(semantic["surfaces"]))
         self.assertGreaterEqual(len(semantic["linearFeatures"]), 8)
         self.assertEqual("", semantic["plan"]["imageUrl"])
@@ -304,7 +342,7 @@ class ReviewedSourceAuthoringTests(unittest.TestCase):
 
             self.assertEqual("available", availability["status"])
             self.assertEqual("complete", result["status"])
-            self.assertEqual(50, result["authored_feature_count"])
+            self.assertEqual(58, result["authored_feature_count"])
 
     def test_reviewed_adapter_refuses_checksum_matching_path_outside_project_bundle(self):
         root, workspace = self._workspace_with_reading_intake()
@@ -778,8 +816,8 @@ class ReviewedSourceAuthoringTests(unittest.TestCase):
             [layer["id"] for layer in semantic["layers"]],
         )
         self.assertEqual(36, len(semantic["objects"]))
-        self.assertEqual(8, len(semantic["linearFeatures"]))
-        self.assertEqual(5, len(semantic["areas"]))
+        self.assertEqual(12, len(semantic["linearFeatures"]))
+        self.assertEqual(9, len(semantic["areas"]))
         self.assertEqual(1, len(semantic["surfaces"]))
         self.assertEqual([], semantic["utilities"])
         self.assertIn("uncalibrated", semantic["plan"]["coordinateBasis"].lower())
