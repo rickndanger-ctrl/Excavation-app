@@ -6,22 +6,35 @@ validator, and builder.
 """
 
 from collections import Counter
+import copy
+from contextlib import contextmanager
 from datetime import datetime, timezone
+import fcntl
+from functools import wraps
 import hashlib
 import json
 import math
 from pathlib import Path
 import re
 import shutil
+import tempfile
+import threading
 from typing import Any
 
 from .build import build_project
-from .io import load_project_bundle
+from .io import (
+    PROJECT_BUNDLE_CITATION_SCOPE,
+    load_project_bundle,
+    resolve_local_source_citation,
+    resolve_model_source_citations,
+)
 from .validation import DISCLAIMER, validate_model
+from .reviewed_sources import adapter_for_checksum
 
 
 HANDOFF_SCHEMA = "civil-plan-factory.field-map-handoff/v0.1.0"
 FIELD_MAP_SCHEMA = "excavation-field-map.jobsite-package/v0.1.0"
+SEMANTIC_PUBLICATION_SCHEMA = "excavation-field-map.semantic-publication/v1"
 DEFAULT_QGIS_APP = Path("/Applications/QGIS-final-4_2_1.app")
 _SLUG = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 OPERATOR_ACTIVITIES = {
@@ -42,6 +55,11 @@ RESULT_CLASSIFICATIONS = {
 }
 
 
+_PROCESS_PROJECT_LOCKS_GUARD = threading.Lock()
+_PROCESS_PROJECT_LOCKS: dict[str, threading.RLock] = {}
+_PROCESS_PROJECT_LOCK_DEPTH = threading.local()
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -60,11 +78,41 @@ def _elapsed_seconds(started_at: str | None, completed_at: str | None) -> float:
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    temporary.write_text(_json_text(payload), encoding="utf-8")
     temporary.replace(path)
+
+
+def _json_text(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+
+
+def _authored_bundle_sha256(
+    project: dict[str, Any], sources: dict[str, Any], decisions: dict[str, Any]
+) -> str:
+    canonical_project = copy.deepcopy(project)
+    marker = canonical_project.get("reviewed_source_adapter")
+    if isinstance(marker, dict):
+        marker.pop("authored_bundle_sha256", None)
+    payload = {
+        "project": canonical_project,
+        "sources": sources,
+        "decisions": decisions,
+    }
+    encoded = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _project_locked(method):
+    @wraps(method)
+    def locked(self, slug: str, *args, **kwargs):
+        with self._project_mutation_lock(slug):
+            with self._project_filesystem_lock(slug):
+                self._recover_interrupted_authoring(slug)
+                return method(self, slug, *args, **kwargs)
+
+    return locked
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -143,8 +191,52 @@ class StudioWorkspace:
         self.projects_root = self.repository / "projects"
         self.state_root = Path(state_root or self.repository / ".model-studio").resolve()
         self.qgis_app = Path(qgis_app).resolve()
+        self._project_locks_guard = threading.Lock()
+        self._project_locks: dict[str, Any] = {}
         self.projects_root.mkdir(parents=True, exist_ok=True)
         self.state_root.mkdir(parents=True, exist_ok=True)
+
+    def _project_mutation_lock(self, slug: str):
+        with self._project_locks_guard:
+            lock = self._project_locks.get(slug)
+            if lock is None:
+                lock = threading.RLock()
+                self._project_locks[slug] = lock
+            return lock
+
+    @contextmanager
+    def _project_filesystem_lock(self, slug: str):
+        """Serialize project mutations across workspace instances and processes."""
+
+        self._project_dir(slug)
+        lock_path = self.repository / ".model-studio" / "locks" / f"{slug}.lock"
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        lock_key = str(lock_path)
+        with _PROCESS_PROJECT_LOCKS_GUARD:
+            process_lock = _PROCESS_PROJECT_LOCKS.get(lock_key)
+            if process_lock is None:
+                process_lock = threading.RLock()
+                _PROCESS_PROJECT_LOCKS[lock_key] = process_lock
+        with process_lock:
+            depths = getattr(_PROCESS_PROJECT_LOCK_DEPTH, "depths", None)
+            if depths is None:
+                depths = {}
+                _PROCESS_PROJECT_LOCK_DEPTH.depths = depths
+            if depths.get(lock_key, 0):
+                depths[lock_key] += 1
+                try:
+                    yield
+                finally:
+                    depths[lock_key] -= 1
+                return
+            with lock_path.open("a+b") as lock_file:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+                depths[lock_key] = 1
+                try:
+                    yield
+                finally:
+                    depths.pop(lock_key, None)
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
     def _project_dir(self, slug: str) -> Path:
         if not _SLUG.fullmatch(slug):
@@ -159,6 +251,33 @@ class StudioWorkspace:
         if not project_file.is_file():
             raise FileNotFoundError(f"Unknown project: {slug}")
         return project_file
+
+    def _recover_interrupted_authoring(self, slug: str) -> None:
+        """Restore the sole prior authority left by an interrupted promotion."""
+
+        project_dir = self._project_dir(slug)
+        all_transactions = list(
+            self.projects_root.glob(f".{slug}.authoring-*")
+        )
+        if project_dir.exists():
+            for transaction in all_transactions:
+                shutil.rmtree(transaction)
+            return
+        transactions = [
+            path
+            for path in all_transactions
+            if (path / "previous/project.json").is_file()
+        ]
+        if not transactions:
+            return
+        if len(transactions) != 1:
+            raise ValueError(
+                f"Ambiguous interrupted authoring transactions for {slug}; manual recovery is required"
+            )
+        transaction = transactions[0]
+        (transaction / "previous").replace(project_dir)
+        for stale_transaction in all_transactions:
+            shutil.rmtree(stale_transaction)
 
     def _review_file(self, slug: str) -> Path:
         return self.state_root / "reviews" / f"{slug}.json"
@@ -190,20 +309,145 @@ class StudioWorkspace:
         for path in root.glob("*/handoff-manifest.json"):
             try:
                 handoff = _read_json(path)
-            except (OSError, ValueError, json.JSONDecodeError):
+                run_id = handoff["source_run_id"]
+                run_path = self.state_root / "runs" / slug / run_id
+                run = _read_json(run_path / "run.json")
+                contract = self._publication_contract(
+                    slug, run_id, run_path, run
+                )
+                if path.parent.name != contract["publication_id"]:
+                    raise ValueError("Publication directory is not content addressed")
+                if handoff != contract["handoff"]:
+                    raise ValueError("Published handoff metadata changed")
+                published_hashes = {
+                    name: _sha256(path.parent / name)
+                    for name in contract["artifact_hashes"]
+                }
+                if published_hashes != contract["artifact_hashes"]:
+                    raise ValueError("Published artifact hashes changed")
+            except (
+                KeyError,
+                OSError,
+                TypeError,
+                ValueError,
+                json.JSONDecodeError,
+            ):
                 continue
             publications.append({
                 "publication_id": handoff.get("publication_id"),
                 "published_at": handoff.get("published_at"),
                 "directory": str(path.parent),
                 "import_file": str(path.parent / "semantic-manifest.json"),
+                "offline_import_file": str(
+                    path.parent / "semantic-publication.json"
+                ),
                 "handoff_manifest": str(path),
+                "integrity_status": "verified",
             })
         return max(
             publications,
             key=lambda item: (item.get("published_at") or "", item.get("publication_id") or ""),
             default=None,
         )
+
+    def _publication_contract(
+        self,
+        slug: str,
+        run_id: str,
+        run_path: Path,
+        run: dict[str, Any],
+    ) -> dict[str, Any]:
+        validation_path = run_path / "validation-report.json"
+        parity_path = run_path / "parity-report.json"
+        semantic_path = run_path / "semantic-manifest.json"
+        if run.get("publication_readiness") != "ready" or not all(
+            path.is_file() for path in (validation_path, parity_path, semantic_path)
+        ):
+            raise ValueError("Publication requires a validated run with passing parity")
+        validation = _read_json(validation_path)
+        parity = _read_json(parity_path)
+        semantic = _read_json(semantic_path)
+        if validation.get("status") != "valid" or parity.get("status") != "valid":
+            raise ValueError("Publication gate is no longer valid")
+        if (
+            semantic.get("schema_version") != FIELD_MAP_SCHEMA
+            or semantic.get("disclaimer") != DISCLAIMER
+        ):
+            raise ValueError(
+                "Semantic package does not satisfy the Field Map handoff contract"
+            )
+        artifacts = run.get("artifacts")
+        required_artifacts = {
+            "validation-report.json",
+            "parity-report.json",
+            "semantic-manifest.json",
+        }
+        if (
+            not isinstance(artifacts, dict)
+            or not required_artifacts.issubset(artifacts)
+            or any(Path(name).name != name for name in artifacts)
+        ):
+            raise ValueError("Run artifact lock is invalid")
+        artifact_names = sorted(name for name in artifacts if name != "run.json")
+        current_hashes = {name: _sha256(run_path / name) for name in artifact_names}
+        if current_hashes != artifacts:
+            raise ValueError("Run artifacts changed after validation; rerun before publishing")
+        manifest_json = semantic_path.read_text(encoding="utf-8")
+        envelope = {
+            "publication_schema": SEMANTIC_PUBLICATION_SCHEMA,
+            "package_id": semantic["id"],
+            "package_version": run_id,
+            "content_sha256": hashlib.sha256(
+                manifest_json.encode("utf-8")
+            ).hexdigest(),
+            "created_at": run["completed_at"],
+            "manifest_json": manifest_json,
+        }
+        expected_published_hashes = {
+            **current_hashes,
+            "semantic-publication.json": hashlib.sha256(
+                _json_text(envelope).encode("utf-8")
+            ).hexdigest(),
+        }
+        publication_basis = {
+            "project_fingerprint": run["project_fingerprint"],
+            "artifacts": expected_published_hashes,
+            "contract": {
+                "semantic_manifest": FIELD_MAP_SCHEMA,
+                "offline_publication": SEMANTIC_PUBLICATION_SCHEMA,
+            },
+        }
+        publication_id = hashlib.sha256(
+            json.dumps(
+                publication_basis, sort_keys=True, separators=(",", ":")
+            ).encode()
+        ).hexdigest()
+        handoff = {
+            "schema_version": HANDOFF_SCHEMA,
+            "disclaimer": DISCLAIMER,
+            "publication_id": publication_id,
+            "project_slug": slug,
+            "project_id": semantic.get("id"),
+            "canonical_model_version": semantic.get("canonical_model_version"),
+            "source_run_id": run_id,
+            "project_fingerprint": run["project_fingerprint"],
+            "published_at": run["completed_at"],
+            "consumer": {
+                "application": "Excavation Field Map",
+                "accepted_schema": FIELD_MAP_SCHEMA,
+                "delivery": "local_file_import",
+                "integration_seam": "Choose semantic-publication.json for an immutable offline import; semantic-manifest.json remains available for session-only inspection.",
+                "remote_delivery": "not_configured",
+            },
+            "artifacts": expected_published_hashes,
+        }
+        return {
+            "publication_id": publication_id,
+            "artifact_names": artifact_names,
+            "artifact_hashes": expected_published_hashes,
+            "envelope": envelope,
+            "handoff": handoff,
+        }
 
     def _validation(self, slug: str) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
         try:
@@ -242,11 +486,21 @@ class StudioWorkspace:
         )}
 
     def list_projects(self) -> list[dict[str, Any]]:
+        slugs = {
+            path.parent.name
+            for path in self.projects_root.glob("*/project.json")
+        }
+        for transaction in self.projects_root.glob(".*.authoring-*"):
+            if not (transaction / "previous/project.json").is_file():
+                continue
+            name = transaction.name
+            slugs.add(name[1:].split(".authoring-", 1)[0])
         return [
-            self.project_detail(path.parent.name, include_issues=False)
-            for path in sorted(self.projects_root.glob("*/project.json"))
+            self.project_detail(slug, include_issues=False)
+            for slug in sorted(slugs)
         ]
 
+    @_project_locked
     def project_detail(self, slug: str, *, include_issues: bool = True) -> dict[str, Any]:
         self._project_file(slug)
         model, raw_issues = self._validation(slug)
@@ -275,6 +529,7 @@ class StudioWorkspace:
         current_run = next((run for run in runs if run["is_current"]), None)
         touches = self._operator_touches(slug)
         latest_publication = self._latest_publication(slug)
+        reviewed_authoring = self.reviewed_authoring(slug)
         source_evidence = []
         for source in (model or {}).get("sources", []):
             lock = source.get("lock", {})
@@ -304,6 +559,12 @@ class StudioWorkspace:
         elif runs:
             stage = "authoritative_inputs_changed"
             current_action = "Review changed inputs and revision metadata, then rerun the canonical pipeline."
+        elif reviewed_authoring["status"] == "complete":
+            stage = "canonical_execution"
+            current_action = "Run canonical validation, semantic artifact build, and parity checks."
+        elif reviewed_authoring["status"] == "available":
+            stage = "reviewed_source_authoring"
+            current_action = "Author the checksum-matched reviewed evidence into the canonical model."
         else:
             stage = "intake"
             current_action = "Lock source plans, verify job metadata and revision, then author the canonical model."
@@ -338,6 +599,7 @@ class StudioWorkspace:
             "provenance": self._provenance_summary(model),
             "input_count": input_count,
             "project_file": str(directory / "project.json"),
+            "reviewed_authoring": reviewed_authoring,
             "cleared_reviews": cleared_reviews,
             "runs": runs,
             "current_run": current_run,
@@ -432,6 +694,7 @@ class StudioWorkspace:
         _write_json(directory / "decisions.json", {"disclaimer": DISCLAIMER, "decisions": []})
         return self.project_detail(project_slug)
 
+    @_project_locked
     def add_input(self, slug: str, filename: str, content: bytes) -> dict[str, Any]:
         if not filename.lower().endswith(".pdf") or not content.startswith(b"%PDF-"):
             raise ValueError("Plan-set intake currently accepts PDF files only")
@@ -444,10 +707,15 @@ class StudioWorkspace:
         ledger = _read_json(ledger_path)
         for existing in ledger.get("sources", []):
             if existing.get("id") == source_id:
+                existing_path = resolve_local_source_citation(
+                    project_dir,
+                    existing["citation"],
+                    require_project_bundle=True,
+                )
                 return {
                     "id": source_id,
                     "filename": Path(existing["citation"]).name,
-                    "path": existing["citation"],
+                    "path": str(existing_path),
                     "sha256": digest,
                     "provenance_status": existing["provenance_status"],
                     "supports": existing.get("supports", []),
@@ -464,7 +732,8 @@ class StudioWorkspace:
             "title": Path(filename).name,
             "authority": "Unreviewed operator plan-set intake",
             "provenance_status": "unknown",
-            "citation": str(stored_path),
+            "citation": stored_path.relative_to(project_dir.resolve()).as_posix(),
+            "citation_scope": PROJECT_BUNDLE_CITATION_SCOPE,
             "lock": {"kind": "local_file", "status": "checksum_locked", "sha256": digest},
             "supports": [],
             "unavailable_reason": "Content has not been reviewed into the authoritative civil job model.",
@@ -481,6 +750,219 @@ class StudioWorkspace:
             "provenance_status": "unknown",
             "supports": [],
         }
+
+    @_project_locked
+    def reviewed_authoring(self, slug: str) -> dict[str, Any]:
+        project_path = self._project_file(slug)
+        try:
+            project = _read_json(project_path)
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            return {
+                "status": "unavailable",
+                "integrity_status": "ledger_unreadable",
+                "reason": f"Project ledger is unreadable: {error}",
+            }
+        authored = project.get("reviewed_source_adapter")
+
+        def unreadable_ledger(kind: str, error: Exception) -> dict[str, Any]:
+            return {
+                "status": "unavailable",
+                "integrity_status": (
+                    "drifted" if isinstance(authored, dict) else "ledger_unreadable"
+                ),
+                "reason": f"{kind} ledger is unreadable or missing: {error}",
+            }
+
+        source_ledger = project.get("source_ledger")
+        try:
+            ledger = (
+                _read_json(project_path.parent / source_ledger)
+                if isinstance(source_ledger, str)
+                else {"sources": project.get("sources", [])}
+            )
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            return unreadable_ledger("Source", error)
+        decision_ledger = project.get("decision_ledger")
+        try:
+            decisions = (
+                _read_json(project_path.parent / decision_ledger)
+                if isinstance(decision_ledger, str)
+                else {"decisions": project.get("decisions", [])}
+            )
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            return unreadable_ledger("Decision", error)
+        sources = ledger.get("sources", [])
+        if not isinstance(sources, list):
+            sources = []
+        matches: list[tuple[dict[str, Any], Any]] = []
+        recognized: list[tuple[dict[str, Any], Any]] = []
+        for source in sources:
+            lock = source.get("lock", {})
+            checksum = lock.get("sha256")
+            adapter = adapter_for_checksum(str(checksum))
+            if adapter is None or lock.get("status") != "checksum_locked":
+                continue
+            recognized.append((source, adapter))
+            try:
+                source_path = resolve_local_source_citation(
+                    project_path.parent,
+                    source["citation"],
+                    require_project_bundle=True,
+                )
+                actual = _sha256(source_path)
+            except (KeyError, OSError, TypeError, ValueError):
+                continue
+            if actual == checksum:
+                matches.append((source, adapter))
+        if not matches:
+            return {
+                "status": "unavailable",
+                "integrity_status": (
+                    "drifted"
+                    if isinstance(authored, dict)
+                    else "source_unavailable"
+                    if recognized
+                    else "no_adapter"
+                ),
+                "reason": (
+                    "A recognized reviewed-source input is missing or does not match its checksum lock."
+                    if recognized
+                    else "No reviewed-source adapter matches exactly one verified checksum-locked input."
+                ),
+            }
+        if len(matches) != 1 or len(sources) != 1:
+            return {
+                "status": "unavailable",
+                "integrity_status": (
+                    "source_scope_mismatch"
+                    if isinstance(authored, dict)
+                    else "adapter_not_selected"
+                ),
+                "reason": "Reviewed-source authoring requires exactly one authoritative checksum-locked source.",
+            }
+        source, adapter = matches[0]
+        marker_matches = (
+            isinstance(authored, dict)
+            and authored.get("adapter_id") == adapter.adapter_id
+            and authored.get("source_sha256") == adapter.source_sha256
+            and authored.get("status") == "complete"
+        )
+        stored_digest = authored.get("authored_bundle_sha256") if marker_matches else None
+        current_digest = _authored_bundle_sha256(project, ledger, decisions)
+        integrity_status = (
+            "verified"
+            if isinstance(stored_digest, str) and stored_digest == current_digest
+            else "drifted"
+            if isinstance(authored, dict)
+            else "not_authored"
+        )
+        status = "complete" if marker_matches and integrity_status == "verified" else "available"
+        feature_counts: Counter[str] = Counter()
+        if isinstance(authored, dict):
+            for group in ("points", "lines", "polygons", "surfaces"):
+                for feature in project.get("features", {}).get(group, []):
+                    feature_counts[feature.get("layer_id", "unknown")] += 1
+        return {
+            "status": status,
+            "integrity_status": integrity_status,
+            "adapter_id": adapter.adapter_id,
+            "title": adapter.title,
+            "source_id": source.get("id"),
+            "source_sha256": adapter.source_sha256,
+            "authored_bundle_sha256": stored_digest,
+            "authored_feature_count": sum(feature_counts.values()),
+            "layer_feature_counts": dict(sorted(feature_counts.items())),
+        }
+
+    def _require_verified_reviewed_authority(
+        self, slug: str, operation: str
+    ) -> None:
+        authoring = self.reviewed_authoring(slug)
+        if authoring.get("status") == "complete":
+            return
+        if (
+            authoring.get("status") == "unavailable"
+            and authoring.get("integrity_status")
+            in {"no_adapter", "adapter_not_selected"}
+        ):
+            return
+        if authoring.get("integrity_status") == "drifted":
+            raise ValueError(
+                f"{operation} refused because reviewed-source canonical authority is drifted; "
+                "reauthor the locked source first"
+            )
+        raise ValueError(
+            f"{operation} requires a complete, integrity-verified reviewed-source model"
+        )
+
+    def _replace_project_bundle(
+        self,
+        slug: str,
+        *,
+        project: dict[str, Any],
+        sources: dict[str, Any],
+        decisions: dict[str, Any],
+    ) -> None:
+        """Promote all authoritative JSON files as one rollback-safe transaction."""
+
+        project_dir = self._project_dir(slug)
+        transaction_root = Path(tempfile.mkdtemp(
+            prefix=f".{slug}.authoring-", dir=self.projects_root
+        ))
+        staged = transaction_root / "project"
+        backup = transaction_root / "previous"
+        try:
+            shutil.copytree(project_dir, staged)
+            _write_json(staged / "project.json", project)
+            _write_json(staged / "sources.lock.json", sources)
+            _write_json(staged / "decisions.json", decisions)
+            project_dir.replace(backup)
+            try:
+                staged.replace(project_dir)
+            except Exception:
+                backup.replace(project_dir)
+                raise
+            shutil.rmtree(backup)
+        finally:
+            if transaction_root.exists() and project_dir.exists():
+                shutil.rmtree(transaction_root)
+
+    @_project_locked
+    def author_reviewed_model(self, slug: str) -> dict[str, Any]:
+        availability = self.reviewed_authoring(slug)
+        if availability["status"] == "unavailable":
+            raise ValueError("No reviewed-source adapter matches the verified checksum-locked input")
+        if availability["status"] == "complete":
+            return {**availability, "changed": False}
+        project_path = self._project_file(slug)
+        intake_project = _read_json(project_path)
+        source_ledger = _read_json(project_path.parent / intake_project.get("source_ledger", "sources.lock.json"))
+        source = next(
+            row for row in source_ledger["sources"]
+            if row.get("id") == availability["source_id"]
+        )
+        adapter = adapter_for_checksum(availability["source_sha256"])
+        if adapter is None:
+            raise ValueError("No reviewed-source adapter matches the verified checksum-locked input")
+        project, sources, decisions = adapter.build(intake_project, source)
+        project["reviewed_source_adapter"]["authored_bundle_sha256"] = (
+            _authored_bundle_sha256(project, sources, decisions)
+        )
+        model = copy.deepcopy(project)
+        model.pop("source_ledger", None)
+        model.pop("decision_ledger", None)
+        model["sources"] = copy.deepcopy(sources["sources"])
+        model["decisions"] = copy.deepcopy(decisions["decisions"])
+        model = resolve_model_source_citations(model, project_path.parent)
+        issues = [issue for issue in validate_model(model) if issue.severity == "error"]
+        if issues:
+            summary = "; ".join(f"{issue.code}: {issue.message}" for issue in issues[:5])
+            raise ValueError(f"Reviewed-source adapter output failed canonical validation: {summary}")
+        self._replace_project_bundle(
+            slug, project=project, sources=sources, decisions=decisions
+        )
+        completed = self.reviewed_authoring(slug)
+        return {**completed, "changed": True}
 
     def review_issue(self, slug: str, issue_key: str, *, reviewer: str, note: str) -> dict[str, Any]:
         clean_reviewer = reviewer.strip()
@@ -573,7 +1055,7 @@ class StudioWorkspace:
         runs = []
         for path in root.glob("*/run.json"):
             try:
-                runs.append(_read_json(path))
+                runs.append(self._run_with_integrity(path.parent, _read_json(path)))
             except (OSError, ValueError, json.JSONDecodeError):
                 continue
         return sorted(
@@ -582,7 +1064,42 @@ class StudioWorkspace:
             reverse=True,
         )
 
+    def _run_with_integrity(
+        self, run_dir: Path, run: dict[str, Any]
+    ) -> dict[str, Any]:
+        result = copy.deepcopy(run)
+        if run.get("publication_readiness") != "ready":
+            result["artifact_integrity"] = "not_ready"
+            return result
+        artifacts = run.get("artifacts")
+        required = {
+            "validation-report.json",
+            "parity-report.json",
+            "semantic-manifest.json",
+        }
+        try:
+            if not isinstance(artifacts, dict) or not required.issubset(artifacts):
+                raise ValueError("Ready run is missing required locked artifacts")
+            if any(Path(name).name != name for name in artifacts):
+                raise ValueError("Run artifact name escapes its run directory")
+            current = {name: _sha256(run_dir / name) for name in artifacts}
+            if current != artifacts:
+                raise ValueError("Run artifact hashes no longer match")
+        except (OSError, TypeError, ValueError) as error:
+            result.update({
+                "artifact_integrity": "corrupt",
+                "integrity_reason": str(error),
+                "publication_readiness": "blocked",
+                "status": "corrupt",
+                "stage": "blocked",
+            })
+            return result
+        result["artifact_integrity"] = "verified"
+        return result
+
+    @_project_locked
     def run_project(self, slug: str) -> dict[str, Any]:
+        self._require_verified_reviewed_authority(slug, "Run")
         project_file = self._project_file(slug)
         fingerprint = self._fingerprint(slug)
         model, issues = self._validation(slug)
@@ -592,8 +1109,13 @@ class StudioWorkspace:
         metadata_path = run_dir / "run.json"
         if metadata_path.exists():
             previous = _read_json(metadata_path)
-            if previous.get("project_fingerprint") == fingerprint and previous.get("status") in {"valid", "invalid"}:
-                return previous
+            verified_previous = self._run_with_integrity(run_dir, previous)
+            if (
+                previous.get("project_fingerprint") == fingerprint
+                and previous.get("status") in {"valid", "invalid"}
+                and verified_previous.get("artifact_integrity") != "corrupt"
+            ):
+                return verified_previous
         run_dir.mkdir(parents=True, exist_ok=True)
         started_at = _now()
         metadata: dict[str, Any] = {
@@ -660,38 +1182,22 @@ class StudioWorkspace:
         _write_json(metadata_path, metadata)
         return metadata
 
+    @_project_locked
     def publish(self, slug: str, run_id: str) -> dict[str, Any]:
         run_path = (self.state_root / "runs" / slug / run_id).resolve()
         expected_root = (self.state_root / "runs" / slug).resolve()
         if run_path.parent != expected_root or not (run_path / "run.json").is_file():
             raise ValueError("Publication requires an existing validated run")
+        self._require_verified_reviewed_authority(slug, "Publication")
         run = _read_json(run_path / "run.json")
-        validation_path = run_path / "validation-report.json"
-        parity_path = run_path / "parity-report.json"
-        semantic_path = run_path / "semantic-manifest.json"
-        if run.get("publication_readiness") != "ready" or not all(
-            path.is_file() for path in (validation_path, parity_path, semantic_path)
-        ):
-            raise ValueError("Publication requires a validated run with passing parity")
-        validation = _read_json(validation_path)
-        parity = _read_json(parity_path)
-        semantic = _read_json(semantic_path)
-        if validation.get("status") != "valid" or parity.get("status") != "valid":
-            raise ValueError("Publication gate is no longer valid")
-        if semantic.get("schema_version") != FIELD_MAP_SCHEMA or semantic.get("disclaimer") != DISCLAIMER:
-            raise ValueError("Semantic package does not satisfy the Field Map handoff contract")
-        artifact_names = sorted(name for name in run.get("artifacts", {}) if name != "run.json")
-        current_hashes = {name: _sha256(run_path / name) for name in artifact_names}
-        if current_hashes != run.get("artifacts"):
-            raise ValueError("Run artifacts changed after validation; rerun before publishing")
-        publication_basis = {
-            "project_fingerprint": run["project_fingerprint"],
-            "artifacts": current_hashes,
-            "contract": FIELD_MAP_SCHEMA,
-        }
-        publication_id = hashlib.sha256(
-            json.dumps(publication_basis, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
+        if run.get("project_fingerprint") != self._fingerprint(slug):
+            raise ValueError("Publication refused because authoritative inputs changed; rerun first")
+        contract = self._publication_contract(slug, run_id, run_path, run)
+        publication_id = contract["publication_id"]
+        artifact_names = contract["artifact_names"]
+        envelope = contract["envelope"]
+        expected_published_hashes = contract["artifact_hashes"]
+        expected_handoff = contract["handoff"]
         publication_dir = self.state_root / "published" / slug / publication_id
         handoff_path = publication_dir / "handoff-manifest.json"
         if not publication_dir.exists():
@@ -701,42 +1207,30 @@ class StudioWorkspace:
             staging.mkdir(parents=True)
             for name in artifact_names:
                 shutil.copy2(run_path / name, staging / name)
-            handoff = {
-                "schema_version": HANDOFF_SCHEMA,
-                "disclaimer": DISCLAIMER,
-                "publication_id": publication_id,
-                "project_slug": slug,
-                "project_id": semantic.get("id"),
-                "canonical_model_version": semantic.get("canonical_model_version"),
-                "source_run_id": run_id,
-                "project_fingerprint": run["project_fingerprint"],
-                "published_at": run["completed_at"],
-                "consumer": {
-                    "application": "Excavation Field Map",
-                    "accepted_schema": FIELD_MAP_SCHEMA,
-                    "delivery": "local_file_import",
-                    "integration_seam": "Choose semantic-manifest.json in the Field Map model-package file input.",
-                    "remote_delivery": "not_configured",
-                },
-                "artifacts": current_hashes,
-            }
-            _write_json(staging / "handoff-manifest.json", handoff)
+            envelope_path = staging / "semantic-publication.json"
+            _write_json(envelope_path, envelope)
+            if _sha256(envelope_path) != expected_published_hashes[envelope_path.name]:
+                raise ValueError("Semantic publication envelope serialization changed unexpectedly")
+            _write_json(staging / "handoff-manifest.json", expected_handoff)
             staging.replace(publication_dir)
         else:
             existing = _read_json(handoff_path)
             try:
-                published_hashes = {name: _sha256(publication_dir / name) for name in artifact_names}
+                published_hashes = {
+                    name: _sha256(publication_dir / name)
+                    for name in expected_published_hashes
+                }
             except OSError as error:
                 raise ValueError("Immutable publication is missing a locked artifact") from error
             if (
-                existing.get("publication_id") != publication_id
-                or existing.get("artifacts") != current_hashes
-                or published_hashes != current_hashes
+                existing != expected_handoff
+                or published_hashes != expected_published_hashes
             ):
                 raise ValueError("Immutable publication directory does not match its content address")
         return {
             "publication_id": publication_id,
             "directory": str(publication_dir),
             "import_file": str(publication_dir / "semantic-manifest.json"),
+            "offline_import_file": str(publication_dir / "semantic-publication.json"),
             "handoff_manifest": str(handoff_path),
         }

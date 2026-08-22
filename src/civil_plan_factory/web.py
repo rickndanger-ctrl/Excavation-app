@@ -24,6 +24,10 @@ STATIC_FILES = {
 }
 
 
+class ProjectOperationConflict(ValueError):
+    """Raised when a project already has a queued or running operation."""
+
+
 class StudioHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
 
@@ -33,10 +37,29 @@ class StudioHTTPServer(ThreadingHTTPServer):
         self.operations_lock = threading.Lock()
         super().__init__(address, StudioRequestHandler)
 
+    def _register_operation(self, operation: dict[str, Any]) -> None:
+        slug = operation["project_slug"]
+        with self.operations_lock:
+            active = next(
+                (
+                    row
+                    for row in self.operations.values()
+                    if row.get("project_slug") == slug
+                    and row.get("status") in {"queued", "running"}
+                ),
+                None,
+            )
+            if active is not None:
+                raise ProjectOperationConflict(
+                    f"Project {slug} already has an active operation"
+                )
+            self.operations[operation["operation_id"]] = operation
+
     def start_run(self, slug: str) -> dict[str, Any]:
         operation_id = uuid.uuid4().hex
         operation = {
             "operation_id": operation_id,
+            "kind": "canonical_run",
             "project_slug": slug,
             "status": "queued",
             "stage": "queued",
@@ -45,8 +68,7 @@ class StudioHTTPServer(ThreadingHTTPServer):
             "elapsed_seconds": 0.0,
             "_queued_monotonic": time.monotonic(),
         }
-        with self.operations_lock:
-            self.operations[operation_id] = operation
+        self._register_operation(operation)
 
         def work() -> None:
             try:
@@ -77,6 +99,54 @@ class StudioHTTPServer(ThreadingHTTPServer):
                     )
 
         threading.Thread(target=work, name=f"model-studio-{operation_id[:8]}", daemon=True).start()
+        return dict(operation)
+
+    def start_authoring(self, slug: str) -> dict[str, Any]:
+        operation_id = uuid.uuid4().hex
+        operation = {
+            "operation_id": operation_id,
+            "kind": "reviewed_source_authoring",
+            "project_slug": slug,
+            "status": "queued",
+            "stage": "queued",
+            "progress_percent": 0,
+            "started_at": None,
+            "elapsed_seconds": 0.0,
+            "_queued_monotonic": time.monotonic(),
+        }
+        self._register_operation(operation)
+
+        def work() -> None:
+            try:
+                with self.operations_lock:
+                    operation.update(
+                        status="running",
+                        stage="reviewed_source_authoring",
+                        progress_percent=35,
+                        started_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                    )
+                result = self.workspace.author_reviewed_model(slug)
+                with self.operations_lock:
+                    operation.update(
+                        status="complete",
+                        stage="reviewed_source_authored",
+                        progress_percent=100,
+                        result=result,
+                        elapsed_seconds=round(time.monotonic() - operation["_queued_monotonic"], 3),
+                    )
+            except Exception as error:
+                with self.operations_lock:
+                    operation.update(
+                        status="failed",
+                        stage="failed",
+                        progress_percent=100,
+                        error=f"{type(error).__name__}: {error}",
+                        elapsed_seconds=round(time.monotonic() - operation["_queued_monotonic"], 3),
+                    )
+
+        threading.Thread(
+            target=work, name=f"model-studio-author-{operation_id[:8]}", daemon=True
+        ).start()
         return dict(operation)
 
     def operation(self, operation_id: str) -> dict[str, Any] | None:
@@ -208,6 +278,10 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 self.server.workspace._project_file(parts[2])
                 self._send_json(HTTPStatus.ACCEPTED, self.server.start_run(parts[2]))
                 return
+            if len(parts) == 4 and parts[:2] == ["api", "projects"] and parts[3] == "author":
+                self.server.workspace._project_file(parts[2])
+                self._send_json(HTTPStatus.ACCEPTED, self.server.start_authoring(parts[2]))
+                return
             if len(parts) == 4 and parts[:2] == ["api", "projects"] and parts[3] == "publish":
                 result = self.server.workspace.publish(parts[2], str(payload.get("run_id", "")))
                 self._send_json(HTTPStatus.CREATED, result)
@@ -216,6 +290,9 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
             self._error(HTTPStatus.NOT_FOUND, str(error))
             return
         except FileExistsError as error:
+            self._error(HTTPStatus.CONFLICT, str(error))
+            return
+        except ProjectOperationConflict as error:
             self._error(HTTPStatus.CONFLICT, str(error))
             return
         except (KeyError, OSError, ValueError, json.JSONDecodeError) as error:

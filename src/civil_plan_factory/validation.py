@@ -7,6 +7,11 @@ from typing import Any, Iterable
 
 
 DISCLAIMER = "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"
+SEMANTIC_ONLY_DELIVERY_MODE = "semantic_only_ungeoreferenced"
+SEMANTIC_REVIEW_GRID_BASIS = (
+    "UNREFERENCED_REVIEW_GRID — uncalibrated source-sheet display coordinates; "
+    "not field feet or staking control."
+)
 PROVENANCE_STATUSES = {
     "confirmed", "reference-derived", "reviewed_assumption", "generated", "unknown"
 }
@@ -168,6 +173,54 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
     if not spatial.get("vertical_datum"):
         issues.append(_issue("datum.missing", "spatial_reference.vertical_datum", "Vertical datum is required"))
 
+    artifact = model.get("artifact_contract", {})
+    if artifact.get("delivery_mode") == SEMANTIC_ONLY_DELIVERY_MODE:
+        expected_transform = {
+            "from": "source_pdf_y_down_review_grid",
+            "to": "canonical_y_up_review_grid",
+            "status": "generated_display_transform",
+            "formula": "x = source_x; y = plan_height - source_y",
+        }
+        tolerances = spatial.get("tolerances", {})
+        tolerance = tolerances.get("output_parity_display_units")
+        source_accuracy = tolerances.get("source_geometry_accuracy")
+        benchmark = spatial.get("benchmark", {})
+        conflicting_exports = [
+            target.get("type")
+            for target in model.get("export_targets", [])
+            if target.get("status") == "available"
+            and target.get("type") in {
+                "geopackage", "vector_pdf", "dxf", "layered_vector_geopdf"
+            }
+        ]
+        profile_checks = {
+            "artifact_contract.plan_availability": artifact.get("plan_availability") == "semantic_review_grid",
+            "artifact_contract.image_url": artifact.get("image_url") == "",
+            "artifact_contract.coordinate_basis": artifact.get("coordinate_basis") == SEMANTIC_REVIEW_GRID_BASIS,
+            "artifact_contract.plan_width_ft": _finite_coordinate(artifact.get("plan_width_ft")) and artifact.get("plan_width_ft", 0) > 0,
+            "artifact_contract.plan_height_ft": _finite_coordinate(artifact.get("plan_height_ft")) and artifact.get("plan_height_ft", 0) > 0,
+            "spatial_reference.horizontal_crs": spatial.get("horizontal_crs") == "UNREFERENCED_REVIEW_GRID",
+            "spatial_reference.horizontal_units": spatial.get("horizontal_units") == "display_unit",
+            "spatial_reference.vertical_datum": spatial.get("vertical_datum") == "SOURCE_PLAN_DATUM_UNVERIFIED",
+            "spatial_reference.vertical_units": spatial.get("vertical_units") == "foot",
+            "spatial_reference.benchmark": benchmark.get("status") == "unknown" and bool(benchmark.get("reason")),
+            "spatial_reference.transformations": spatial.get("transformations") == [expected_transform],
+            "spatial_reference.tolerances.output_parity_display_units": _finite_coordinate(tolerance) and tolerance > 0,
+            "spatial_reference.tolerances.no_field_unit_claim": "output_parity_horizontal_ft" not in tolerances,
+            "spatial_reference.tolerances.source_geometry_accuracy": isinstance(source_accuracy, str) and "uncalibrated" in source_accuracy.lower() and "not field coordinates" in source_accuracy.lower(),
+            "export_targets": not conflicting_exports,
+        }
+        invalid_fields = sorted(
+            path for path, valid in profile_checks.items() if not valid
+        )
+        if invalid_fields:
+            issues.append(_issue(
+                "artifact.semantic_only_profile_invalid",
+                "artifact_contract.delivery_mode",
+                "Semantic-only delivery requires the exact unreferenced review-grid profile; conflicting fields: "
+                + ", ".join(invalid_fields),
+            ))
+
     for index, source in enumerate(model.get("sources", [])):
         lock = source.get("lock", {})
         if lock.get("kind") == "local_file" and lock.get("status") == "checksum_locked":
@@ -244,7 +297,23 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
         if feature.get("feature_type") == "wall_penetration"
     ]
     interface_systems = {feature.get("system") for feature in interfaces}
-    for system in sorted(REQUIRED_INTERFACE_SYSTEMS - interface_systems):
+    coverage_by_system = {
+        row.get("system"): row for row in model.get("contract_coverage", [])
+    }
+    contract_system_for_interface = {"electric": "power"}
+    modeled_network_systems = {
+        network.get("system") for network in model.get("networks", [])
+    }
+    required_interfaces = {
+        system for system in REQUIRED_INTERFACE_SYSTEMS
+        if (
+            coverage_by_system.get(
+                contract_system_for_interface.get(system, system), {}
+            ).get("availability") == "modeled"
+            or contract_system_for_interface.get(system, system) in modeled_network_systems
+        )
+    }
+    for system in sorted(required_interfaces - interface_systems):
         issues.append(_issue("interface.missing_system", "features.points", f"Missing permanent building terminal for: {system}"))
     for index, interface in enumerate(interfaces):
         building = polygon_by_id.get(interface.get("wall_association_id"))

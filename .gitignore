@@ -9,3 +9,4 @@ work/
 .model-studio/
 .playwright-cli/
 *.app/
+/projects/reading-public-library-demo/

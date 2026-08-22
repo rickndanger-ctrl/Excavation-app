@@ -4,6 +4,59 @@ from pathlib import Path
 from typing import Any
 
 
+PROJECT_BUNDLE_CITATION_SCOPE = "project_bundle"
+
+
+def resolve_local_source_citation(
+    project_directory: Path,
+    citation: str,
+    *,
+    require_project_bundle: bool = False,
+) -> Path:
+    """Resolve a local source without letting bundle-scoped paths escape.
+
+    Relative citations are always relative to the directory containing
+    ``project.json``.  They, and any citation explicitly required to be
+    bundle-local, are resolved through symlinks and must remain inside that
+    directory.  Absolute paths remain supported only for legacy canonical
+    projects whose source record is not bundle-scoped.
+    """
+
+    if not isinstance(citation, str) or not citation.strip():
+        raise ValueError("Local source citation must be a non-empty path")
+    project_root = Path(project_directory).resolve()
+    raw_path = Path(citation)
+    resolved = raw_path.resolve() if raw_path.is_absolute() else (project_root / raw_path).resolve()
+    if require_project_bundle or not raw_path.is_absolute():
+        try:
+            resolved.relative_to(project_root)
+        except ValueError as error:
+            raise ValueError("Bundle-local source citation escapes the project directory") from error
+    return resolved
+
+
+def resolve_model_source_citations(
+    model: dict[str, Any], project_directory: Path
+) -> dict[str, Any]:
+    """Return an in-memory model with local citations resolved for validation."""
+
+    resolved_model = copy.deepcopy(model)
+    for source in resolved_model.get("sources", []):
+        lock = source.get("lock", {})
+        if lock.get("kind") != "local_file":
+            continue
+        citation = source.get("citation")
+        require_project_bundle = (
+            source.get("citation_scope") == PROJECT_BUNDLE_CITATION_SCOPE
+        )
+        source["citation"] = str(resolve_local_source_citation(
+            project_directory,
+            citation,
+            require_project_bundle=require_project_bundle,
+        ))
+    return resolved_model
+
+
 def _deep_update(target: dict[str, Any], patch: dict[str, Any]) -> None:
     for key, value in patch.items():
         if key == "$replace":
@@ -58,4 +111,4 @@ def load_project_bundle(project_path: Path) -> dict[str, Any]:
     for reference in model.pop("design_slices", []):
         design_path = project_path.parent / reference
         _apply_design_slice(model, json.loads(design_path.read_text(encoding="utf-8")))
-    return model
+    return resolve_model_source_citations(model, project_path.parent)

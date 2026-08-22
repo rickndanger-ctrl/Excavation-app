@@ -26,6 +26,7 @@ class SourceRecord(TypedDict):
     authority: str
     provenance_status: ProvenanceStatus
     citation: str
+    citation_scope: NotRequired[Literal["project_bundle"]]
     lock: SourceLock
     supports: list[str]
 

@@ -14,7 +14,7 @@ import tempfile
 from typing import Any
 
 from .export import build_semantic_manifest
-from .validation import DISCLAIMER, validate_model
+from .validation import DISCLAIMER, SEMANTIC_ONLY_DELIVERY_MODE, validate_model
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -1624,6 +1624,349 @@ def _max_coordinate_delta(expected: Any, actual: Any) -> float:
     return max((abs(a - b) for a, b in zip(left, right)), default=0.0)
 
 
+def _canonical_semantic_contract(model: dict[str, Any]) -> dict[str, Any]:
+    """Independently project canonical inputs onto the field-facing contract."""
+
+    artifact = model.get("artifact_contract", {})
+    def common(feature: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "id": feature["id"],
+            "type": feature["feature_type"],
+            "system": feature.get("system"),
+            "layer": feature["layer_id"],
+            "phase": feature["phase_id"],
+            "label": feature["label"],
+            "searchable": feature.get("field_detail", {}).get(
+                "searchable", True
+            ),
+            "clickable": True,
+            "map_target": feature.get("field_detail", {}).get(
+                "map_target", feature["id"]
+            ),
+            "field_detail": feature.get("field_detail", {}),
+            "provenance": feature["provenance"],
+        }
+    objects = {}
+    for feature in model["features"]["points"]:
+        objects[feature["id"]] = {
+            **common(feature),
+            "geometry": feature["coordinates"],
+            "wall_association_id": feature.get("wall_association_id"),
+            "network_terminal_id": feature.get("network_terminal_id"),
+        }
+    areas = {
+        feature["id"]: {**common(feature), "geometry": feature["coordinates"]}
+        for feature in model["features"]["polygons"]
+    }
+    linear_features = {
+        feature["id"]: {**common(feature), "geometry": feature["coordinates"]}
+        for feature in model["features"]["lines"]
+    }
+    surfaces = {
+        feature["id"]: {
+            **common(feature),
+            "geometry": feature["boundary"],
+            "vertical_datum": feature.get("vertical_datum"),
+        }
+        for feature in model["features"]["surfaces"]
+    }
+    feature_by_id = {
+        feature["id"]: feature
+        for group in ("points", "lines", "polygons")
+        for feature in model["features"][group]
+    }
+    utilities = {}
+    for network in model.get("networks", []):
+        for edge in network.get("edges", []):
+            geometry = feature_by_id[edge["geometry_feature_id"]]
+            utilities[edge["id"]] = {
+                "id": edge["id"],
+                "type": edge["edge_type"],
+                "system": network["system"],
+                "geometry_feature_id": edge["geometry_feature_id"],
+                "geometry": geometry["coordinates"],
+                "from_node_id": edge["from_node_id"],
+                "to_node_id": edge["to_node_id"],
+                "terminal_feature_id": edge.get("terminal_feature_id"),
+                "label": geometry["label"],
+                "searchable": True,
+                "clickable": True,
+                "map_target": edge["id"],
+                "field_detail": edge.get("field_detail", {}),
+                "provenance": edge["provenance"],
+            }
+    return {
+        "top": {
+            "schema_version": "excavation-field-map.jobsite-package/v0.1.0",
+            "canonical_model_version": model["schema_version"],
+            "id": model["project"]["id"],
+            "project_name": model["project"]["name"],
+            "disclaimer": DISCLAIMER,
+            "plan": {
+                "availability": artifact.get(
+                    "plan_availability", "generated_vector_pdf"
+                ),
+                "image_url": artifact.get(
+                    "image_url",
+                    f"{artifact.get('basename', 'hilyard-site-layout')}.pdf",
+                ),
+                "width": artifact.get("plan_width_ft", 178.59),
+                "height": artifact.get("plan_height_ft", 291.97),
+                "coordinate_basis": artifact.get(
+                    "coordinate_basis",
+                    "EPSG:6823 reference-derived site geometry; not surveyed",
+                ),
+            },
+            "phases": model["phases"],
+            "layers": model["layers"],
+            "unavailable": [
+                {
+                    "system": row["system"],
+                    "reason": row["reason"],
+                    "provenance_status": row["provenance_status"],
+                }
+                for row in model["contract_coverage"]
+                if row["availability"] != "modeled"
+            ],
+            "source_ids": [source["id"] for source in model["sources"]],
+            "decision_ids": [decision["id"] for decision in model["decisions"]],
+            "user_location": None,
+            "user_heading": None,
+            "calibration_points": [],
+        },
+        "objects": objects,
+        "areas": areas,
+        "linear_features": linear_features,
+        "surfaces": surfaces,
+        "utilities": utilities,
+    }
+
+
+def _semantic_contract_from_artifact(
+    semantic: dict[str, Any], mismatches: list[dict[str, Any]]
+) -> dict[str, Any]:
+    def common(row: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "id": row.get("id"),
+            "type": row.get("type"),
+            "system": row.get("system"),
+            "layer": row.get("layerId"),
+            "phase": row.get("phase"),
+            "label": row.get("label"),
+            "searchable": row.get("searchable"),
+            "clickable": row.get("clickable"),
+            "map_target": row.get("mapTarget"),
+            "field_detail": row.get("fieldDetail"),
+            "provenance": row.get("provenance"),
+        }
+
+    def keyed(collection: str, rows: Any, normalize) -> dict[str, Any]:
+        if not isinstance(rows, list):
+            mismatches.append({
+                "artifact": "semantic",
+                "collection": collection,
+                "field": collection,
+                "reason": "missing_or_invalid_collection",
+            })
+            return {}
+        result = {}
+        for row in rows:
+            feature_id = row.get("id") if isinstance(row, dict) else None
+            if not isinstance(feature_id, str):
+                mismatches.append({
+                    "artifact": "semantic",
+                    "collection": collection,
+                    "field": "id",
+                    "reason": "missing_or_invalid",
+                })
+                continue
+            if feature_id in result:
+                mismatches.append({
+                    "artifact": "semantic",
+                    "collection": collection,
+                    "id": feature_id,
+                    "field": "id",
+                    "reason": "duplicate",
+                })
+                continue
+            result[feature_id] = normalize(row)
+        return result
+
+    objects = keyed(
+        "objects",
+        semantic.get("objects"),
+        lambda row: {
+            **common(row),
+            "geometry": [row.get("x"), row.get("y")],
+            "wall_association_id": row.get("wallAssociationId"),
+            "network_terminal_id": row.get("networkTerminalId"),
+        },
+    )
+    areas = keyed(
+        "areas",
+        semantic.get("areas"),
+        lambda row: {**common(row), "geometry": row.get("coordinates")},
+    )
+    linear_features = keyed(
+        "linear_features",
+        semantic.get("linearFeatures"),
+        lambda row: {**common(row), "geometry": row.get("coordinates")},
+    )
+    surfaces = keyed(
+        "surfaces",
+        semantic.get("surfaces"),
+        lambda row: {
+            **common(row),
+            "geometry": row.get("coordinates"),
+            "vertical_datum": row.get("verticalDatum"),
+        },
+    )
+    utilities = keyed(
+        "utilities",
+        semantic.get("utilities"),
+        lambda row: {
+            "id": row.get("id"),
+            "type": row.get("type"),
+            "system": row.get("system"),
+            "geometry_feature_id": row.get("geometryFeatureId"),
+            "geometry": row.get("coordinates"),
+            "from_node_id": row.get("fromNodeId"),
+            "to_node_id": row.get("toNodeId"),
+            "terminal_feature_id": row.get("terminalFeatureId"),
+            "label": row.get("label"),
+            "searchable": row.get("searchable"),
+            "clickable": row.get("clickable"),
+            "map_target": row.get("mapTarget"),
+            "field_detail": row.get("fieldDetail"),
+            "provenance": row.get("provenance"),
+        },
+    )
+    plan = semantic.get("plan") if isinstance(semantic.get("plan"), dict) else {}
+    provenance = (
+        semantic.get("provenance")
+        if isinstance(semantic.get("provenance"), dict)
+        else {}
+    )
+    return {
+        "top": {
+            "schema_version": semantic.get("schema_version"),
+            "canonical_model_version": semantic.get("canonical_model_version"),
+            "id": semantic.get("id"),
+            "project_name": semantic.get("projectName"),
+            "disclaimer": semantic.get("disclaimer"),
+            "plan": {
+                "availability": plan.get("availability"),
+                "image_url": plan.get("imageUrl"),
+                "width": plan.get("widthFt"),
+                "height": plan.get("heightFt"),
+                "coordinate_basis": plan.get("coordinateBasis"),
+            },
+            "phases": semantic.get("phases"),
+            "layers": semantic.get("layers"),
+            "unavailable": semantic.get("unavailable"),
+            "source_ids": provenance.get("source_ids"),
+            "decision_ids": provenance.get("decision_ids"),
+            "user_location": semantic.get("userLocation"),
+            "user_heading": semantic.get("userHeading"),
+            "calibration_points": semantic.get("calibrationPoints"),
+        },
+        "objects": objects,
+        "areas": areas,
+        "linear_features": linear_features,
+        "surfaces": surfaces,
+        "utilities": utilities,
+    }
+
+
+def verify_semantic_only_parity(
+    model: dict[str, Any], semantic: dict[str, Any]
+) -> dict[str, Any]:
+    """Verify the complete field contract for unreferenced review grids."""
+
+    tolerance = float(
+        model["spatial_reference"]["tolerances"]["output_parity_display_units"]
+    )
+    mismatches: list[dict[str, Any]] = []
+    expected = _canonical_semantic_contract(model)
+    actual = _semantic_contract_from_artifact(semantic, mismatches)
+    for field, expected_value in expected["top"].items():
+        if actual["top"].get(field) != expected_value:
+            mismatches.append({
+                "artifact": "semantic",
+                "collection": "top",
+                "field": field,
+                "reason": "value_mismatch",
+            })
+    for collection in (
+        "objects", "areas", "linear_features", "surfaces", "utilities"
+    ):
+        expected_rows = expected[collection]
+        actual_rows = actual[collection]
+        for feature_id in sorted(set(expected_rows) - set(actual_rows)):
+            mismatches.append({
+                "artifact": "semantic",
+                "collection": collection,
+                "id": feature_id,
+                "field": "feature",
+                "reason": "missing",
+            })
+        for feature_id in sorted(set(actual_rows) - set(expected_rows)):
+            mismatches.append({
+                "artifact": "semantic",
+                "collection": collection,
+                "id": feature_id,
+                "field": "feature",
+                "reason": "unexpected",
+            })
+        for feature_id in sorted(set(expected_rows) & set(actual_rows)):
+            expected_row = expected_rows[feature_id]
+            actual_row = actual_rows[feature_id]
+            for field, expected_value in expected_row.items():
+                actual_value = actual_row.get(field)
+                matches = (
+                    _max_coordinate_delta(expected_value, actual_value) <= tolerance
+                    if field == "geometry"
+                    else actual_value == expected_value
+                )
+                if not matches:
+                    mismatches.append({
+                        "artifact": "semantic",
+                        "collection": collection,
+                        "id": feature_id,
+                        "field": field,
+                        "reason": (
+                            "geometry_delta" if field == "geometry" else "value_mismatch"
+                        ),
+                    })
+    contract_digest = hashlib.sha256(
+        json.dumps(
+            expected, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ).encode("utf-8")
+    ).hexdigest()
+    return {
+        "schema_version": "civil-plan-factory.parity-report/v0.2.0",
+        "disclaimer": DISCLAIMER,
+        "status": "invalid" if mismatches else "valid",
+        "canonical_geometry_sha256": geometry_digest(model),
+        "canonical_field_contract_sha256": contract_digest,
+        "semantic": {
+            "status": "invalid" if mismatches else "valid",
+            "feature_count": sum(
+                len(actual[collection])
+                for collection in (
+                    "objects", "areas", "linear_features", "surfaces", "utilities"
+                )
+            ),
+            "horizontal_tolerance_display_units": tolerance,
+        },
+        "geospatial_artifacts": {
+            "status": "not_applicable_ungeoreferenced",
+            "reason": "The reviewed source has no calibrated field CRS or control; no GeoPackage or geospatial PDF was generated.",
+        },
+        "mismatches": mismatches,
+    }
+
+
 def verify_parity(
     model: dict[str, Any], semantic: dict[str, Any], pdf_path: Path,
     gpkg_path: Path, qgis_app: Path,
@@ -1765,6 +2108,12 @@ def build_project(model: dict[str, Any], output_dir: Path, qgis_app: Path) -> in
     artifact_basename = model.get("artifact_contract", {}).get("basename", "hilyard-site-layout")
     semantic = build_semantic_manifest(model)
     semantic_path = output_dir / "semantic-manifest.json"
+    delivery_mode = model.get("artifact_contract", {}).get("delivery_mode")
+    if delivery_mode == SEMANTIC_ONLY_DELIVERY_MODE:
+        _write_json(semantic_path, semantic)
+        parity = verify_semantic_only_parity(model, semantic)
+        _write_json(output_dir / "parity-report.json", parity)
+        return 0 if parity["status"] == "valid" else 1
     gpkg_path = output_dir / f"{artifact_basename}.gpkg"
     pdf_path = output_dir / f"{artifact_basename}.pdf"
     _write_json(semantic_path, semantic)

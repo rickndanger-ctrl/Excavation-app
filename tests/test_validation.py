@@ -97,6 +97,48 @@ class ValidationTests(unittest.TestCase):
         ]
         self.assertIn("coverage.missing_system", self.errors_for(broken))
 
+    def test_explicitly_unavailable_interfaces_do_not_require_fabricated_wall_terminals(self):
+        scoped = copy.deepcopy(self.model)
+        unavailable_systems = {
+            "sanitary", "domestic_water", "fire_water", "roof_drainage",
+            "power", "telecom_fiber", "gas", "site_lighting",
+        }
+        scoped["features"]["points"] = [
+            point for point in scoped["features"]["points"]
+            if point.get("feature_type") != "wall_penetration"
+        ]
+        scoped["networks"] = [
+            network for network in scoped["networks"]
+            if network.get("system") not in unavailable_systems
+        ]
+        for coverage in scoped["contract_coverage"]:
+            if coverage["system"] in {
+                "sanitary", "domestic_water", "fire_water", "roof_drainage",
+                "telecom_fiber", "gas", "site_lighting",
+            }:
+                coverage["availability"] = "declared_unavailable"
+                coverage["reason"] = "The reviewed source does not establish a permanent building terminal."
+
+        errors = self.errors_for(scoped)
+
+        self.assertNotIn("interface.missing_system", errors)
+
+    def test_modeled_interface_system_still_requires_its_wall_terminal(self):
+        scoped = copy.deepcopy(self.model)
+        scoped["features"]["points"] = [
+            point for point in scoped["features"]["points"]
+            if not (
+                point.get("feature_type") == "wall_penetration"
+                and point.get("system") == "sanitary"
+            )
+        ]
+        next(
+            coverage for coverage in scoped["contract_coverage"]
+            if coverage["system"] == "sanitary"
+        )["availability"] = "modeled"
+
+        self.assertIn("interface.missing_system", self.errors_for(scoped))
+
     def test_rejects_tampered_locked_source_checksum(self):
         broken = copy.deepcopy(self.model)
         source = next(row for row in broken["sources"] if row["id"] == "src-project-brief")

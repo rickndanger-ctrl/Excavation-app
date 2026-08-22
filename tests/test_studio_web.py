@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -8,13 +9,39 @@ import time
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
+from types import SimpleNamespace
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from civil_plan_factory.studio import StudioWorkspace
+from civil_plan_factory.reviewed_sources import adapter_for_checksum
 from civil_plan_factory.validation import DISCLAIMER
 from civil_plan_factory.web import create_server
 from civil_plan_factory.cli import main
+
+
+READING_SHA256 = "835e28d8d981b4c0a0c5840e006c4cc19f259fc7fcb218ddc744bfec97da97d1"
+TEST_READING_BYTES = b"%PDF-1.7\nself-contained HTTP reviewed-source fixture\n%%EOF\n"
+TEST_READING_SHA256 = hashlib.sha256(TEST_READING_BYTES).hexdigest()
+
+
+def http_test_reading_adapter():
+    production = adapter_for_checksum(READING_SHA256)
+    if production is None:  # pragma: no cover - direct production invariant
+        raise AssertionError("Production Reading adapter is not registered")
+
+    def build(intake_project, source):
+        project, sources, decisions = production.build(intake_project, source)
+        project["reviewed_source_adapter"]["source_sha256"] = TEST_READING_SHA256
+        return project, sources, decisions
+
+    return SimpleNamespace(
+        adapter_id=production.adapter_id,
+        title=production.title,
+        source_sha256=TEST_READING_SHA256,
+        build=build,
+    )
 
 
 class ModelStudioWebTests(unittest.TestCase):
@@ -70,6 +97,8 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertIn("Publication readiness", html)
         self.assertIn('id="readiness-groups"', html)
         self.assertIn("Run canonical pipeline", html)
+        self.assertIn("Author reviewed model", html)
+        self.assertIn('id="author-reviewed-model"', html)
         self.assertIn("data:image/svg+xml", html)
         self.assertIn("/api/projects", javascript)
         self.assertIn("readiness_inventory", javascript)
@@ -79,6 +108,14 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertIn('id="operator-touch-form"', html)
         self.assertIn('id="evidence-list"', html)
         self.assertIn("/touches", javascript)
+        self.assertIn("/author", javascript)
+        self.assertIn("offline_import_file", javascript)
+        self.assertIn("function setProjectOperationBusy", javascript)
+        self.assertIn("function reviewedAuthoringAllowsRun", javascript)
+        self.assertIn("const authoringReady=reviewedAuthoringAllowsRun()", javascript)
+        self.assertIn("disabled=busy||!authoringReady", javascript)
+        self.assertIn("if(!reviewedAuthoringAllowsRun())", javascript)
+        self.assertIn("if(state.operation)", javascript)
         self.assertNotIn(
             "event.currentTarget.reset()",
             javascript,
@@ -95,6 +132,34 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertEqual("model-studio", health["service"])
         self.assertEqual(DISCLAIMER, health["disclaimer"])
         self.assertEqual(str(self.server.workspace.repository), health["repository"])
+
+    def test_missing_source_ledger_stays_visible_as_an_invalid_project_over_http(self):
+        self.request(
+            "/api/projects",
+            method="POST",
+            payload={"name": "Missing Source Ledger", "slug": "missing-source-ledger"},
+        )
+        (
+            self.workspace.repository
+            / "projects/missing-source-ledger/sources.lock.json"
+        ).unlink()
+
+        status, detail = self.request("/api/projects/missing-source-ledger")
+        list_status, projects = self.request("/api/projects")
+
+        self.assertEqual(200, status)
+        self.assertEqual(200, list_status)
+        self.assertEqual("invalid", detail["validation_status"])
+        self.assertIn("bundle.load_failed", {
+            issue["code"] for issue in detail["issues"]
+        })
+        self.assertEqual("unavailable", detail["reviewed_authoring"]["status"])
+        self.assertIn(
+            "source ledger", detail["reviewed_authoring"]["reason"].lower()
+        )
+        self.assertIn(
+            "missing-source-ledger", {project["slug"] for project in projects}
+        )
 
     def test_project_intake_run_and_review_are_operable_through_http(self):
         _, created = self.request(
@@ -133,6 +198,177 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertEqual("reviewed_not_cleared", review["status"])
         self.assertIn("elapsed_seconds", progress)
 
+    def test_http_rejects_overlapping_project_operations_until_first_finishes(self):
+        self.request(
+            "/api/projects",
+            method="POST",
+            payload={"name": "Serialized Operations", "slug": "serialized-operations"},
+        )
+        run_entered = threading.Event()
+        release_run = threading.Event()
+
+        def blocking_run(slug):
+            self.assertEqual("serialized-operations", slug)
+            run_entered.set()
+            if not release_run.wait(timeout=3):
+                raise TimeoutError("test did not release canonical run")
+            return {
+                "run_id": "serialized-run",
+                "stage": "blocked",
+                "status": "invalid",
+                "publication_readiness": "blocked",
+            }
+
+        with patch.object(self.workspace, "run_project", side_effect=blocking_run):
+            status, first = self.request(
+                "/api/projects/serialized-operations/runs",
+                method="POST",
+                payload={},
+            )
+            self.assertEqual(202, status)
+            self.assertTrue(run_entered.wait(timeout=2))
+
+            with self.assertRaises(HTTPError) as conflict:
+                self.request(
+                    "/api/projects/serialized-operations/author",
+                    method="POST",
+                    payload={},
+                )
+            self.assertEqual(409, conflict.exception.code)
+            error = json.loads(conflict.exception.read())
+            self.assertIn("already has an active operation", error["error"])
+
+            release_run.set()
+            deadline = time.monotonic() + 3
+            while time.monotonic() < deadline:
+                _, progress = self.request(
+                    f"/api/operations/{first['operation_id']}"
+                )
+                if progress["status"] in {"complete", "failed"}:
+                    break
+                time.sleep(0.02)
+            else:
+                self.fail("first project operation did not finish")
+
+            accepted, _ = self.request(
+                "/api/projects/serialized-operations/runs",
+                method="POST",
+                payload={},
+            )
+
+        self.assertEqual("complete", progress["status"])
+        self.assertEqual(202, accepted)
+
+    def test_reviewed_reading_source_authors_through_an_observable_http_operation(self):
+        test_adapter = http_test_reading_adapter()
+
+        def lookup(checksum):
+            if checksum == TEST_READING_SHA256:
+                return test_adapter
+            return adapter_for_checksum(checksum)
+
+        adapter_patch = patch(
+            "civil_plan_factory.studio.adapter_for_checksum", side_effect=lookup
+        )
+        adapter_patch.start()
+        self.addCleanup(adapter_patch.stop)
+        _, created = self.request(
+            "/api/projects",
+            method="POST",
+            payload={"name": "Reading Public Library Demo", "slug": "reading-demo"},
+        )
+        plan = TEST_READING_BYTES
+        self.request(
+            "/api/projects/reading-demo/inputs",
+            method="POST",
+            payload={
+                "filename": "25020-RPL_Bid_Drawings_2025_07_11.pdf",
+                "content_base64": base64.b64encode(plan).decode(),
+            },
+        )
+
+        _, before = self.request("/api/projects/reading-demo")
+        status, operation = self.request(
+            "/api/projects/reading-demo/author", method="POST", payload={}
+        )
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            _, progress = self.request(f"/api/operations/{operation['operation_id']}")
+            if progress["status"] in {"complete", "failed"}:
+                break
+            time.sleep(0.02)
+        else:
+            self.fail("reviewed authoring operation did not finish")
+        _, after = self.request("/api/projects/reading-demo")
+
+        _, run_operation = self.request(
+            "/api/projects/reading-demo/runs", method="POST", payload={}
+        )
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            _, run_progress = self.request(
+                f"/api/operations/{run_operation['operation_id']}"
+            )
+            if run_progress["status"] in {"complete", "failed"}:
+                break
+            time.sleep(0.02)
+        else:
+            self.fail("reviewed Reading pipeline operation did not finish")
+        run_semantic = (
+            Path(self.state_temp.name)
+            / "runs/reading-demo"
+            / run_progress["result"]["run_id"]
+            / "semantic-manifest.json"
+        )
+        original_run_semantic = run_semantic.read_bytes()
+        run_semantic.write_text("{}\n")
+        _, corrupt_run_detail = self.request("/api/projects/reading-demo")
+        self.assertEqual(
+            "blocked",
+            corrupt_run_detail["current_run"]["publication_readiness"],
+        )
+        self.assertEqual(
+            "corrupt", corrupt_run_detail["current_run"]["artifact_integrity"]
+        )
+        run_semantic.write_bytes(original_run_semantic)
+
+        publish_status, publication = self.request(
+            "/api/projects/reading-demo/publish",
+            method="POST",
+            payload={"run_id": run_progress["result"]["run_id"]},
+        )
+        envelope = json.loads(Path(publication["offline_import_file"]).read_text())
+
+        self.assertEqual("reading-demo", created["slug"])
+        self.assertEqual("available", before["reviewed_authoring"]["status"])
+        self.assertEqual(202, status)
+        self.assertEqual("complete", progress["status"])
+        self.assertEqual("reviewed_source_authored", progress["stage"])
+        self.assertEqual(37, progress["result"]["authored_feature_count"])
+        self.assertEqual("complete", after["reviewed_authoring"]["status"])
+        self.assertEqual("valid", after["validation_status"])
+        self.assertEqual("complete", run_progress["status"])
+        self.assertEqual("ready", run_progress["result"]["publication_readiness"])
+        self.assertEqual(201, publish_status)
+        self.assertEqual(
+            "excavation-field-map.semantic-publication/v1",
+            envelope["publication_schema"],
+        )
+        self.assertTrue(Path(publication["import_file"]).is_file())
+
+        envelope["manifest_json"] = "{}"
+        Path(publication["offline_import_file"]).write_text(
+            json.dumps(envelope, indent=2, sort_keys=True) + "\n"
+        )
+        _, after_tamper = self.request("/api/projects/reading-demo")
+        self.assertEqual(
+            "publication_readiness",
+            after_tamper["workflow_observation"]["stage"],
+        )
+        self.assertIsNone(
+            after_tamper["workflow_observation"]["outputs"]["publication"]
+        )
+
     def test_operator_touch_is_auditable_through_http(self):
         self.request(
             "/api/projects", method="POST", payload={"name": "Touch Log", "slug": "touch-log"}
@@ -169,6 +405,16 @@ class ModelStudioWebTests(unittest.TestCase):
         for run_id, completed_at, status in fixtures:
             path = runs / run_id
             path.mkdir(parents=True)
+            artifacts = {}
+            if status == "valid":
+                for name in (
+                    "validation-report.json",
+                    "parity-report.json",
+                    "semantic-manifest.json",
+                ):
+                    artifact = path / name
+                    artifact.write_text("{}\n")
+                    artifacts[name] = hashlib.sha256(artifact.read_bytes()).hexdigest()
             (path / "run.json").write_text(json.dumps({
                 "run_id": run_id,
                 "started_at": completed_at,
@@ -176,6 +422,7 @@ class ModelStudioWebTests(unittest.TestCase):
                 "status": status,
                 "publication_readiness": "ready" if status == "valid" else "blocked",
                 "project_fingerprint": current_fingerprint,
+                "artifacts": artifacts,
             }))
 
         _, detail = self.request("/api/projects/run-ordering")

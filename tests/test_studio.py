@@ -2,6 +2,7 @@ import importlib.util
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 
@@ -70,6 +71,13 @@ class ModelStudioModuleTests(unittest.TestCase):
             self.assertEqual(plan_bytes, Path(record["path"]).read_bytes())
             ledger = json.loads((root / "projects/oak-street/sources.lock.json").read_text())
             self.assertEqual(1, len(ledger["sources"]))
+            source = ledger["sources"][0]
+            self.assertEqual("project_bundle", source["citation_scope"])
+            self.assertFalse(Path(source["citation"]).is_absolute())
+            self.assertEqual(
+                Path(record["path"]),
+                (root / "projects/oak-street" / source["citation"]).resolve(),
+            )
 
     def test_review_notes_are_auditable_but_cannot_clear_a_validation_gate(self):
         with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
@@ -104,6 +112,49 @@ class ModelStudioModuleTests(unittest.TestCase):
             self.assertIn("spatial_basis", inventory["groups"])
             self.assertIn("system_coverage", inventory["groups"])
             self.assertTrue(all(group["next_action"] for group in inventory["groups"].values()))
+
+    def test_malformed_source_ledger_remains_an_actionable_invalid_project(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            workspace.create_project("Broken Source Ledger", "broken-source-ledger")
+            ledger = root / "projects/broken-source-ledger/sources.lock.json"
+            ledger.write_text("{malformed json\n")
+
+            detail = workspace.project_detail("broken-source-ledger")
+            listed = next(
+                project
+                for project in workspace.list_projects()
+                if project["slug"] == "broken-source-ledger"
+            )
+
+            self.assertEqual("invalid", detail["validation_status"])
+            self.assertIn("bundle.load_failed", {
+                issue["code"] for issue in detail["issues"]
+            })
+            self.assertEqual("unavailable", detail["reviewed_authoring"]["status"])
+            self.assertIn("source ledger", detail["reviewed_authoring"]["reason"].lower())
+            self.assertEqual("invalid", listed["validation_status"])
+
+    def test_missing_decision_ledger_remains_an_actionable_invalid_project(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            workspace.create_project("Missing Decisions", "missing-decisions")
+            (root / "projects/missing-decisions/decisions.json").unlink()
+
+            detail = workspace.project_detail("missing-decisions")
+
+            self.assertEqual("invalid", detail["validation_status"])
+            self.assertIn("bundle.load_failed", {
+                issue["code"] for issue in detail["issues"]
+            })
+            self.assertEqual("unavailable", detail["reviewed_authoring"]["status"])
+            self.assertIn(
+                "decision ledger", detail["reviewed_authoring"]["reason"].lower()
+            )
 
     def test_workflow_observation_exposes_evidence_decisions_blockers_outputs_and_timing(self):
         with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
@@ -225,6 +276,38 @@ class ModelStudioModuleTests(unittest.TestCase):
             import_file.write_text("{}\n")
             with self.assertRaisesRegex(ValueError, "Immutable publication"):
                 workspace.publish("hilyard", run["run_id"])
+
+    def test_publish_rejects_a_ready_run_after_authoritative_bundle_changes(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            shutil.copytree(REPOSITORY / "projects/hilyard", root / "projects/hilyard")
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            run = workspace.run_project("hilyard")
+            project_path = root / "projects/hilyard/project.json"
+            project = json.loads(project_path.read_text())
+            project["project"]["revision"] = "changed-after-run"
+            project_path.write_text(json.dumps(project, indent=2, sort_keys=True) + "\n")
+
+            with self.assertRaisesRegex(ValueError, "authoritative inputs changed"):
+                workspace.publish("hilyard", run["run_id"])
+
+    def test_incomplete_legacy_publication_is_not_advertised(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            publication_dir = Path(state) / "published/legacy-project/legacy-id"
+            publication_dir.mkdir(parents=True)
+            (publication_dir / "semantic-manifest.json").write_text("{}\n")
+            (publication_dir / "handoff-manifest.json").write_text(json.dumps({
+                "publication_id": "legacy-id",
+                "published_at": "2026-08-21T10:00:00Z",
+            }))
+
+            publication = workspace._latest_publication("legacy-project")
+
+            self.assertIsNone(publication)
 
 
 if __name__ == "__main__":

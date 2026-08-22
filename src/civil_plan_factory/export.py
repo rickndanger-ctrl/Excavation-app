@@ -1,3 +1,4 @@
+import copy
 from typing import Any
 
 from .validation import DISCLAIMER
@@ -38,6 +39,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         {
             "id": feature["id"],
             "type": feature["feature_type"],
+            "system": feature.get("system"),
             "layerId": feature["layer_id"],
             "phase": feature["phase_id"],
             "label": feature["label"],
@@ -54,6 +56,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         {
             "id": feature["id"],
             "type": feature["feature_type"],
+            "system": feature.get("system"),
             "layerId": feature["layer_id"],
             "phase": feature["phase_id"],
             "label": feature["label"],
@@ -70,6 +73,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         {
             "id": feature["id"],
             "type": feature["feature_type"],
+            "system": feature.get("system"),
             "layerId": feature["layer_id"],
             "phase": feature["phase_id"],
             "label": feature["label"],
@@ -108,15 +112,17 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
                 "fieldDetail": edge.get("field_detail", {}),
                 "provenance": edge["provenance"],
             })
-    return {
+    manifest = {
         "schema_version": "excavation-field-map.jobsite-package/v0.1.0",
         "canonical_model_version": model["schema_version"],
         "id": model["project"]["id"],
         "projectName": model["project"]["name"],
         "disclaimer": DISCLAIMER,
         "plan": {
-            "availability": "generated_vector_pdf",
-            "imageUrl": f"{artifact.get('basename', 'hilyard-site-layout')}.pdf",
+            "availability": artifact.get("plan_availability", "generated_vector_pdf"),
+            "imageUrl": artifact.get(
+                "image_url", f"{artifact.get('basename', 'hilyard-site-layout')}.pdf"
+            ),
             "widthFt": artifact.get("plan_width_ft", 178.59),
             "heightFt": artifact.get("plan_height_ft", 291.97),
             "coordinateBasis": artifact.get(
@@ -140,3 +146,4 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
             "decision_ids": [decision["id"] for decision in model["decisions"]],
         },
     }
+    return copy.deepcopy(manifest)

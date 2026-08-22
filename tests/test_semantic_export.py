@@ -1,3 +1,4 @@
+import copy
 import json
 import subprocess
 import sys
@@ -6,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from civil_plan_factory.export import build_semantic_manifest
+from civil_plan_factory.build import build_project
 from civil_plan_factory.io import load_project_bundle
 
 
@@ -55,6 +57,32 @@ class SemanticExportTests(unittest.TestCase):
             "Controlled fictional local grid; not surveyed",
             semantic["plan"]["coordinateBasis"],
         )
+
+    def test_coordinated_project_cannot_bypass_geospatial_parity_with_semantic_only_mode(self):
+        model = copy.deepcopy(load_project_bundle(PROJECT))
+        model.setdefault("artifact_contract", {})["delivery_mode"] = (
+            "semantic_only_ungeoreferenced"
+        )
+
+        with tempfile.TemporaryDirectory() as output:
+            result = build_project(
+                model,
+                Path(output),
+                Path("/Applications/QGIS-final-4_2_1.app"),
+            )
+            report = json.loads(
+                (Path(output) / "validation-report.json").read_text()
+            )
+
+            self.assertEqual(1, result)
+            self.assertEqual("invalid", report["status"])
+            self.assertIn(
+                "artifact.semantic_only_profile_invalid",
+                {issue["code"] for issue in report["issues"]},
+            )
+            self.assertFalse((Path(output) / "semantic-manifest.json").exists())
+            self.assertFalse(any(Path(output).glob("*.gpkg")))
+            self.assertFalse(any(Path(output).glob("*.pdf")))
 
     def test_cli_writes_deterministic_semantic_manifest_and_validation_report(self):
         with tempfile.TemporaryDirectory() as first, tempfile.TemporaryDirectory() as second:

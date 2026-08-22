@@ -30,7 +30,7 @@
           <div id="validation-chip" class="chip"></div>
         </section>
         <nav class="workflow" aria-label="Model Studio workflow">
-          <span class="active">1 · Intake</span><span>2 · Validate & build</span><span>3 · Review gates</span><span>4 · Publish handoff</span>
+          <span class="active">1 · Intake</span><span>2 · Author</span><span>3 · Validate & build</span><span>4 · Publish handoff</span>
         </nav>
         <div id="notice" class="notice" hidden></div>
         <section class="card factory-window">
@@ -65,6 +65,12 @@
             <div class="progress-track"><span id="progress-bar"></span></div>
             <div class="stage-row"><strong id="run-stage">Not started</strong><span id="run-detail">Validation → artifacts → parity</span></div>
             <div id="artifact-list" class="artifact-list"></div>
+          </section>
+          <section class="card authoring-card">
+            <div class="card-heading"><div><span class="eyebrow">Reviewed source adapter</span><h2>Canonical authoring</h2></div><span id="authoring-badge" class="chip blocked">Unavailable</span></div>
+            <p id="authoring-copy">A checksum-matched reviewed source is required.</p>
+            <button id="author-reviewed-model" class="primary" disabled>Author reviewed model</button>
+            <div id="authoring-result" class="publication-result"></div>
           </section>
           <section class="card provenance-card">
             <div class="card-heading"><div><span class="eyebrow">Evidence basis</span><h2>Provenance</h2></div></div>
