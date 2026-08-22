@@ -193,6 +193,34 @@ export type StatePlaneFit = {
   toWorld: (point: Point) => WorldPoint;
 };
 
+export type DistanceCalibrationCheck = {
+  id: string;
+  label: string;
+  start: Point;
+  end: Point;
+  expectedDistanceFt: number;
+};
+
+export type DistanceCalibrationAcceptance = {
+  maximumAbsoluteErrorFt: number;
+  maximumRelativeErrorPercent: number;
+};
+
+export type DistanceCalibrationReport = {
+  passed: boolean;
+  maximumAbsoluteErrorFt: number;
+  maximumRelativeErrorPercent: number;
+  checks: Array<{
+    id: string;
+    label: string;
+    expectedDistanceFt: number;
+    measuredDistanceFt: number;
+    absoluteErrorFt: number;
+    relativeErrorPercent: number;
+    passed: boolean;
+  }>;
+};
+
 export function fitStatePlaneTransform(
   controls: ReviewerControlPoint[],
   maxResidualFt: number,
@@ -257,6 +285,46 @@ export function fitStatePlaneTransform(
     scaleFtPerPageUnit: Math.hypot(a, b),
     rotationRadians: Math.atan2(b, a),
     toWorld,
+  };
+}
+
+export function evaluateDistanceCalibration(
+  fit: StatePlaneFit,
+  checks: DistanceCalibrationCheck[],
+  acceptance: DistanceCalibrationAcceptance,
+): DistanceCalibrationReport {
+  if (checks.length === 0) throw new Error('At least one sealed distance check is required.');
+  if (acceptance.maximumAbsoluteErrorFt < 0 || acceptance.maximumRelativeErrorPercent < 0) {
+    throw new Error('Calibration tolerances must be non-negative.');
+  }
+  const results = checks.map((check) => {
+    if (!(check.expectedDistanceFt > 0)) {
+      throw new Error(`Expected distance for ${check.id} must be greater than zero.`);
+    }
+    const start = fit.toWorld(check.start);
+    const end = fit.toWorld(check.end);
+    const measuredDistanceFt = Math.hypot(
+      end.easting - start.easting,
+      end.northing - start.northing,
+    );
+    const absoluteErrorFt = Math.abs(measuredDistanceFt - check.expectedDistanceFt);
+    const relativeErrorPercent = absoluteErrorFt / check.expectedDistanceFt * 100;
+    return {
+      id: check.id,
+      label: check.label,
+      expectedDistanceFt: check.expectedDistanceFt,
+      measuredDistanceFt,
+      absoluteErrorFt,
+      relativeErrorPercent,
+      passed: absoluteErrorFt <= acceptance.maximumAbsoluteErrorFt
+        && relativeErrorPercent <= acceptance.maximumRelativeErrorPercent,
+    };
+  });
+  return {
+    passed: results.every((check) => check.passed),
+    maximumAbsoluteErrorFt: Math.max(...results.map((check) => check.absoluteErrorFt)),
+    maximumRelativeErrorPercent: Math.max(...results.map((check) => check.relativeErrorPercent)),
+    checks: results,
   };
 }
 
