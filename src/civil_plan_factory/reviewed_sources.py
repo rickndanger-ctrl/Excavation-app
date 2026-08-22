@@ -104,6 +104,232 @@ def _point(
     }
 
 
+def _line(
+    *,
+    feature_id: str,
+    feature_type: str,
+    layer_id: str,
+    system: str,
+    label: str,
+    review_coordinates: list[list[float]],
+    source_id: str,
+    decision_id: str,
+    sheet: str,
+    pdf_page: int,
+    source_text: list[str],
+    confidence: str = "medium",
+    values: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "id": feature_id,
+        "feature_type": feature_type,
+        "system": system,
+        "layer_id": layer_id,
+        "phase_id": "reviewed-source",
+        "label": label,
+        "coordinates": [
+            _review_coordinates((point[0], point[1]))
+            for point in review_coordinates
+        ],
+        "field_detail": _review_detail(
+            confidence=confidence,
+            sheet=sheet,
+            pdf_page=pdf_page,
+            extraction="manual_vector_review",
+            source_text=source_text,
+            source_item_indexes=[],
+            source_review_coordinates=review_coordinates,
+            values=values,
+        ),
+        "provenance": _feature_provenance(source_id, decision_id),
+    }
+
+
+def _polygon(
+    *,
+    feature_id: str,
+    feature_type: str,
+    system: str,
+    label: str,
+    review_coordinates: list[list[float]],
+    source_id: str,
+    decision_id: str,
+    source_text: list[str],
+    values: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    feature = _line(
+        feature_id=feature_id,
+        feature_type=feature_type,
+        layer_id="finished-site",
+        system=system,
+        label=label,
+        review_coordinates=review_coordinates,
+        source_id=source_id,
+        decision_id=decision_id,
+        sheet="L1.1",
+        pdf_page=5,
+        source_text=source_text,
+        values=values,
+    )
+    return feature
+
+
+def _finished_site_features(
+    source_id: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Return the manually reviewed L1.1/L2.1 geometry, not inferred design."""
+
+    decision_id = "review-reading-finished-site"
+    polygons = [
+        _polygon(
+            feature_id="reading-library-footprint",
+            feature_type="building_footprint",
+            system="buildings_pads",
+            label="Existing Reading Public Library · project-side footprint",
+            review_coordinates=[[0, 18], [18, 18], [18, 58], [0, 58], [0, 18]],
+            source_id=source_id,
+            decision_id=decision_id,
+            source_text=["READING PUBLIC LIBRARY", "2 STORY MIXED MATERIAL"],
+            values={"scope": "Existing project-side building extent shown as context on L1.1."},
+        ),
+        _polygon(
+            feature_id="reading-proposed-concrete-walk",
+            feature_type="cement_concrete_pavement",
+            system="paving",
+            label="Proposed cement concrete walk and terrace apron",
+            review_coordinates=[
+                [18, 26], [53, 26], [53, 62], [15, 62], [15, 55],
+                [24, 55], [24, 42], [18, 42], [18, 26],
+            ],
+            source_id=source_id,
+            decision_id=decision_id,
+            source_text=["CEMENT CONCRETE PAVEMENT"],
+            values={"material": "cement concrete", "detail_reference": "1/L4.1"},
+        ),
+        _polygon(
+            feature_id="reading-proposed-unit-paver-terrace",
+            feature_type="unit_paver_area",
+            system="paving",
+            label="Proposed unit-paver terrace",
+            review_coordinates=[[28, 42], [45, 42], [45, 55], [28, 55], [28, 42]],
+            source_id=source_id,
+            decision_id=decision_id,
+            source_text=["UNIT PAVERS", "18.0'", "12.0'"],
+            values={"material": "unit pavers", "detail_reference": "2/L4.1"},
+        ),
+        _polygon(
+            feature_id="reading-proposed-planting-bed-north",
+            feature_type="planting_area",
+            system="grading",
+            label="Proposed upper terrace planting bed",
+            review_coordinates=[[18, 11], [50, 11], [50, 25], [18, 25], [18, 11]],
+            source_id=source_id,
+            decision_id=decision_id,
+            source_text=["LOAM AND SEED", "PLANTING PLAN AND DETAILS"],
+            values={"source_cross_reference": "L3.1"},
+        ),
+        _polygon(
+            feature_id="reading-proposed-planting-bed-south",
+            feature_type="planting_area",
+            system="grading",
+            label="Proposed lower terrace planting bed",
+            review_coordinates=[[16, 56], [55, 56], [55, 68], [16, 68], [16, 56]],
+            source_id=source_id,
+            decision_id=decision_id,
+            source_text=["LOAM AND SEED", "PLANTING PLAN AND DETAILS"],
+            values={"source_cross_reference": "L3.1"},
+        ),
+    ]
+    lines = [
+        _line(
+            feature_id="reading-limit-of-work",
+            feature_type="limit_of_work",
+            layer_id="finished-site",
+            system="construction_erosion",
+            label="Approximate limit of work",
+            review_coordinates=[[14, 8], [58, 8], [63, 69], [11, 69], [14, 8]],
+            source_id=source_id,
+            decision_id=decision_id,
+            sheet="L1.1",
+            pdf_page=5,
+            source_text=["APPROXIMATE LIMIT OF WORK"],
+        ),
+        *[
+            _line(
+                feature_id=feature_id,
+                feature_type="stone_seat_wall",
+                layer_id="finished-site",
+                system="structures",
+                label=label,
+                review_coordinates=coordinates,
+                source_id=source_id,
+                decision_id=decision_id,
+                sheet="L1.1",
+                pdf_page=5,
+                source_text=["PRE-ENGINEERED STONE SEAT WALL SYSTEM"],
+                values={"detail_reference": "3/L4.1"},
+            )
+            for feature_id, label, coordinates in (
+                ("reading-seat-wall-upper", "Proposed upper stone seat wall", [[22, 15], [47, 15]]),
+                ("reading-seat-wall-middle", "Proposed middle stone seat wall", [[22, 20], [48, 20]]),
+                ("reading-seat-wall-lower", "Proposed lower stone seat wall", [[21, 25], [49, 25]]),
+            )
+        ],
+        *[
+            _line(
+                feature_id=f"reading-proposed-contour-{elevation}",
+                feature_type="reviewed_proposed_contour_reference",
+                layer_id="grading",
+                system="grading",
+                label=f"Proposed contour {elevation}",
+                review_coordinates=coordinates,
+                source_id=source_id,
+                decision_id="review-reading-grading",
+                sheet="L2.1",
+                pdf_page=6,
+                source_text=["PROPOSED 1' CONTOUR", str(elevation)],
+                values={"elevation_ft": elevation},
+            )
+            for elevation, coordinates in (
+                (155, [[15, 61], [28, 57], [43, 59], [57, 63]]),
+                (156, [[15, 52], [29, 48], [44, 50], [56, 54]]),
+                (157, [[18, 43], [30, 39], [46, 42], [56, 47]]),
+            )
+        ],
+    ]
+    surface_review_boundary = [[14, 8], [58, 8], [63, 69], [11, 69], [14, 8]]
+    surfaces = [{
+        "id": "reading-proposed-terrace-finish-grade",
+        "feature_type": "reviewed_finish_grade_envelope",
+        "system": "grading",
+        "layer_id": "grading",
+        "phase_id": "reviewed-source",
+        "label": "Proposed terrace finish-grade surface · sparse source controls",
+        "boundary": [
+            _review_coordinates((point[0], point[1]))
+            for point in surface_review_boundary
+        ],
+        "vertical_datum": "SOURCE_PLAN_DATUM_UNVERIFIED",
+        "field_detail": _review_detail(
+            confidence="medium",
+            sheet="L2.1",
+            pdf_page=6,
+            extraction="manual_vector_review",
+            source_text=["PROPOSED 1' CONTOUR", "PROPOSED SPOT GRADE", "PROPOSED SLOPE DIRECTION"],
+            source_item_indexes=[],
+            source_review_coordinates=surface_review_boundary,
+            values={
+                "surface_status": "bounded_sparse_source_controls",
+                "unavailable": {
+                    "triangulation": "No calibrated TIN or staking surface is claimed.",
+                },
+            },
+        ),
+        "provenance": _feature_provenance(source_id, "review-reading-grading"),
+    }]
+    return polygons, lines, surfaces
+
+
 def _grading_points(source_id: str) -> list[dict[str, Any]]:
     decision_id = "review-reading-grading"
     rows = [
@@ -277,13 +503,17 @@ def _dry_utility_points(source_id: str) -> list[dict[str, Any]]:
 
 def _coverage() -> list[dict[str, Any]]:
     partial = {
-        "surfaces": "Twenty reviewed grading annotations are modeled, but contours, breaklines, and a calibrated surface remain unavailable.",
+        "surfaces": "Three proposed contour traces and the bounded terrace finish-grade review surface are modeled; a calibrated TIN remains unavailable.",
         "sanitary": "Two manholes, one cleanout, and one 8-inch PVC segment are reviewed; topology, slope, and unshown attributes remain unavailable.",
         "storm": "Seven drainage manholes and two catch basins are reviewed; 12-inch RCP and 30-inch CPP traces and connectivity are withheld.",
         "domestic_water": "Two water gates are reviewed; the water main, size, depth, hydrants, and connectivity are unavailable.",
         "site_lighting": "Two light bollards are reviewed; OHW and pole geometry, ownership, voltage, and connectivity are withheld.",
-        "structures": "Reviewed sanitary and storm structures are represented with only their source-backed attributes.",
-        "grading": "Twenty approved L2.1 annotations are represented; this is not a terrain surface or staking model.",
+        "structures": "Reviewed sanitary and storm structures plus the three proposed terrace seat-wall runs are represented with source-backed attributes.",
+        "grading": "Twenty approved L2.1 annotations, three proposed contour traces, and the bounded terrace surface are represented; this is not a staking model.",
+        "buildings_pads": "The existing library project-side footprint is retained as context; no new building or pad is proposed by this plan set.",
+        "sidewalks": "The proposed cement-concrete terrace walk is modeled from L1.1; unrelated existing walks remain context only.",
+        "paving": "The proposed cement-concrete and unit-paver areas are modeled from L1.1.",
+        "construction_erosion": "The approximate limit of work is modeled; temporary means and methods remain contractor-controlled.",
         "materials_specifications": "Only the source-labeled 8-inch PVC sewer segment and 6-inch PVC cleanout note are retained.",
         "plans_profiles_sections_schedules": "A semantic reviewed-source plan is generated; profiles, sections, schedules, and georeferenced plans are unavailable.",
         "field_details_workflows_checklists": "Source evidence, confidence, and unavailable fields are exposed; construction workflows and checklists are not authored.",
@@ -297,10 +527,7 @@ def _coverage() -> list[dict[str, Any]]:
         "power": "OHW and utility-pole evidence remain pending safe trace and system classification.",
         "telecom_fiber": "Legend entries and generic utility marks do not establish mapped telecom or fiber assets.",
         "roof_drainage": "No roof-drainage system is established by the reviewed evidence.",
-        "buildings_pads": "Building and pad geometry were not reviewed into this adapter.",
         "curbs": "Curb geometry was not reviewed into this adapter.",
-        "sidewalks": "Sidewalk geometry was not reviewed into this adapter.",
-        "paving": "Paving geometry and section data were not reviewed into this adapter.",
         "ada": "No accessibility geometry or compliance determination is claimed.",
         "demolition": "No demolition scope was reviewed into this adapter.",
         "construction_erosion": "No erosion-control or temporary-construction design was reviewed into this adapter.",
@@ -336,13 +563,38 @@ def _decisions(source_id: str) -> list[dict[str, Any]]:
             "source_ids": [source_id],
         },
         {
+            "id": "review-reading-finished-site",
+            "subject": "L1.1 finished-site geometry review",
+            "status": "reference-derived",
+            "value": {
+                "approved_area_count": 5,
+                "approved_line_count": 4,
+                "scope": [
+                    "existing library project-side footprint",
+                    "proposed cement-concrete walk",
+                    "proposed unit-paver terrace",
+                    "two proposed planting beds",
+                    "approximate limit of work",
+                    "three proposed seat-wall runs",
+                ],
+                "withheld_geometry": [
+                    "unlabeled inferred edges",
+                    "field coordinates",
+                    "staking offsets",
+                ],
+            },
+            "rationale": "Only visibly distinct, source-labeled L1.1 footprints and linework were manually reviewed into the finished-site model.",
+            "source_ids": [source_id],
+        },
+        {
             "id": "review-reading-grading",
             "subject": "L2.1 grading annotation review",
             "status": "reference-derived",
             "value": {
                 "approved_count": 20,
                 "rejected_candidate_ids": ["l2.1-grading-note-68", "l2.1-grading-note-80"],
-                "withheld_geometry": ["contours", "breaklines", "leader-line associations"],
+                "approved_geometry": ["three proposed contour traces", "bounded sparse-control finish-grade surface"],
+                "withheld_geometry": ["untraced contours", "breaklines", "leader-line associations", "calibrated TIN"],
             },
             "rationale": "Only ten spot elevations, four BW/TW pairs, four slopes, and two rim adjustments passed review.",
             "source_ids": [source_id],
@@ -400,6 +652,7 @@ def _build_reading_bundle(
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     source_id = str(source["id"])
     sanitary_points, sanitary_lines = _sanitary_features(source_id)
+    finished_polygons, finished_lines, finished_surfaces = _finished_site_features(source_id)
     points = (
         _grading_points(source_id)
         + sanitary_points
@@ -409,7 +662,7 @@ def _build_reading_bundle(
     )
     project_identity = copy.deepcopy(intake_project["project"])
     project_identity.update({
-        "revision": "reading-reviewed-v1",
+        "revision": "reading-reviewed-v3",
         "jurisdiction": "Town of Reading, Massachusetts — source context only",
         "disclaimer": DISCLAIMER,
     })
@@ -417,14 +670,14 @@ def _build_reading_bundle(
         "schema_version": "civil-plan-factory.project/v0.1.0",
         "project": project_identity,
         "reviewed_source_adapter": {
-            "adapter_id": "reading-public-library-reviewed-v1",
+            "adapter_id": "reading-public-library-reviewed-v3",
             "source_sha256": READING_PLAN_SHA256,
             "status": "complete",
         },
         "artifact_contract": {
             "basename": "reading-public-library-reviewed-model",
             "delivery_mode": "semantic_only_ungeoreferenced",
-            "plan_availability": "semantic_review_grid",
+            "plan_availability": "reviewed_finished_site_model",
             "image_url": "",
             "plan_width_ft": 120,
             "plan_height_ft": 80,
@@ -452,16 +705,22 @@ def _build_reading_bundle(
         "phases": [{
             "id": "reviewed-source",
             "name": "Reviewed source evidence",
-            "summary": "Human-reviewed source annotations and approximate sheet-space locations only.",
+            "summary": "Human-reviewed finished-site geometry and annotations in uncalibrated sheet space.",
         }],
         "layers": [
+            {"id": "finished-site", "name": "Finished Site", "color": "#64748b", "defaultVisible": True},
             {"id": "grading", "name": "Grading", "color": "#d97706", "defaultVisible": True},
             {"id": "sanitary", "name": "Sanitary", "color": "#9333ea", "defaultVisible": True},
             {"id": "storm", "name": "Storm", "color": "#0369a1", "defaultVisible": True},
             {"id": "water", "name": "Water", "color": "#2563eb", "defaultVisible": True},
             {"id": "dry-utilities", "name": "Dry Utilities", "color": "#a16207", "defaultVisible": True},
         ],
-        "features": {"points": points, "lines": sanitary_lines, "polygons": [], "surfaces": []},
+        "features": {
+            "points": points,
+            "lines": sanitary_lines + finished_lines,
+            "polygons": finished_polygons,
+            "surfaces": finished_surfaces,
+        },
         "networks": [],
         "deliverables": {"plans": [], "profiles": [], "sections": [], "schedules": [], "detail_cards": []},
         "contract_coverage": _coverage(),
@@ -469,7 +728,7 @@ def _build_reading_bundle(
             DISCLAIMER,
             "Feature positions are source-sheet review locations and are not calibrated field coordinates.",
             "Elevations preserve source annotations, but their vertical datum was not independently established by this adapter.",
-            "Contours, breaklines, storm pipes, water mains, OHW, poles, and unsupported systems are explicitly withheld rather than inferred.",
+            "Untraced contours, calibrated breaklines/TIN, storm pipes, water mains, OHW, poles, and unsupported systems are explicitly withheld rather than inferred.",
             "Reference-derived reviewed evidence is not survey control, construction staking, permit, bid, or construction authority.",
         ],
     }
@@ -477,10 +736,10 @@ def _build_reading_bundle(
     reviewed_source.update({
         "authority": "Town of Reading bid drawing set; page-specific evidence reviewed for product-development test use",
         "provenance_status": "reference-derived",
-        "supports": ["grading", "sanitary", "storm", "water", "dry-utilities"],
+        "supports": ["finished-site", "grading", "sanitary", "storm", "water", "dry-utilities"],
         "review": {
-            "adapter_id": "reading-public-library-reviewed-v1",
-            "scope": "L2.1 page 6 and Topographic Survey page 2",
+            "adapter_id": "reading-public-library-reviewed-v3",
+            "scope": "L1.1 page 5, L2.1 page 6, and Topographic Survey page 2",
             "limitations": "Manual review and native PDF text extraction; uncalibrated sheet-space locations.",
         },
     })
@@ -500,8 +759,8 @@ def _build_reading_bundle(
 
 REVIEWED_SOURCE_ADAPTERS: dict[str, ReviewedSourceAdapter] = {
     READING_PLAN_SHA256: ReviewedSourceAdapter(
-        adapter_id="reading-public-library-reviewed-v1",
-        title="Reading Public Library reviewed grading and utilities",
+        adapter_id="reading-public-library-reviewed-v3",
+        title="Reading Public Library reviewed finished site, grading, and utilities",
         source_sha256=READING_PLAN_SHA256,
         build=_build_reading_bundle,
     ),

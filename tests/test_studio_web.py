@@ -344,7 +344,7 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertEqual(202, status)
         self.assertEqual("complete", progress["status"])
         self.assertEqual("reviewed_source_authored", progress["stage"])
-        self.assertEqual(37, progress["result"]["authored_feature_count"])
+        self.assertEqual(50, progress["result"]["authored_feature_count"])
         self.assertEqual("complete", after["reviewed_authoring"]["status"])
         self.assertEqual("valid", after["validation_status"])
         self.assertEqual("complete", run_progress["status"])

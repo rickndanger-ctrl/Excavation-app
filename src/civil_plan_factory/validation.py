@@ -194,7 +194,10 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
             }
         ]
         profile_checks = {
-            "artifact_contract.plan_availability": artifact.get("plan_availability") == "semantic_review_grid",
+            "artifact_contract.plan_availability": artifact.get("plan_availability") in {
+                "semantic_review_grid",
+                "reviewed_finished_site_model",
+            },
             "artifact_contract.image_url": artifact.get("image_url") == "",
             "artifact_contract.coordinate_basis": artifact.get("coordinate_basis") == SEMANTIC_REVIEW_GRID_BASIS,
             "artifact_contract.plan_width_ft": _finite_coordinate(artifact.get("plan_width_ft")) and artifact.get("plan_width_ft", 0) > 0,
