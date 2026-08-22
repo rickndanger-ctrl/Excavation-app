@@ -540,7 +540,6 @@ export function FieldMapPage() {
         ref={modelPackageInputRef}
         className="sr-only"
         type="file"
-        accept="application/json,.json"
         aria-label="Choose a semantic model package"
         onChange={(event) => {
           importModelPackage(event.target.files?.[0]);
