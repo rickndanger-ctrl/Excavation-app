@@ -15,13 +15,13 @@ test('keeps the complete authored overview legible on a phone without dropping g
   const chooser = page.waitForEvent('filechooser');
   await drawer.getByRole('button', { name: 'Import Model Package' }).click();
   await (await chooser).setFiles(manifestPath);
-  await expect(page.getByRole('status')).toContainText('123 semantic features');
+  await expect(page.getByRole('status')).toContainText('129 semantic features');
 
   await page.getByRole('button', { name: 'Menu' }).click();
   drawer = page.locator('.field-drawer');
   await drawer.getByLabel('Select excavation phase').selectOption('__overview__');
   await expect(drawer).toHaveCount(0);
 
-  await expect(page.locator('[data-object-id]')).toHaveCount(123);
+  await expect(page.locator('[data-object-id]')).toHaveCount(129);
   expect(await page.locator('.plan-canvas__overlay text').count()).toBeLessThanOrEqual(40);
 });

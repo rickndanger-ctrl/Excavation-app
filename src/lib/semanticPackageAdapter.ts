@@ -86,7 +86,9 @@ function formatValue(value: unknown): string | undefined {
 }
 
 function consumerLayerId(source: UnknownRecord): string {
+  if (source.layerId === 'site') return 'finished-site';
   if (source.layerId !== 'water') return source.layerId!;
+  if (source.id?.includes('public-main') || source.id?.includes('reference-main')) return 'water-reference';
   if (source.system === 'domestic_water' || source.id?.startsWith('domestic-water-')) return 'domestic-water';
   if (source.system === 'fire_water' || source.id?.startsWith('fire-')) return 'fire-water';
   return 'water-reference';
@@ -102,13 +104,12 @@ function consumerLayers(sourceLayers: unknown[]): JobsitePackage['layers'] {
     ];
     const names: Record<string, string> = {
       property: 'Property / Constraints',
-      site: 'Building / Site',
       sanitary: 'Sanitary Sewer',
       storm: 'Storm / Roof Drainage',
     };
     return [{
-      id: layer.id!,
-      name: names[layer.id!] ?? String(layer.name),
+      id: layer.id === 'site' ? 'finished-site' : layer.id!,
+      name: layer.id === 'site' ? 'Finished Job Layout' : names[layer.id!] ?? String(layer.name),
       color: String(layer.color),
       defaultVisible: layer.defaultVisible !== false,
     }];

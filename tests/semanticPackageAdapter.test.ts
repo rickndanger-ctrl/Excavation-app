@@ -72,7 +72,7 @@ test('splits combined producer water geometry into independent domestic, fire, a
 
   assert.equal(jobsite.objects.length, 71);
   assert.equal(counts.property, 12);
-  assert.equal(counts.site, 5);
+  assert.equal(counts['finished-site'], 5);
   assert.equal(counts.sanitary, 9);
   assert.equal(counts.storm, 18);
   assert.equal(counts.grading, 2);

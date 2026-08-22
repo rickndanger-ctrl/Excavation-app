@@ -386,11 +386,16 @@ function semanticPolygonStyle(obj: BlueprintObject, fallbackColor: string, selec
 
   const styles: Record<string, { fill: string; stroke: string; fillOpacity: number; labelColor: string }> = {
     building_footprint: { fill: '#334155', stroke: '#0f172a', fillOpacity: 0.82, labelColor: '#ffffff' },
+    building: { fill: '#334155', stroke: '#0f172a', fillOpacity: 0.82, labelColor: '#ffffff' },
+    building_pad: { fill: '#cbd5e1', stroke: '#64748b', fillOpacity: 0.78, labelColor: '#334155' },
     existing_concrete_walk: { fill: '#d6d3d1', stroke: '#78716c', fillOpacity: 0.88, labelColor: '#44403c' },
     existing_concrete_sidewalk: { fill: '#d6d3d1', stroke: '#78716c', fillOpacity: 0.88, labelColor: '#44403c' },
+    pedestrian_flatwork: { fill: '#e7e5e4', stroke: '#78716c', fillOpacity: 0.92, labelColor: '#44403c' },
     cement_concrete_pavement: { fill: '#e7e5e4', stroke: '#78716c', fillOpacity: 0.92, labelColor: '#44403c' },
+    pavement_area: { fill: '#64748b', stroke: '#334155', fillOpacity: 0.86, labelColor: '#ffffff' },
     unit_paver_area: { fill: '#d6b98c', stroke: '#8b6f47', fillOpacity: 0.92, labelColor: '#5c452b' },
     planting_area: { fill: '#7fa36b', stroke: '#527146', fillOpacity: 0.84, labelColor: '#294325' },
+    landscape_area: { fill: '#7fa36b', stroke: '#527146', fillOpacity: 0.84, labelColor: '#294325' },
     existing_lawn_area: { fill: '#a7c99a', stroke: '#64845a', fillOpacity: 0.78, labelColor: '#36522f' },
   };
   const style = styles[obj.type] ?? { fill: '#94a3b8', stroke: '#475569', fillOpacity: 0.48, labelColor: '#334155' };
@@ -407,7 +412,9 @@ function showOverviewLabel(obj: BlueprintObject, selected: boolean, suppressed: 
   if (selected) return true;
   if (obj.layerId !== 'finished-site') return !suppressed;
   if (obj.geometry?.type === 'LineString') return false;
-  return obj.type === 'building_footprint' || (obj.type === 'unit_paver_area' && !suppressed);
+  return obj.type === 'building_footprint'
+    || obj.type === 'building'
+    || ((obj.type === 'unit_paver_area' || obj.type === 'pavement_area') && !suppressed);
 }
 
 export function PlanCanvas({

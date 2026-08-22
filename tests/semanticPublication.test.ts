@@ -40,7 +40,7 @@ test('accepts an exact, checksum-bound package only after the existing semantic 
 
   assert.equal(parsed.identity, 'hilyard-apartment-test@hilyard-complete-v1');
   assert.equal(parsed.jobsite.id, 'hilyard-apartment-test');
-  assert.equal(parsed.jobsite.objects.length, 123);
+  assert.equal(parsed.jobsite.objects.length, 129);
   assert.equal(parsed.envelope.content_sha256, await sha256Hex(manifestJson));
 });
 

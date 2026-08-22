@@ -122,9 +122,33 @@ function ForemanStrip({ object, distanceFt }: { object: BlueprintObject; distanc
 // ── Tab: Summary ──────────────────────────────────────────────────────────────
 
 function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceFt: number | null }) {
-  const semanticDetails = Object.entries(object.fieldDetail ?? {});
+  const rawMeasurementTips = object.fieldDetail?.measurement_tips;
+  const measurementTips = Array.isArray(rawMeasurementTips)
+    ? rawMeasurementTips.filter((value): value is { id?: string; label: string; distance_ft: number } => (
+      Boolean(value)
+      && typeof value === 'object'
+      && typeof (value as Record<string, unknown>).label === 'string'
+      && Number.isFinite((value as Record<string, unknown>).distance_ft)
+    ))
+    : [];
+  const semanticDetails = Object.entries(object.fieldDetail ?? {})
+    .filter(([key]) => key !== 'measurement_tips');
   return (
     <div className="tab-content">
+      {measurementTips.length > 0 && (
+        <div className="detail-section measurement-tips">
+          <div className="detail-section__title">Measurement &amp; Location Tips</div>
+          <ul className="info-list">
+            {measurementTips.map((tip, index) => (
+              <li key={tip.id ?? `${object.id}-measurement-tip-${index}`}>
+                <strong>{tip.distance_ft.toFixed(1)} FT</strong> · {tip.label}
+              </li>
+            ))}
+          </ul>
+          <p className="measurement-tips__basis">Plan-derived guidance · verify control before field use</p>
+        </div>
+      )}
+
       {/* Location / layout */}
       {(object.nearbyRef || object.locationGuidance) && (
         <div className="detail-section">

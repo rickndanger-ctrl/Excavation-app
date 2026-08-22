@@ -33,7 +33,7 @@ test('discovers a directly published immutable package in the phone project flow
   await page.locator('.project-selector__btn').click();
   await expect(page.getByRole('button', { name: /Hilyard Apartment Civil Plan Test/ })).toBeVisible();
   await page.getByRole('button', { name: /Hilyard Apartment Civil Plan Test/ }).click();
-  await expect(page.locator('[data-object-id]')).toHaveCount(123);
+  await expect(page.locator('[data-object-id]')).toHaveCount(129);
   await expect(page.getByText('FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION', { exact: true })).toBeVisible();
   await expect(page.getByText('● Immutable package · offline')).toBeVisible();
   await page.getByLabel('Select excavation phase').selectOption('__overview__');
@@ -48,7 +48,7 @@ test('discovers a directly published immutable package in the phone project flow
     ['Fire Water', 'fire-water', 12],
     ['Water Source Reference', 'water-reference', 1],
     ['Gas / Power / Telecom / Lighting', 'dry-utilities', 25],
-    ['Building / Site', 'site', 5],
+    ['Finished Job Layout', 'finished-site', 11],
     ['Construction / Erosion Control', 'construction-erosion', 4],
   ] as const;
   for (const [label, layerId, expectedCount] of layers) {
@@ -71,6 +71,6 @@ test('discovers a directly published immutable package in the phone project flow
   await page.unroute('**/semantic-publications.local.json');
   await page.route('**/semantic-publications.local.json', (route) => route.abort('internetdisconnected'));
   await page.reload();
-  await expect(page.locator('[data-object-id]')).toHaveCount(123);
+  await expect(page.locator('[data-object-id]')).toHaveCount(129);
   await expect(page.getByText('FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION', { exact: true })).toBeVisible();
 });

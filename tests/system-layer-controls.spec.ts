@@ -47,7 +47,7 @@ test('binds the latest civil systems to the existing Layers controls without rep
   await expect(page.getByLabel('Fire Water')).toBeChecked();
   await expect(page.getByLabel('Water Source Reference')).toHaveCount(0);
   await expect(page.getByLabel('Property / Constraints')).toHaveCount(0);
-  await expect(page.getByText('Building / Site', { exact: true })).toBeVisible();
+  await expect(page.getByText('Finished Job Layout', { exact: true })).toBeVisible();
 
   await page.getByLabel('Select excavation phase').selectOption('temporary');
   await page.getByRole('button', { name: 'Menu' }).click();
@@ -58,7 +58,7 @@ test('binds the latest civil systems to the existing Layers controls without rep
   await page.getByRole('button', { name: 'Menu' }).click();
   await expect(page.getByText('Water Source Reference', { exact: true })).toBeVisible();
   await expect(page.getByText('Property / Constraints', { exact: true })).toBeVisible();
-  await expect(page.getByText('Building / Site', { exact: true })).toBeVisible();
+  await expect(page.getByText('Finished Job Layout', { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Close' }).click();
   await page.getByRole('button', { name: 'Search objects' }).click();

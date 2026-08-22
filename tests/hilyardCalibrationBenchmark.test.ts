@@ -85,8 +85,8 @@ test('calibrates the actual Hilyard plan sheet and recovers all sealed distances
   );
 
   assert.equal(report.passed, true);
-  assert.equal(report.checks.length, 12);
-  assert.equal(report.checks.filter((check) => check.passed).length, 12);
+  assert.equal(report.checks.length, 15);
+  assert.equal(report.checks.filter((check) => check.passed).length, 15);
   assert.ok(report.maximumAbsoluteErrorFt < 1e-6);
   assert.ok(fit.rmsResidualFt < 1e-6);
 });
