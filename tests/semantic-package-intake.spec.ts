@@ -50,18 +50,28 @@ test('renders the recognizable finished job as a material-styled base beneath wo
   const building = page.locator('[data-object-id="reading-library-footprint"]');
   const sidewalk = page.locator('[data-object-id="reading-existing-south-sidewalk"]');
   const lawn = page.locator('[data-object-id="reading-existing-south-lawn"]');
+  const westWalk = page.locator('[data-object-id="reading-existing-west-concrete-walk"]');
+  const seatWall = page.locator('[data-object-id="reading-seat-wall-upper"]');
   const sanitary = page.locator('[data-object-id="survey-smh-west"]');
+  const basePrecedesOverlay = await building.evaluate((element, overlay) => Boolean(
+    element.compareDocumentPosition(overlay) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ), await sanitary.elementHandle());
+  expect(basePrecedesOverlay).toBe(true);
+
+  await page.getByRole('button', { name: 'Menu' }).click();
+  for (const layer of ['Grading', 'Sanitary Sewer', 'Storm / Roof Drainage', 'Water Source Reference', 'Dry Utilities']) {
+    await page.getByText(layer, { exact: true }).click();
+  }
+  await page.getByRole('button', { name: 'Close' }).click();
 
   await expect(building.locator('polygon')).toHaveAttribute('fill', '#334155');
   await expect(building.locator('polygon')).toHaveAttribute('fill-opacity', '0.82');
   await expect(sidewalk.locator('polygon')).toHaveAttribute('fill', '#d6d3d1');
   await expect(lawn.locator('polygon')).toHaveAttribute('fill', '#a7c99a');
   await expect(building.locator('text')).toHaveText('Reading Public Library');
+  await expect(westWalk.locator('text')).toHaveCount(0);
+  await expect(seatWall.locator('text')).toHaveCount(0);
 
-  const basePrecedesOverlay = await building.evaluate((element, overlay) => Boolean(
-    element.compareDocumentPosition(overlay) & Node.DOCUMENT_POSITION_FOLLOWING,
-  ), await sanitary.elementHandle());
-  expect(basePrecedesOverlay).toBe(true);
 });
 
 test('imports, searches, and clicks the real Hilyard point, line, and polygon package', async ({ page }) => {

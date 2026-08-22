@@ -403,6 +403,13 @@ function semanticPolygonStyle(obj: BlueprintObject, fallbackColor: string, selec
   };
 }
 
+function showOverviewLabel(obj: BlueprintObject, selected: boolean, suppressed: boolean): boolean {
+  if (selected) return true;
+  if (obj.layerId !== 'finished-site') return !suppressed;
+  if (obj.geometry?.type === 'LineString') return false;
+  return obj.type === 'building_footprint' || (obj.type === 'unit_paver_area' && !suppressed);
+}
+
 export function PlanCanvas({
   jobsite,
   userLocation,
@@ -808,13 +815,13 @@ export function PlanCanvas({
                 const style = semanticPolygonStyle(obj, color, selected);
                 return <g key={obj.id} className="semantic-feature semantic-feature--polygon" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="Polygon" data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'} opacity={opacity}>
                   <polygon points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill={style.fill} fillOpacity={style.fillOpacity} stroke={style.stroke} strokeWidth={style.strokeWidth} onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
-                  {(selected || obj.type === 'building_footprint' || !labelLayout?.suppressed) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y : labelLayout?.labelY ?? obj.y} textAnchor="middle" fontSize={obj.type === 'building_footprint' ? '3.7' : '3.2'} fontWeight={obj.type === 'building_footprint' ? '700' : undefined} fill={style.labelColor} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
+                  {showOverviewLabel(obj, selected, Boolean(labelLayout?.suppressed)) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y : labelLayout?.labelY ?? obj.y} textAnchor="middle" fontSize={obj.type === 'building_footprint' ? '3.7' : '3.2'} fontWeight={obj.type === 'building_footprint' ? '700' : undefined} fill={style.labelColor} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
                 </g>;
               }
               if (geometry?.type === 'LineString') {
                 return <g key={obj.id} className="semantic-feature semantic-feature--line" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="LineString" data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'} opacity={opacity}>
                   <polyline points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" stroke={selected ? '#ea4335' : color} strokeWidth={selected ? 2.2 : 1.4} strokeLinecap="round" onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
-                  {(selected || !labelLayout?.suppressed) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y - 2 : labelLayout?.labelY ?? obj.y - 2} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
+                  {showOverviewLabel(obj, selected, Boolean(labelLayout?.suppressed)) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y - 2 : labelLayout?.labelY ?? obj.y - 2} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
                 </g>;
               }
               return <g key={obj.id} opacity={opacity} data-geometry-type="Point" style={{ pointerEvents: inPhase ? 'auto' : 'none' }}>
