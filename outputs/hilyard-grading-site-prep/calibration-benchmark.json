@@ -403,6 +403,10 @@
       ],
       "id": "CAL-1",
       "label": "Southwest parcel corner",
+      "pdf_geometry_ref": {
+        "feature_id": "property-site-boundary",
+        "vertex_index": 0
+      },
       "status": "reference_scale_test_control_not_for_staking"
     },
     {
@@ -412,6 +416,10 @@
       ],
       "id": "CAL-2",
       "label": "Southeast parcel corner",
+      "pdf_geometry_ref": {
+        "feature_id": "property-site-boundary",
+        "vertex_index": 1
+      },
       "status": "reference_scale_test_control_not_for_staking"
     },
     {
@@ -421,6 +429,10 @@
       ],
       "id": "CAL-3",
       "label": "Northeast parcel bend",
+      "pdf_geometry_ref": {
+        "feature_id": "property-site-boundary",
+        "vertex_index": 2
+      },
       "status": "reference_scale_test_control_not_for_staking"
     }
   ]

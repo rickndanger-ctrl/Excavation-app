@@ -5602,6 +5602,16 @@
     "imageUrl": "hilyard-site-layout.pdf",
     "widthFt": 178.59
   },
+  "planCalibration": {
+    "authority": "Product QA on reference-scale test geometry; not survey or staking control.",
+    "checkCount": 15,
+    "controlCount": 3,
+    "controlRmsResidualFt": 0.0,
+    "maximumAbsoluteErrorFt": 4.99e-07,
+    "maximumRelativeErrorPercent": 7.99e-07,
+    "passedCheckCount": 15,
+    "status": "passed_product_qa"
+  },
   "projectName": "Hilyard Apartment Civil Plan Test",
   "provenance": {
     "decision_ids": [

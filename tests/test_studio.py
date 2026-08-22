@@ -272,6 +272,14 @@ class ModelStudioModuleTests(unittest.TestCase):
             self.assertEqual(DISCLAIMER, handoff["disclaimer"])
             self.assertEqual(publication["publication_id"], handoff["publication_id"])
             self.assertEqual(hashlib.sha256(import_file.read_bytes()).hexdigest(), handoff["artifacts"]["semantic-manifest.json"])
+            self.assertIn("calibration-report.json", handoff["artifacts"])
+            self.assertNotIn("calibration-benchmark.json", handoff["artifacts"])
+            self.assertTrue(
+                (Path(publication["directory"]) / "calibration-report.json").is_file()
+            )
+            self.assertFalse(
+                (Path(publication["directory"]) / "calibration-benchmark.json").exists()
+            )
 
             import_file.write_text("{}\n")
             with self.assertRaisesRegex(ValueError, "Immutable publication"):

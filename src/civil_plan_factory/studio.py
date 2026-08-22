@@ -388,10 +388,20 @@ class StudioWorkspace:
             or any(Path(name).name != name for name in artifacts)
         ):
             raise ValueError("Run artifact lock is invalid")
-        artifact_names = sorted(name for name in artifacts if name != "run.json")
-        current_hashes = {name: _sha256(run_path / name) for name in artifact_names}
-        if current_hashes != artifacts:
+        locked_artifact_names = sorted(name for name in artifacts if name != "run.json")
+        locked_hashes = {
+            name: _sha256(run_path / name) for name in locked_artifact_names
+        }
+        if locked_hashes != artifacts:
             raise ValueError("Run artifacts changed after validation; rerun before publishing")
+        # The sealed benchmark contains the withheld answers used to prove plan
+        # calibration. It remains part of the immutable producer run, but must
+        # never cross the publication boundary into the field application.
+        qa_only_artifacts = {"calibration-benchmark.json"}
+        artifact_names = [
+            name for name in locked_artifact_names if name not in qa_only_artifacts
+        ]
+        current_hashes = {name: locked_hashes[name] for name in artifact_names}
         manifest_json = semantic_path.read_text(encoding="utf-8")
         envelope = {
             "publication_schema": SEMANTIC_PUBLICATION_SCHEMA,

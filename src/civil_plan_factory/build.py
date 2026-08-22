@@ -118,8 +118,12 @@ def build_calibration_benchmark(model: dict[str, Any]) -> dict[str, Any] | None:
                 "label": label,
                 "coordinates": coordinates,
                 "status": "reference_scale_test_control_not_for_staking",
+                "pdf_geometry_ref": {
+                    "feature_id": "property-site-boundary",
+                    "vertex_index": index,
+                },
             }
-            for control_id, label, coordinates in controls
+            for index, (control_id, label, coordinates) in enumerate(controls)
         ],
         "acceptance": {
             "maximum_absolute_error_ft": 0.25,
@@ -127,6 +131,107 @@ def build_calibration_benchmark(model: dict[str, Any]) -> dict[str, Any] | None:
             "note": "Product QA tolerance for the generated vector plan; not a survey or construction tolerance.",
         },
         "sealed_checks": checks,
+    }
+
+
+def verify_calibration_benchmark(
+    pdf_path: Path,
+    benchmark: dict[str, Any],
+) -> dict[str, Any]:
+    from pypdf import PdfReader
+
+    reader = PdfReader(pdf_path)
+    content = b"\n".join(page.get_contents().get_data() for page in reader.pages)
+    pdf_geometry: dict[str, Any] = {}
+    for encoded in re.findall(rb"%MS_GEOM ([A-Za-z0-9+/=]+)", content):
+        marker = json.loads(base64.b64decode(encoded))
+        pdf_geometry.setdefault(marker["id"], marker["page_coordinates"])
+
+    def page_point(reference: dict[str, Any]) -> list[float]:
+        feature_id = reference["feature_id"]
+        vertex_index = reference["vertex_index"]
+        try:
+            point = pdf_geometry[feature_id][vertex_index]
+        except (KeyError, IndexError, TypeError) as error:
+            raise ValueError(f"Missing PDF calibration geometry {feature_id}[{vertex_index}]") from error
+        return [float(point[0]), float(point[1])]
+
+    controls = [
+        {
+            "id": control["id"],
+            "page": page_point(control["pdf_geometry_ref"]),
+            "world": [float(value) for value in control["coordinates"]],
+        }
+        for control in benchmark["visible_controls"]
+    ]
+    mean_page = [sum(row["page"][axis] for row in controls) / len(controls) for axis in (0, 1)]
+    mean_world = [sum(row["world"][axis] for row in controls) / len(controls) for axis in (0, 1)]
+    denominator = 0.0
+    a_numerator = 0.0
+    b_numerator = 0.0
+    for control in controls:
+        x = control["page"][0] - mean_page[0]
+        y = control["page"][1] - mean_page[1]
+        easting = control["world"][0] - mean_world[0]
+        northing = control["world"][1] - mean_world[1]
+        denominator += x * x + y * y
+        a_numerator += x * easting + y * northing
+        b_numerator += x * northing - y * easting
+    if denominator < 1e-9:
+        raise ValueError("Calibration controls are degenerate")
+    a = a_numerator / denominator
+    b = b_numerator / denominator
+    translate_easting = mean_world[0] - a * mean_page[0] + b * mean_page[1]
+    translate_northing = mean_world[1] - b * mean_page[0] - a * mean_page[1]
+
+    def to_world(point: list[float]) -> list[float]:
+        return [
+            a * point[0] - b * point[1] + translate_easting,
+            b * point[0] + a * point[1] + translate_northing,
+        ]
+
+    squared_control_error = 0.0
+    for control in controls:
+        recovered = to_world(control["page"])
+        squared_control_error += math.dist(recovered, control["world"]) ** 2
+    control_rms = math.sqrt(squared_control_error / len(controls))
+
+    absolute_tolerance = benchmark["acceptance"]["maximum_absolute_error_ft"]
+    relative_tolerance = benchmark["acceptance"]["maximum_relative_error_percent"]
+    results = []
+    for check in benchmark["sealed_checks"]:
+        start = to_world(page_point(check["pdf_geometry_refs"]["start"]))
+        end = to_world(page_point(check["pdf_geometry_refs"]["end"]))
+        measured = math.dist(start, end)
+        absolute_error = abs(measured - check["expected_distance_ft"])
+        relative_error = absolute_error / check["expected_distance_ft"] * 100
+        results.append({
+            "id": check["id"],
+            "label": check["label"],
+            "expected_distance_ft": check["expected_distance_ft"],
+            "measured_distance_ft": round(measured, 9),
+            "absolute_error_ft": round(absolute_error, 9),
+            "relative_error_percent": round(relative_error, 9),
+            "passed": absolute_error <= absolute_tolerance and relative_error <= relative_tolerance,
+        })
+    maximum_absolute_error = max(row["absolute_error_ft"] for row in results)
+    maximum_relative_error = max(row["relative_error_percent"] for row in results)
+    passed_count = sum(1 for row in results if row["passed"])
+    valid = passed_count == len(results) and control_rms <= absolute_tolerance
+    return {
+        "schema_version": "civil-plan-factory.calibration-report/v0.1.0",
+        "disclaimer": DISCLAIMER,
+        "status": "valid" if valid else "invalid",
+        "control_count": len(controls),
+        "check_count": len(results),
+        "passed_check_count": passed_count,
+        "control_rms_residual_ft": round(control_rms, 9),
+        "scale_ft_per_page_unit": round(math.hypot(a, b), 12),
+        "maximum_absolute_error_ft": maximum_absolute_error,
+        "maximum_relative_error_percent": maximum_relative_error,
+        "acceptance": benchmark["acceptance"],
+        "note": "QA result from actual PDF geometry and visible controls; not survey or staking authority.",
+        "checks": results,
     }
 
 
@@ -2264,8 +2369,23 @@ def build_project(model: dict[str, Any], output_dir: Path, qgis_app: Path) -> in
     digest = geometry_digest(model)
     create_vector_plan(model, pdf_path, digest)
     benchmark = build_calibration_benchmark(model)
+    calibration_status = "not_applicable"
     if benchmark:
         _write_json(output_dir / "calibration-benchmark.json", benchmark)
+        calibration_report = verify_calibration_benchmark(pdf_path, benchmark)
+        _write_json(output_dir / "calibration-report.json", calibration_report)
+        calibration_status = calibration_report["status"]
+        semantic["planCalibration"] = {
+            "status": "passed_product_qa" if calibration_status == "valid" else "failed_product_qa",
+            "controlCount": calibration_report["control_count"],
+            "checkCount": calibration_report["check_count"],
+            "passedCheckCount": calibration_report["passed_check_count"],
+            "controlRmsResidualFt": calibration_report["control_rms_residual_ft"],
+            "maximumAbsoluteErrorFt": calibration_report["maximum_absolute_error_ft"],
+            "maximumRelativeErrorPercent": calibration_report["maximum_relative_error_percent"],
+            "authority": "Product QA on reference-scale test geometry; not survey or staking control.",
+        }
+        _write_json(semantic_path, semantic)
     parity = verify_parity(model, semantic, pdf_path, gpkg_path, qgis_app)
     _write_json(output_dir / "parity-report.json", parity)
-    return 0 if parity["status"] == "valid" else 1
+    return 0 if parity["status"] == "valid" and calibration_status != "invalid" else 1

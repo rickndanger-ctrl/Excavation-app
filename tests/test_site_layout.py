@@ -236,7 +236,7 @@ class SiteLayoutBuildTests(unittest.TestCase):
             expected = {
                 "hilyard-site-layout.pdf", "hilyard-site-layout.gpkg",
                 "semantic-manifest.json", "validation-report.json", "parity-report.json",
-                "calibration-benchmark.json",
+                "calibration-benchmark.json", "calibration-report.json",
             }
             self.assertEqual(expected, {path.name for path in output.iterdir()})
 
@@ -259,6 +259,20 @@ class SiteLayoutBuildTests(unittest.TestCase):
             self.assertEqual(18.5, checks["building_nw_to_north_walk"]["expected_distance_ft"])
             self.assertEqual(12.5, checks["building_east_to_service_walk"]["expected_distance_ft"])
             self.assertTrue(all(row["withheld_from_app_import"] for row in benchmark["sealed_checks"]))
+
+            calibration_report = json.loads((output / "calibration-report.json").read_text())
+            self.assertEqual("valid", calibration_report["status"])
+            self.assertEqual(3, calibration_report["control_count"])
+            self.assertEqual(15, calibration_report["check_count"])
+            self.assertEqual(15, calibration_report["passed_check_count"])
+            self.assertLess(calibration_report["maximum_absolute_error_ft"], 0.000001)
+            self.assertLess(calibration_report["control_rms_residual_ft"], 0.000001)
+
+            semantic = json.loads((output / "semantic-manifest.json").read_text())
+            self.assertEqual("passed_product_qa", semantic["planCalibration"]["status"])
+            self.assertEqual(3, semantic["planCalibration"]["controlCount"])
+            self.assertEqual(15, semantic["planCalibration"]["checkCount"])
+            self.assertNotIn("sealedChecks", semantic["planCalibration"])
 
             from pypdf import PdfReader
             reader = PdfReader(output / "hilyard-site-layout.pdf")

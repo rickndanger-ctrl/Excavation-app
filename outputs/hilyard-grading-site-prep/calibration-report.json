@@ -1,0 +1,155 @@
+{
+  "acceptance": {
+    "maximum_absolute_error_ft": 0.25,
+    "maximum_relative_error_percent": 0.5,
+    "note": "Product QA tolerance for the generated vector plan; not a survey or construction tolerance."
+  },
+  "check_count": 15,
+  "checks": [
+    {
+      "absolute_error_ft": 0.0,
+      "expected_distance_ft": 45.0,
+      "id": "building_width",
+      "label": "Building south wall",
+      "measured_distance_ft": 45.0,
+      "passed": true,
+      "relative_error_percent": 0.0
+    },
+    {
+      "absolute_error_ft": 0.0,
+      "expected_distance_ft": 90.0,
+      "id": "building_length",
+      "label": "Building east wall",
+      "measured_distance_ft": 90.0,
+      "passed": true,
+      "relative_error_percent": 0.0
+    },
+    {
+      "absolute_error_ft": 1.3e-08,
+      "expected_distance_ft": 100.623059,
+      "id": "building_diagonal",
+      "label": "Building diagonal",
+      "measured_distance_ft": 100.623058987,
+      "passed": true,
+      "relative_error_percent": 1.2e-08
+    },
+    {
+      "absolute_error_ft": 0.0,
+      "expected_distance_ft": 55.0,
+      "id": "pad_width",
+      "label": "Building pad south edge",
+      "measured_distance_ft": 55.0,
+      "passed": true,
+      "relative_error_percent": 0.0
+    },
+    {
+      "absolute_error_ft": 0.0,
+      "expected_distance_ft": 100.0,
+      "id": "pad_length",
+      "label": "Building pad east edge",
+      "measured_distance_ft": 100.0,
+      "passed": true,
+      "relative_error_percent": 0.0
+    },
+    {
+      "absolute_error_ft": 1.05e-07,
+      "expected_distance_ft": 114.127122,
+      "id": "pad_diagonal",
+      "label": "Building pad diagonal",
+      "measured_distance_ft": 114.127122105,
+      "passed": true,
+      "relative_error_percent": 9.2e-08
+    },
+    {
+      "absolute_error_ft": 4.99e-07,
+      "expected_distance_ft": 178.576584,
+      "id": "south_frontage",
+      "label": "South parcel frontage",
+      "measured_distance_ft": 178.576584499,
+      "passed": true,
+      "relative_error_percent": 2.79e-07
+    },
+    {
+      "absolute_error_ft": 3.83e-07,
+      "expected_distance_ft": 157.033745,
+      "id": "east_frontage",
+      "label": "East parcel frontage",
+      "measured_distance_ft": 157.033745383,
+      "passed": true,
+      "relative_error_percent": 2.44e-07
+    },
+    {
+      "absolute_error_ft": 2.81e-07,
+      "expected_distance_ft": 101.712763,
+      "id": "building_sw_to_parcel_sw",
+      "label": "Building SW to parcel SW",
+      "measured_distance_ft": 101.712762719,
+      "passed": true,
+      "relative_error_percent": 2.76e-07
+    },
+    {
+      "absolute_error_ft": 9e-09,
+      "expected_distance_ft": 43.571356,
+      "id": "building_se_to_parcel_se",
+      "label": "Building SE to parcel SE",
+      "measured_distance_ft": 43.571356009,
+      "passed": true,
+      "relative_error_percent": 2e-08
+    },
+    {
+      "absolute_error_ft": 4.35e-07,
+      "expected_distance_ft": 54.50477,
+      "id": "building_ne_to_parcel_ne",
+      "label": "Building NE to parcel NE",
+      "measured_distance_ft": 54.504770435,
+      "passed": true,
+      "relative_error_percent": 7.99e-07
+    },
+    {
+      "absolute_error_ft": 3.41e-07,
+      "expected_distance_ft": 47.459902,
+      "id": "pad_ne_to_parcel_ne",
+      "label": "Pad NE to parcel NE",
+      "measured_distance_ft": 47.459902341,
+      "passed": true,
+      "relative_error_percent": 7.18e-07
+    },
+    {
+      "absolute_error_ft": 0.0,
+      "expected_distance_ft": 18.5,
+      "id": "building_sw_to_south_walk",
+      "label": "Building SW corner to west edge of south entry walk",
+      "measured_distance_ft": 18.5,
+      "passed": true,
+      "relative_error_percent": 0.0
+    },
+    {
+      "absolute_error_ft": 0.0,
+      "expected_distance_ft": 18.5,
+      "id": "building_nw_to_north_walk",
+      "label": "Building NW corner to west edge of north entry walk",
+      "measured_distance_ft": 18.5,
+      "passed": true,
+      "relative_error_percent": 0.0
+    },
+    {
+      "absolute_error_ft": 0.0,
+      "expected_distance_ft": 12.5,
+      "id": "building_east_to_service_walk",
+      "label": "Building east wall to east edge of service walk",
+      "measured_distance_ft": 12.5,
+      "passed": true,
+      "relative_error_percent": 0.0
+    }
+  ],
+  "control_count": 3,
+  "control_rms_residual_ft": 0.0,
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "maximum_absolute_error_ft": 4.99e-07,
+  "maximum_relative_error_percent": 7.99e-07,
+  "note": "QA result from actual PDF geometry and visible controls; not survey or staking authority.",
+  "passed_check_count": 15,
+  "scale_ft_per_page_unit": 0.694444444444,
+  "schema_version": "civil-plan-factory.calibration-report/v0.1.0",
+  "status": "valid"
+}
