@@ -83,6 +83,7 @@ test('frames a selected construction phase without changing Fit full plan recove
 
   await expect(page.getByText('Fictional apartment building - reviewed assumption')).toBeVisible();
   await expect(page.getByText('City 21-inch storm main UNIQUE_ID 4183')).toBeHidden();
+  await expect(page.getByText('ASSUMED electric permanent building terminal')).toBeHidden();
 
   const focused = await finishedLayoutBounds(page);
   expect(focused.right - focused.left).toBeGreaterThan(230);

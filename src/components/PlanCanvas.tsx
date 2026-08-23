@@ -921,7 +921,7 @@ export function PlanCanvas({
                 </g>;
               }
               return <g key={obj.id} opacity={opacity} data-geometry-type="Point" style={{ pointerEvents: inPhase ? 'auto' : 'none' }}>
-                <ObjectIcon obj={obj} selected={selected} color={color} status={getObjectStatus(obj.id)} labelLayout={labelLayout} showLabel={!suppressOutOfPhaseLabels || inPhase || obj.layerId === 'finished-site'} renderScale={scale} onClick={(e) => { e.stopPropagation(); onSelectObject(obj.id); }} />
+                <ObjectIcon obj={obj} selected={selected} color={color} status={getObjectStatus(obj.id)} labelLayout={labelLayout} showLabel={!suppressOutOfPhaseLabels || inPhase} renderScale={scale} onClick={(e) => { e.stopPropagation(); onSelectObject(obj.id); }} />
               </g>;
             })}
 
