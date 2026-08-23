@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .validation import DISCLAIMER, SAFETY_NOTICE
+from .vertical import utility_vertical_callout, vertical_callout
 
 
 def declutter_callout_positions(
@@ -61,7 +62,9 @@ def _feature_rows(model: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
     ]
 
 
-def create_golden_vector_plan(model: dict[str, Any], output_path: Path, digest: str) -> None:
+def create_golden_vector_plan(
+    model: dict[str, Any], output_path: Path, digest: str, field_digest: str
+) -> None:
     """Render the declared golden sheet index as one deterministic vector PDF.
 
     Plan sheets use a true 1 inch = 20 feet paper transform on ARCH D. Full
@@ -76,6 +79,11 @@ def create_golden_vector_plan(model: dict[str, Any], output_path: Path, digest: 
     plans = model["deliverables"]["plans"]
     rows = _feature_rows(model)
     by_id = {feature["id"]: (group, feature) for group, feature in rows}
+    edge_by_geometry_id = {
+        edge["geometry_feature_id"]: edge
+        for network in model.get("networks", [])
+        for edge in network.get("edges", [])
+    }
     width, height = 36 * inch, 24 * inch
     page_scale = 72.0 / 20.0
     map_left, map_bottom = 86.0, 178.0
@@ -168,6 +176,9 @@ def create_golden_vector_plan(model: dict[str, Any], output_path: Path, digest: 
         pdf.setFont("Helvetica-Bold", 10)
         pdf.drawString(48, 112, f"SCALE: {plan['written_scale'].upper()}   |   UNITS: FEET   |   CRS: EPSG:6823")
         pdf.drawString(48, 92, f"PHASE: {(plan.get('phase_id') or 'GENERAL / MULTI-PHASE').upper()}")
+        benchmark = model.get("spatial_reference", {}).get("benchmark", {}).get("status", "unknown")
+        vertical_datum = model.get("spatial_reference", {}).get("vertical_datum", "UNKNOWN")
+        pdf.drawString(650, 112, f"VERTICAL DATUM: {str(vertical_datum).upper()}   |   BENCHMARK: {str(benchmark).upper()}")
         pdf.drawRightString(width - 250, 112, f"PAGE {page_number} OF {len(plans)}")
         pdf.drawRightString(width - 250, 92, f"GEOMETRY SHA-256: {digest[:24]}...")
         pdf.setFillColor(colors.HexColor("#991b1b"))
@@ -264,6 +275,11 @@ def create_golden_vector_plan(model: dict[str, Any], output_path: Path, digest: 
                 _, feature = by_id[asset_id]
                 detail = feature.get("field_detail", {})
                 bits = [feature.get("label", "")]
+                if callout := vertical_callout(feature):
+                    bits.append(callout)
+                if edge := edge_by_geometry_id.get(asset_id):
+                    if callout := utility_vertical_callout(edge):
+                        bits.append(callout)
                 for key in ("diameter_in", "material", "length_ft", "slope_percent", "rim_elevation_ft", "invert_elevation_ft", "area_sf"):
                     if key in detail:
                         bits.append(f"{key.replace('_', ' ')}: {detail[key]}")
@@ -282,10 +298,127 @@ def create_golden_vector_plan(model: dict[str, Any], output_path: Path, digest: 
         ):
             limit_y = draw_wrapped(pdf, note, register_left + 18, limit_y, width - register_left - 74, size=7.5, leading=10)
 
+    def draw_network_profile(pdf, plan: dict[str, Any]) -> None:
+        edge_ids = plan.get("profile_edge_ids", [])
+        if not edge_ids:
+            return
+        network = next(
+            row for row in model["networks"]
+            if row["id"] == plan["profile_network_id"]
+        )
+        edge_by_id = {edge["id"]: edge for edge in network["edges"]}
+        edges = [edge_by_id[edge_id] for edge_id in edge_ids]
+        profile = next(
+            (
+                row for row in model["deliverables"].get("profiles", [])
+                if row.get("alignment_edge_ids") == edge_ids
+            ),
+            None,
+        )
+
+        panel_x, panel_y = map_left, 236.0
+        panel_w, panel_h = map_width, 330.0
+        plot_left, plot_bottom = panel_x + 64.0, panel_y + 48.0
+        plot_w, plot_h = panel_w - 94.0, panel_h - 102.0
+        invert_values = [
+            float(value)
+            for edge in edges
+            for value in (
+                edge["field_detail"]["upstream_invert_ft"],
+                edge["field_detail"]["downstream_invert_ft"],
+            )
+        ]
+        surface_samples = (profile or {}).get("surface_samples", [])
+        surface_values = [float(sample["elevation_ft"]) for sample in surface_samples]
+        minimum = math.floor(min(invert_values) - 1.0)
+        maximum = math.ceil(max(surface_values or invert_values) + 1.0)
+        total_station = sum(float(edge["field_detail"]["length_ft"]) for edge in edges)
+
+        def px(station: float) -> float:
+            return plot_left + station / total_station * plot_w
+
+        def py(elevation: float) -> float:
+            return plot_bottom + (elevation - minimum) / (maximum - minimum) * plot_h
+
+        pdf.saveState()
+        pdf.setFillColor(colors.white)
+        pdf.setStrokeColor(colors.HexColor("#334155"))
+        pdf.setLineWidth(1.2)
+        pdf.rect(panel_x, panel_y, panel_w, panel_h, fill=1, stroke=1)
+        pdf.setFillColor(colors.HexColor("#0f172a"))
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(panel_x + 18, panel_y + panel_h - 24, "CANONICAL GRAVITY PROFILE")
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(
+            panel_x + 18,
+            panel_y + panel_h - 42,
+            f"PROFILE DATUM: {model['spatial_reference']['vertical_datum']}  |  "
+            f"H: {(profile or {}).get('horizontal_scale', 'AS NOTED')}  |  "
+            f"V: {(profile or {}).get('vertical_scale', 'AS NOTED')}",
+        )
+
+        pdf.setFont("Helvetica", 6.5)
+        pdf.setStrokeColor(colors.HexColor("#cbd5e1"))
+        for elevation in range(minimum, maximum + 1):
+            y = py(float(elevation))
+            pdf.line(plot_left, y, plot_left + plot_w, y)
+            pdf.setFillColor(colors.HexColor("#475569"))
+            pdf.drawRightString(plot_left - 7, y - 2, f"{elevation:.0f}")
+
+        if surface_samples:
+            pdf.setStrokeColor(colors.HexColor("#166534"))
+            pdf.setLineWidth(2.0)
+            path = pdf.beginPath()
+            first = surface_samples[0]
+            path.moveTo(px(float(first["station_ft"])), py(float(first["elevation_ft"])))
+            for sample in surface_samples[1:]:
+                path.lineTo(px(float(sample["station_ft"])), py(float(sample["elevation_ft"])))
+            pdf.drawPath(path, fill=0, stroke=1)
+            pdf.setFillColor(colors.HexColor("#166534"))
+            pdf.drawString(plot_left + 4, py(float(surface_samples[0]["elevation_ft"])) + 5, "FG")
+
+        station = 0.0
+        pdf.setStrokeColor(colors.HexColor("#0369a1"))
+        for edge in edges:
+            detail = edge["field_detail"]
+            length = float(detail["length_ft"])
+            next_station = station + length
+            upstream = float(detail["upstream_invert_ft"])
+            downstream = float(detail["downstream_invert_ft"])
+            pdf.setLineWidth(3.0)
+            pdf.line(px(station), py(upstream), px(next_station), py(downstream))
+            pdf.setFillColor(colors.HexColor("#0f172a"))
+            pdf.setFont("Helvetica-Bold", 6.3)
+            midpoint = (station + next_station) / 2.0
+            label_y = max(py(upstream), py(downstream)) + 11
+            pdf.drawCentredString(px(midpoint), label_y, edge["id"])
+            pdf.setFont("Helvetica", 6.1)
+            pdf.drawCentredString(
+                px(midpoint),
+                label_y - 9,
+                f"INV {upstream:.2f} -> {downstream:.2f}  |  {float(detail['slope_percent']):.2f}%",
+            )
+            pdf.setStrokeColor(colors.HexColor("#64748b"))
+            pdf.setLineWidth(0.7)
+            pdf.line(px(station), plot_bottom - 5, px(station), plot_bottom + plot_h)
+            pdf.setFillColor(colors.HexColor("#475569"))
+            pdf.drawCentredString(px(station), plot_bottom - 16, f"{station:.1f}")
+            station = next_station
+            pdf.setStrokeColor(colors.HexColor("#0369a1"))
+        pdf.setStrokeColor(colors.HexColor("#64748b"))
+        pdf.line(px(station), plot_bottom - 5, px(station), plot_bottom + plot_h)
+        pdf.setFillColor(colors.HexColor("#475569"))
+        pdf.drawCentredString(px(station), plot_bottom - 16, f"{station:.1f}")
+        pdf.drawString(panel_x + panel_w - 330, panel_y + 14, "STATION (FT) / ELEVATION (FT) — REVIEWED TEST VALUES")
+        pdf.restoreState()
+
     pdf = canvas.Canvas(str(output_path), pagesize=(width, height), invariant=1, pageCompression=0)
     pdf.setTitle("Hilyard Apartment Civil Plan Test — Golden Plan Package")
     pdf.setAuthor("Civil Plan Factory / Model Studio")
-    pdf.setSubject(f"Canonical geometry SHA-256 {digest}")
+    pdf.setSubject(
+        f"Canonical geometry SHA-256 {digest}; "
+        f"canonical field contract SHA-256 {field_digest}"
+    )
 
     for page_number, plan in enumerate(plans, 1):
         draw_title_block(pdf, plan, page_number)
@@ -373,6 +506,7 @@ def create_golden_vector_plan(model: dict[str, Any], output_path: Path, digest: 
                 pdf.setFillColor(colors.HexColor("#0f172a"))
                 pdf.setFont("Helvetica-Bold", 8)
                 pdf.drawCentredString(x, y - 3, str(index))
+            draw_network_profile(pdf, plan)
             draw_callout_register(pdf, plan)
             draw_north_and_scale(pdf, plan)
         pdf.showPage()

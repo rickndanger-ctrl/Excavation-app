@@ -1,0 +1,329 @@
+{
+  "schema_version": "civil-plan-factory.design-slice/v0.1.0",
+  "project_revision": "golden-apartment-vertical-v1",
+  "model_updates": {
+    "vertical_design_basis": {
+      "vertical_datum": "NAVD88",
+      "units": "feet",
+      "status": "reviewed_assumption",
+      "benchmark_status": "unknown",
+      "survey_authority": false,
+      "finished_floor_elevation_ft": 445.0,
+      "building_subgrade_elevation_ft": 443.5,
+      "finished_floor_to_subgrade_depth_ft": 1.5,
+      "exterior_landing_elevation_ft": 444.98,
+      "arrival_court_plane": {
+        "origin_feature_id": "paving-arrival-court",
+        "origin_vertex_index": 0,
+        "origin_elevation_ft": 443.8,
+        "rise_per_foot_local_x": 0.005,
+        "rise_per_foot_local_y": 0.01,
+        "drainage_direction": "toward_vertex_0_southwest",
+        "low_point_outfall_status": "unknown_pending_final_drainage_design"
+      },
+      "gravity_network_edge_ids": [
+        "san-edge-service-01",
+        "san-edge-service-02",
+        "storm-edge-roof-lateral-01",
+        "storm-edge-planter-inlet-01",
+        "storm-edge-planter-underdrain-01",
+        "storm-edge-outlet-01",
+        "storm-edge-public-connection-01"
+      ],
+      "pressure_and_dry_utility_vertical_status": "reviewed_assumption_absolute_profiles_from_finished_surface",
+      "pressure_and_dry_utility_edge_ids": [
+        "dom-edge-tie-meter",
+        "dom-edge-meter-backflow",
+        "dom-edge-backflow-terminal",
+        "fire-edge-tie-valve",
+        "fire-edge-valve-backflow",
+        "fire-edge-backflow-junction",
+        "fire-edge-junction-terminal",
+        "fire-edge-fdc-branch",
+        "power-edge-poc-vault",
+        "power-edge-vault-pull",
+        "power-edge-pull-terminal",
+        "telecom-edge-poc-handhole",
+        "telecom-edge-handhole-terminal",
+        "gas-edge-poc-meter",
+        "gas-edge-meter-terminal",
+        "lighting-edge-terminal-pole-01",
+        "lighting-edge-pole-01-pole-02"
+      ],
+      "decision_id": "decision-whole-job-vertical-coordination",
+      "replacement_note": "Replace every reviewed elevation, slope, and cover with current survey control and licensed final design before any real use.",
+      "warning": "FICTIONAL TEST ELEVATIONS FOR PRODUCT DEVELOPMENT ONLY — NOT FOR STAKING, EXCAVATION, BIDDING, PERMITTING, OR CONSTRUCTION."
+    }
+  },
+  "network_updates": [
+    {
+      "id": "network-domestic-water",
+      "edge_updates": [
+        {"id": "dom-edge-tie-meter", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [443.98, 444.10], "centerline_elevation_samples_ft": [440.396667, 440.516667]}},
+        {"id": "dom-edge-meter-backflow", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [444.10, 444.22], "centerline_elevation_samples_ft": [440.516667, 440.636667]}},
+        {"id": "dom-edge-backflow-terminal", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [444.22, 444.50], "centerline_elevation_samples_ft": [440.636667, 440.916667]}}
+      ]
+    },
+    {
+      "id": "network-fire-water",
+      "edge_updates": [
+        {"id": "fire-edge-tie-valve", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [444.02, 444.14], "centerline_elevation_samples_ft": [440.27, 440.39]}},
+        {"id": "fire-edge-valve-backflow", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [444.14, 444.25], "centerline_elevation_samples_ft": [440.39, 440.50]}},
+        {"id": "fire-edge-backflow-junction", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [444.25, 444.35], "centerline_elevation_samples_ft": [440.50, 440.60]}},
+        {"id": "fire-edge-junction-terminal", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [444.35, 444.52], "centerline_elevation_samples_ft": [440.60, 440.77]}},
+        {"id": "fire-edge-fdc-branch", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [444.40, 444.35], "centerline_elevation_samples_ft": [440.733333, 440.683333]}}
+      ]
+    },
+    {
+      "id": "network-power",
+      "edge_updates": [
+        {"id": "power-edge-poc-vault", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_top_of_utility", "surface_samples_ft": [444.05, 444.30], "utility_top_elevation_samples_ft": [441.05, 441.30]}},
+        {"id": "power-edge-vault-pull", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_top_of_utility", "surface_samples_ft": [444.30, 444.55], "utility_top_elevation_samples_ft": [441.30, 441.55]}},
+        {"id": "power-edge-pull-terminal", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_top_of_utility", "surface_samples_ft": [444.55, 444.72], "utility_top_elevation_samples_ft": [441.55, 441.72]}}
+      ]
+    },
+    {
+      "id": "network-telecom-fiber",
+      "edge_updates": [
+        {"id": "telecom-edge-poc-handhole", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_top_of_utility", "surface_samples_ft": [444.02, 444.27], "utility_top_elevation_samples_ft": [441.52, 441.77]}},
+        {"id": "telecom-edge-handhole-terminal", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_top_of_utility", "surface_samples_ft": [444.27, 444.62], "utility_top_elevation_samples_ft": [441.77, 442.12]}}
+      ]
+    },
+    {
+      "id": "network-gas",
+      "edge_updates": [
+        {"id": "gas-edge-poc-meter", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [444.16, 444.31], "centerline_elevation_samples_ft": [441.576667, 441.726667], "cover_samples_ft": [2.5, 2.5]}},
+        {"id": "gas-edge-meter-terminal", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_pipe_crown", "surface_samples_ft": [444.31, 444.55], "centerline_elevation_samples_ft": [441.726667, 441.966667], "cover_samples_ft": [2.5, 2.5]}}
+      ]
+    },
+    {
+      "id": "network-site-lighting",
+      "edge_updates": [
+        {"id": "lighting-edge-terminal-pole-01", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_top_of_utility", "surface_samples_ft": [444.55, 444.60], "utility_top_elevation_samples_ft": [442.55, 442.60]}},
+        {"id": "lighting-edge-pole-01-pole-02", "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "cover_reference": "finished_surface_to_top_of_utility", "surface_samples_ft": [444.60, 444.48], "utility_top_elevation_samples_ft": [442.60, 442.48]}}
+      ]
+    }
+  ],
+  "feature_updates": {
+    "points": [
+      {
+        "id": "entry-south-primary",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "threshold_elevation_ft": 445.0,
+          "exterior_landing_elevation_ft": 444.98,
+          "unavailable": {
+            "$replace": {
+              "ada_compliance": "Not evaluated; elevations are fictional product-test assumptions.",
+              "survey_control": "No project benchmark or surveyed control has been supplied."
+            }
+          }
+        }
+      },
+      {
+        "id": "entry-east-service",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "threshold_elevation_ft": 445.0,
+          "exterior_landing_elevation_ft": 444.98,
+          "unavailable": {
+            "$replace": {
+              "service_layout": "Final service layout is not designed.",
+              "survey_control": "No project benchmark or surveyed control has been supplied."
+            }
+          }
+        }
+      },
+      {
+        "id": "entry-north-pedestrian",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "threshold_elevation_ft": 445.0,
+          "exterior_landing_elevation_ft": 444.98,
+          "unavailable": {
+            "$replace": {
+              "ada_compliance": "Not evaluated; elevations are fictional product-test assumptions.",
+              "survey_control": "No project benchmark or surveyed control has been supplied."
+            }
+          }
+        }
+      }
+    ],
+    "lines": [
+      {
+        "id": "curb-arrival-court-01",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "curb_reveal_ft": 0.5,
+          "grade_controls": [
+            {"vertex_index": 0, "gutter_elevation_ft": 443.8, "top_of_curb_elevation_ft": 444.3},
+            {"vertex_index": 1, "gutter_elevation_ft": 444.11, "top_of_curb_elevation_ft": 444.61},
+            {"vertex_index": 2, "gutter_elevation_ft": 444.5, "top_of_curb_elevation_ft": 445.0},
+            {"vertex_index": 3, "gutter_elevation_ft": 444.19, "top_of_curb_elevation_ft": 444.69}
+          ]
+        }
+      },
+      {
+        "id": "fire-access-route-01",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "grade_controls": [
+            {"vertex_index": 0, "elevation_ft": 443.8},
+            {"vertex_index": 1, "elevation_ft": 444.1},
+            {"vertex_index": 2, "elevation_ft": 444.34}
+          ],
+          "drainage_direction": "southwest"
+        }
+      }
+    ],
+    "polygons": [
+      {
+        "id": "pad-apartment-1",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "subgrade_elevation_ft": 443.5,
+          "perimeter_grade_controls": [
+            {"vertex_index": 0, "elevation_ft": 444.38},
+            {"vertex_index": 1, "elevation_ft": 444.33},
+            {"vertex_index": 2, "elevation_ft": 444.43},
+            {"vertex_index": 3, "elevation_ft": 444.48}
+          ],
+          "unavailable": {
+            "$replace": {
+              "geotechnical_and_structural_basis": "Subgrade and section require geotechnical and structural design."
+            }
+          }
+        }
+      },
+      {
+        "id": "building-apartment-1",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "finished_floor_elevation_ft": 445.0,
+          "building_subgrade_elevation_ft": 443.5,
+          "non_entry_perimeter_grade_range_ft": [444.45, 444.6],
+          "unavailable": {
+            "$replace": {
+              "final_architecture": "Not designed in this civil test-data slice.",
+              "survey_control": "FFE and subgrade are reviewed assumptions without project benchmark control."
+            }
+          }
+        }
+      },
+      {
+        "id": "sidewalk-south-entry",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "vertical_profile": {"high_elevation_ft": 444.98, "low_elevation_ft": 444.82, "run_ft": 10.5, "slope_percent": 1.52381, "high_location": "building landing", "low_location": "south outer edge"},
+          "cross_slope_status": "requires licensed final design"
+        }
+      },
+      {
+        "id": "sidewalk-north-entry",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "vertical_profile": {"high_elevation_ft": 444.98, "low_elevation_ft": 444.63, "run_ft": 23.5, "slope_percent": 1.489362, "high_location": "building landing", "low_location": "north outer edge"},
+          "cross_slope_status": "requires licensed final design"
+        }
+      },
+      {
+        "id": "sidewalk-east-service",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "vertical_profile": {"high_elevation_ft": 444.98, "low_elevation_ft": 444.79, "run_ft": 12.5, "slope_percent": 1.52, "high_location": "building landing", "low_location": "east outer edge"},
+          "cross_slope_status": "requires licensed final design"
+        }
+      },
+      {
+        "id": "sidewalk-arrival-link",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "vertical_profile": {"high_elevation_ft": 444.82, "low_elevation_ft": 444.45, "run_ft": 24.5, "slope_percent": 1.510204, "high_location": "east tie to south entry walk", "low_location": "west tie to curb ramp"},
+          "cross_slope_status": "requires licensed final design"
+        }
+      },
+      {
+        "id": "paving-arrival-court",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "grade_controls": [
+            {"vertex_index": 0, "elevation_ft": 443.8},
+            {"vertex_index": 1, "elevation_ft": 444.11},
+            {"vertex_index": 2, "elevation_ft": 444.5},
+            {"vertex_index": 3, "elevation_ft": 444.19}
+          ],
+          "drainage_direction": "southwest"
+        }
+      },
+      {
+        "id": "landscape-north-court",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "grade_controls": [
+            {"vertex_index": 0, "elevation_ft": 444.55},
+            {"vertex_index": 1, "elevation_ft": 444.5},
+            {"vertex_index": 2, "elevation_ft": 444.3},
+            {"vertex_index": 3, "elevation_ft": 444.35}
+          ],
+          "drainage_direction": "toward storm planter"
+        }
+      },
+      {
+        "id": "drive-aisle-arrival-01",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "grade_controls": [
+            {"vertex_index": 0, "elevation_ft": 443.8},
+            {"vertex_index": 1, "elevation_ft": 444.11},
+            {"vertex_index": 2, "elevation_ft": 444.31},
+            {"vertex_index": 3, "elevation_ft": 444.0}
+          ],
+          "drainage_direction": "southwest"
+        }
+      },
+      {
+        "id": "parking-stall-01",
+        "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "grade_controls": [{"vertex_index": 0, "elevation_ft": 444.01}, {"vertex_index": 1, "elevation_ft": 444.055}, {"vertex_index": 2, "elevation_ft": 444.235}, {"vertex_index": 3, "elevation_ft": 444.19}]}
+      },
+      {
+        "id": "parking-stall-02",
+        "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "grade_controls": [{"vertex_index": 0, "elevation_ft": 444.065}, {"vertex_index": 1, "elevation_ft": 444.11}, {"vertex_index": 2, "elevation_ft": 444.29}, {"vertex_index": 3, "elevation_ft": 444.245}]}
+      },
+      {
+        "id": "parking-stall-03",
+        "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "grade_controls": [{"vertex_index": 0, "elevation_ft": 444.12}, {"vertex_index": 1, "elevation_ft": 444.165}, {"vertex_index": 2, "elevation_ft": 444.345}, {"vertex_index": 3, "elevation_ft": 444.3}]}
+      },
+      {
+        "id": "parking-stall-04",
+        "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "grade_controls": [{"vertex_index": 0, "elevation_ft": 444.175}, {"vertex_index": 1, "elevation_ft": 444.22}, {"vertex_index": 2, "elevation_ft": 444.4}, {"vertex_index": 3, "elevation_ft": 444.355}]}
+      },
+      {
+        "id": "parking-stall-05",
+        "field_detail": {"vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "grade_controls": [{"vertex_index": 0, "elevation_ft": 444.23}, {"vertex_index": 1, "elevation_ft": 444.275}, {"vertex_index": 2, "elevation_ft": 444.455}, {"vertex_index": 3, "elevation_ft": 444.41}]}
+      },
+      {
+        "id": "curb-ramp-arrival-01",
+        "field_detail": {
+          "vertical_datum": "NAVD88",
+          "vertical_status": "reviewed_assumption",
+          "vertical_profile": {"high_elevation_ft": 444.45, "low_elevation_ft": 444.11, "run_ft": 5.0, "slope_percent": 6.8, "high_location": "arrival walk landing", "low_location": "arrival court gutter"},
+          "ada_compliance_status": "not evaluated; fictional vertical test geometry"
+        }
+      }
+    ]
+  }
+}

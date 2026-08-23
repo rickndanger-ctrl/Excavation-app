@@ -11,7 +11,7 @@
   },
   "source_ledger": "sources.lock.json",
   "decision_ledger": "decisions.json",
-  "design_slices": ["sanitary.json", "storm.json", "water-fire.json", "dry-utilities.json", "grading-site-prep.json", "golden-package.json"],
+  "design_slices": ["sanitary.json", "storm.json", "water-fire.json", "dry-utilities.json", "grading-site-prep.json", "golden-package.json", "vertical-coordination.json"],
   "spatial_reference": {
     "horizontal_crs": "EPSG:6823",
     "horizontal_crs_name": "NAD83(2011) / Oregon Eugene zone",

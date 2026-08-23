@@ -492,7 +492,7 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
             for edge_index, edge in enumerate(network.get("edges", [])):
                 detail = edge.get("field_detail", {})
                 path = f"networks.{network['id']}.edges[{edge_index}].field_detail"
-                diameter = detail.get("diameter_in")
+                diameter = detail.get("diameter_in", detail.get("conduit_or_pipe_size_in"))
                 material = detail.get("material")
                 if not _finite_coordinate(diameter) or diameter <= 0 or not isinstance(material, str) or not material.strip():
                     issues.append(_issue(
@@ -623,6 +623,22 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
                     "Existing contours must preserve both source NGVD29 and converted NAVD88 elevations",
                 ))
         for polygon_index, polygon in enumerate(features.get("polygons", [])):
+            if polygon.get("feature_type") == "earthwork_classification_zone":
+                detail = polygon.get("field_detail", {})
+                if (
+                    model.get("earthwork_summary", {}).get("quantity_status") == "withheld_pending_survey_surface"
+                    and (
+                        "average_depth_ft" in detail
+                        or "volume_cy" in detail
+                        or detail.get("classification_status") != "unknown_pending_complete_existing_tin"
+                    )
+                ):
+                    issues.append(_issue(
+                        "grading.earthwork_quantity_must_be_withheld",
+                        f"features.polygons[{polygon_index}].field_detail",
+                        "Cut/fill classification and quantities must remain withheld until a complete existing TIN exists",
+                    ))
+                continue
             if polygon.get("feature_type") not in {"earthwork_fill_area", "earthwork_cut_area"}:
                 continue
             detail = polygon.get("field_detail", {})
@@ -637,6 +653,178 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
                     "grading.earthwork_volume_mismatch",
                     f"features.polygons[{polygon_index}].field_detail.volume_cy",
                     "Screening earthwork volume must derive from area and average depth",
+                ))
+
+    if basis := model.get("vertical_design_basis"):
+        by_id = {
+            feature["id"]: feature
+            for group in ("points", "lines", "polygons", "surfaces")
+            for feature in features.get(group, [])
+        }
+        if (
+            spatial.get("vertical_datum")
+            and basis.get("vertical_datum") != spatial.get("vertical_datum")
+        ):
+            issues.append(_issue(
+                "vertical.datum_mismatch",
+                "vertical_design_basis.vertical_datum",
+                "Whole-job vertical basis must use the project vertical datum",
+            ))
+        if (
+            basis.get("status") != "reviewed_assumption"
+            or basis.get("benchmark_status") != "unknown"
+            or basis.get("survey_authority") is not False
+        ):
+            issues.append(_issue(
+                "vertical.authority_invalid",
+                "vertical_design_basis",
+                "Fictional elevations require reviewed-assumption status, unknown benchmark, and no survey authority",
+            ))
+
+        ffe = basis.get("finished_floor_elevation_ft")
+        for entry_id in (
+            "entry-south-primary",
+            "entry-east-service",
+            "entry-north-pedestrian",
+        ):
+            entry = by_id.get(entry_id, {})
+            if entry.get("field_detail", {}).get("threshold_elevation_ft") != ffe:
+                issues.append(_issue(
+                    "vertical.entry_ffe_mismatch",
+                    f"features.{entry_id}.field_detail.threshold_elevation_ft",
+                    "Entry threshold must match the canonical finished-floor elevation",
+                ))
+
+        for feature_id, feature in by_id.items():
+            profile = feature.get("field_detail", {}).get("vertical_profile")
+            if not profile:
+                continue
+            high = profile.get("high_elevation_ft")
+            low = profile.get("low_elevation_ft")
+            run = profile.get("run_ft")
+            slope = profile.get("slope_percent")
+            valid = all(_finite_coordinate(value) for value in (high, low, run, slope))
+            if (
+                not valid
+                or run <= 0
+                or high < low
+                or not math.isclose((high - low) / run * 100.0, slope, abs_tol=1e-5)
+            ):
+                issues.append(_issue(
+                    "vertical.profile_slope_mismatch",
+                    f"features.{feature_id}.field_detail.vertical_profile",
+                    "Vertical profile slope must derive from its high, low, and run controls",
+                ))
+
+        plane = basis.get("arrival_court_plane", {})
+        origin_feature = by_id.get(plane.get("origin_feature_id"), {})
+        origin_coordinates = origin_feature.get("coordinates", [])
+        origin_index = plane.get("origin_vertex_index")
+        if (
+            not isinstance(origin_index, int)
+            or origin_index < 0
+            or origin_index >= len(origin_coordinates)
+        ):
+            issues.append(_issue(
+                "vertical.arrival_plane_mismatch",
+                "vertical_design_basis.arrival_court_plane",
+                "Arrival-court plane requires a resolvable origin vertex",
+            ))
+        else:
+            origin_x, origin_y = origin_coordinates[origin_index][:2]
+            origin_elevation = plane.get("origin_elevation_ft")
+            rise_x = plane.get("rise_per_foot_local_x")
+            rise_y = plane.get("rise_per_foot_local_y")
+            for feature_id in (
+                "paving-arrival-court",
+                "drive-aisle-arrival-01",
+                "parking-stall-01",
+                "parking-stall-02",
+                "parking-stall-03",
+                "parking-stall-04",
+                "parking-stall-05",
+            ):
+                feature = by_id.get(feature_id, {})
+                coordinates = feature.get("coordinates", [])
+                controls = feature.get("field_detail", {}).get("grade_controls", [])
+                for control in controls:
+                    vertex_index = control.get("vertex_index")
+                    if not isinstance(vertex_index, int) or vertex_index >= len(coordinates):
+                        issues.append(_issue(
+                            "vertical.arrival_plane_mismatch",
+                            f"features.{feature_id}.field_detail.grade_controls",
+                            "Arrival-court grade control must resolve to a feature vertex",
+                        ))
+                        continue
+                    x, y = coordinates[vertex_index][:2]
+                    expected = origin_elevation + (x - origin_x) * rise_x + (y - origin_y) * rise_y
+                    if not math.isclose(control.get("elevation_ft", float("nan")), expected, abs_tol=1e-3):
+                        issues.append(_issue(
+                            "vertical.arrival_plane_mismatch",
+                            f"features.{feature_id}.field_detail.grade_controls[{vertex_index}]",
+                            "Arrival-court control elevation does not match the canonical plane",
+                        ))
+
+        utility_edge_ids = set(basis.get("pressure_and_dry_utility_edge_ids", []))
+        utility_edges = {
+            edge["id"]: (network.get("network_kind"), edge)
+            for network in model.get("networks", [])
+            for edge in network.get("edges", [])
+            if edge.get("id") in utility_edge_ids
+        }
+        for edge_id in utility_edge_ids:
+            network_kind, edge = utility_edges.get(edge_id, (None, {}))
+            detail = edge.get("field_detail", {})
+            surfaces = detail.get("surface_samples_ft", [])
+            valid = (
+                detail.get("vertical_datum") == basis.get("vertical_datum")
+                and detail.get("vertical_status") == "reviewed_assumption"
+                and detail.get("surface_id") == "surface-proposed-grade"
+                and len(surfaces) == 2
+                and all(_finite_coordinate(value) for value in surfaces)
+            )
+            if network_kind == "pressure":
+                centerlines = detail.get("centerline_elevation_samples_ft", [])
+                covers = detail.get("cover_samples_ft", [])
+                diameter = detail.get(
+                    "diameter_in", detail.get("conduit_or_pipe_size_in")
+                )
+                valid = (
+                    valid
+                    and detail.get("cover_reference") == "finished_surface_to_pipe_crown"
+                    and _finite_coordinate(diameter)
+                    and len(centerlines) == len(covers) == 2
+                    and all(_finite_coordinate(value) for value in (*centerlines, *covers))
+                    and all(
+                        math.isclose(
+                            surface - (centerline + diameter / 24.0),
+                            cover,
+                            abs_tol=1e-5,
+                        )
+                        for surface, centerline, cover in zip(surfaces, centerlines, covers)
+                    )
+                )
+            elif network_kind == "dry":
+                utility_tops = detail.get("utility_top_elevation_samples_ft", [])
+                cover = detail.get("modeled_cover_ft")
+                valid = (
+                    valid
+                    and detail.get("cover_reference") == "finished_surface_to_top_of_utility"
+                    and _finite_coordinate(cover)
+                    and len(utility_tops) == 2
+                    and all(_finite_coordinate(value) for value in utility_tops)
+                    and all(
+                        math.isclose(surface - utility_top, cover, abs_tol=1e-5)
+                        for surface, utility_top in zip(surfaces, utility_tops)
+                    )
+                )
+            else:
+                valid = False
+            if not valid:
+                issues.append(_issue(
+                    "vertical.utility_cover_mismatch",
+                    f"networks.edges.{edge_id}.field_detail",
+                    "Utility absolute elevations must derive from the coordinated finished surface and declared cover reference",
                 ))
 
     for relationship_id, relationship in model.get("relationships", {}).items():

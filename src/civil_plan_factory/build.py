@@ -15,6 +15,7 @@ from typing import Any
 
 from .export import build_semantic_manifest
 from .validation import DISCLAIMER, SAFETY_NOTICE, SEMANTIC_ONLY_DELIVERY_MODE, validate_model
+from .vertical import edge_field_detail_with_vertical_callout, field_detail_with_vertical_callout
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -303,10 +304,11 @@ def _centroid(ring: list[list[float]]) -> tuple[float, float]:
 
 
 def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) -> None:
+    field_digest = field_contract_digest(model)
     if model.get("plan_conventions", {}).get("template") == "generic_oregon_style_test_plan":
         from .golden_pdf import create_golden_vector_plan
 
-        create_golden_vector_plan(model, output_path, digest)
+        create_golden_vector_plan(model, output_path, digest, field_digest)
         return
 
     from reportlab.lib import colors
@@ -361,7 +363,10 @@ def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) ->
     pdf = canvas.Canvas(str(raw_path), pagesize=(width, height), invariant=1, pageCompression=0)
     pdf.setTitle(f"Model Studio - {title} Civil Plan Set")
     pdf.setAuthor("Model Studio")
-    pdf.setSubject(f"Canonical geometry SHA-256 {digest}")
+    pdf.setSubject(
+        f"Canonical geometry SHA-256 {digest}; "
+        f"canonical field contract SHA-256 {field_digest}"
+    )
 
     pdf.setFillColor(colors.HexColor("#991b1b"))
     pdf.setFont("Helvetica-Bold", 13)
@@ -1897,7 +1902,7 @@ def _canonical_semantic_contract(model: dict[str, Any]) -> dict[str, Any]:
             "map_target": feature.get("field_detail", {}).get(
                 "map_target", feature["id"]
             ),
-            "field_detail": feature.get("field_detail", {}),
+            "field_detail": field_detail_with_vertical_callout(feature),
             "provenance": feature["provenance"],
         }
     objects = {}
@@ -1946,7 +1951,7 @@ def _canonical_semantic_contract(model: dict[str, Any]) -> dict[str, Any]:
                 "searchable": True,
                 "clickable": True,
                 "map_target": edge["id"],
-                "field_detail": edge.get("field_detail", {}),
+                "field_detail": edge_field_detail_with_vertical_callout(edge),
                 "provenance": edge["provenance"],
             }
     return {
@@ -1987,6 +1992,7 @@ def _canonical_semantic_contract(model: dict[str, Any]) -> dict[str, Any]:
             "user_location": None,
             "user_heading": None,
             "calibration_points": [],
+            "vertical_design_basis": model.get("vertical_design_basis"),
         },
         "objects": objects,
         "areas": areas,
@@ -2123,6 +2129,7 @@ def _semantic_contract_from_artifact(
             "user_location": semantic.get("userLocation"),
             "user_heading": semantic.get("userHeading"),
             "calibration_points": semantic.get("calibrationPoints"),
+            "vertical_design_basis": semantic.get("verticalDesignBasis"),
         },
         "objects": objects,
         "areas": areas,
@@ -2132,14 +2139,25 @@ def _semantic_contract_from_artifact(
     }
 
 
+def field_contract_digest(model: dict[str, Any]) -> str:
+    expected = _canonical_semantic_contract(model)
+    return hashlib.sha256(
+        json.dumps(
+            expected, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ).encode("utf-8")
+    ).hexdigest()
+
+
 def verify_semantic_only_parity(
     model: dict[str, Any], semantic: dict[str, Any]
 ) -> dict[str, Any]:
     """Verify the complete field contract for unreferenced review grids."""
 
-    tolerance = float(
-        model["spatial_reference"]["tolerances"]["output_parity_display_units"]
-    )
+    tolerances = model["spatial_reference"]["tolerances"]
+    tolerance_value = tolerances.get("output_parity_display_units")
+    if tolerance_value is None:
+        tolerance_value = tolerances.get("output_parity_horizontal_ft")
+    tolerance = float(tolerance_value)
     mismatches: list[dict[str, Any]] = []
     expected = _canonical_semantic_contract(model)
     actual = _semantic_contract_from_artifact(semantic, mismatches)
@@ -2192,11 +2210,7 @@ def verify_semantic_only_parity(
                             "geometry_delta" if field == "geometry" else "value_mismatch"
                         ),
                     })
-    contract_digest = hashlib.sha256(
-        json.dumps(
-            expected, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-        ).encode("utf-8")
-    ).hexdigest()
+    contract_digest = field_contract_digest(model)
     return {
         "schema_version": "civil-plan-factory.parity-report/v0.2.0",
         "disclaimer": DISCLAIMER,
@@ -2238,7 +2252,14 @@ def verify_parity(
     }
     semantic_geometry.update({row["id"]: row["coordinates"] for row in semantic["linearFeatures"] + semantic["areas"]})
     semantic_geometry.update({row["id"]: row["coordinates"] for row in semantic["surfaces"]})
-    mismatches: list[dict[str, Any]] = []
+    semantic_contract = verify_semantic_only_parity(model, semantic)
+    mismatches: list[dict[str, Any]] = list(semantic_contract["mismatches"])
+    contract_digest = field_contract_digest(model)
+    canonical_features = {
+        feature["id"]: feature
+        for group in ("points", "lines", "polygons", "surfaces")
+        for feature in model["features"][group]
+    }
     for feature_id, coordinates in canonical.items():
         if feature_id not in semantic_geometry:
             mismatches.append({"artifact": "semantic", "id": feature_id, "reason": "missing"})
@@ -2266,6 +2287,17 @@ def verify_parity(
             gpkg_geometry[feature_id] = coordinates
             if _max_coordinate_delta(canonical[feature_id], coordinates) > tolerance:
                 mismatches.append({"artifact": "geopackage", "id": feature_id, "reason": "geometry_delta"})
+            properties = row.get("properties", {})
+            try:
+                gpkg_field_detail = json.loads(properties.get("field_detail", "{}"))
+            except (TypeError, json.JSONDecodeError):
+                gpkg_field_detail = None
+            if gpkg_field_detail != canonical_features[feature_id].get("field_detail", {}):
+                mismatches.append({
+                    "artifact": "geopackage",
+                    "id": feature_id,
+                    "reason": "field_contract_mismatch",
+                })
     for feature_id in set(canonical) - gpkg_ids:
         mismatches.append({"artifact": "geopackage", "id": feature_id, "reason": "missing"})
 
@@ -2279,11 +2311,18 @@ def verify_parity(
             if obj.get_object().get("/Subtype") == "/Image":
                 image_count += 1
     subject = reader.metadata.get("/Subject", "")
-    prefix = "Canonical geometry SHA-256 "
-    pdf_digest = subject[len(prefix):] if subject.startswith(prefix) else None
+    subject_match = re.fullmatch(
+        r"Canonical geometry SHA-256 ([0-9a-f]{64}); "
+        r"canonical field contract SHA-256 ([0-9a-f]{64})",
+        subject,
+    )
+    pdf_digest = subject_match.group(1) if subject_match else None
+    pdf_field_digest = subject_match.group(2) if subject_match else None
     digest = geometry_digest(model)
     if pdf_digest != digest:
         mismatches.append({"artifact": "pdf", "reason": "geometry_digest"})
+    if pdf_field_digest != contract_digest:
+        mismatches.append({"artifact": "pdf", "reason": "field_contract_digest"})
     if not vector_paths or image_count:
         mismatches.append({"artifact": "pdf", "reason": "not_vector_only"})
     parity_text_ids = model.get("artifact_contract", {}).get(
@@ -2323,16 +2362,17 @@ def verify_parity(
             mismatches.append({"artifact": "pdf_vs_geopackage", "id": feature_id, "reason": "geometry_delta", "delta_ft": delta})
 
     return {
-        "schema_version": "civil-plan-factory.parity-report/v0.1.0",
+        "schema_version": "civil-plan-factory.parity-report/v0.2.0",
         "disclaimer": DISCLAIMER,
         "status": "invalid" if mismatches else "valid",
         "horizontal_tolerance_ft": tolerance,
         "tolerance_note": "Output-to-output numeric equality tolerance; not survey/source accuracy.",
         "canonical_geometry_sha256": digest,
+        "canonical_field_contract_sha256": contract_digest,
         "feature_count": len(canonical),
         "semantic": {"feature_count": len(semantic_geometry)},
         "geopackage": {"feature_count": len(gpkg_ids), "layers": ["canonical_points", "canonical_lines", "canonical_polygons", "canonical_surfaces"]},
-        "pdf": {"geometry_sha256": pdf_digest, "vector_paths_present": vector_paths, "embedded_image_count": image_count, "text_extractable": DISCLAIMER in text},
+        "pdf": {"geometry_sha256": pdf_digest, "field_contract_sha256": pdf_field_digest, "vector_paths_present": vector_paths, "embedded_image_count": image_count, "text_extractable": DISCLAIMER in text},
         "pdf_vs_geopackage": {
             "method": "pdf_content_stream_geometry_markers_vs_gpkg",
             "compared_feature_count": len(pdf_gpkg_deltas),

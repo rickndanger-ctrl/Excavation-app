@@ -2,6 +2,7 @@ import copy
 from typing import Any
 
 from .validation import DISCLAIMER, SAFETY_NOTICE
+from .vertical import edge_field_detail_with_vertical_callout, field_detail_with_vertical_callout
 
 
 def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
@@ -28,7 +29,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
             "searchable": feature.get("field_detail", {}).get("searchable", True),
             "clickable": True,
             "mapTarget": feature.get("field_detail", {}).get("map_target", feature["id"]),
-            "fieldDetail": feature.get("field_detail", {}),
+            "fieldDetail": field_detail_with_vertical_callout(feature),
             "wallAssociationId": feature.get("wall_association_id"),
             "networkTerminalId": feature.get("network_terminal_id"),
             "provenance": feature["provenance"],
@@ -47,7 +48,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
             "searchable": feature.get("field_detail", {}).get("searchable", True),
             "clickable": True,
             "mapTarget": feature.get("field_detail", {}).get("map_target", feature["id"]),
-            "fieldDetail": feature.get("field_detail", {}),
+            "fieldDetail": field_detail_with_vertical_callout(feature),
             "provenance": feature["provenance"],
         }
         for feature in model["features"]["polygons"]
@@ -64,7 +65,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
             "searchable": feature.get("field_detail", {}).get("searchable", True),
             "clickable": True,
             "mapTarget": feature.get("field_detail", {}).get("map_target", feature["id"]),
-            "fieldDetail": feature.get("field_detail", {}),
+            "fieldDetail": field_detail_with_vertical_callout(feature),
             "provenance": feature["provenance"],
         }
         for feature in model["features"]["lines"]
@@ -82,7 +83,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
             "searchable": feature.get("field_detail", {}).get("searchable", True),
             "clickable": True,
             "mapTarget": feature.get("field_detail", {}).get("map_target", feature["id"]),
-            "fieldDetail": feature.get("field_detail", {}),
+            "fieldDetail": field_detail_with_vertical_callout(feature),
             "provenance": feature["provenance"],
         }
         for feature in model["features"]["surfaces"]
@@ -109,7 +110,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
                 "searchable": True,
                 "clickable": True,
                 "mapTarget": edge["id"],
-                "fieldDetail": edge.get("field_detail", {}),
+                "fieldDetail": edge_field_detail_with_vertical_callout(edge),
                 "provenance": edge["provenance"],
             })
     manifest = {
@@ -141,6 +142,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         "userLocation": None,
         "userHeading": None,
         "calibrationPoints": [],
+        "verticalDesignBasis": model.get("vertical_design_basis"),
         "unavailable": unavailable,
         "provenance": {
             "source_ids": [source["id"] for source in model["sources"]],

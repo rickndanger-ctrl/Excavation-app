@@ -408,12 +408,31 @@
       "subject": "Screening-only cut/fill and temporary site-preparation concept",
       "status": "reviewed_assumption",
       "value": {
-        "quantity_method": "plan area times assumed average depth divided by 27",
-        "quantity_status": "screening_only",
+        "quantity_method": "withheld until a complete existing TIN can be compared with proposed grades",
+        "quantity_status": "withheld_pending_survey_surface",
         "temporary_features": ["disturbance limit", "construction entrance", "stockpile", "silt fence"],
         "erosion_control_approval_status": "unknown"
       },
-      "rationale": "The fictional cut/fill polygons and temporary controls create testable site-prep layers. They are not survey-to-surface volumes, bid quantities, a construction sequence, or an approved erosion-control plan.",
+      "rationale": "The temporary controls create testable site-prep layers, but the sparse 1999 reference contours cannot support honest cut/fill classification or quantities. Earthwork values remain withheld until a complete existing surface exists.",
+      "source_ids": ["src-eugene-contours-vdatum", "src-project-brief"]
+    },
+    {
+      "id": "decision-whole-job-vertical-coordination",
+      "subject": "Fictional whole-job finished-grade and gravity-network coordination basis",
+      "status": "reviewed_assumption",
+      "value": {
+        "vertical_datum": "NAVD88",
+        "benchmark_status": "unknown",
+        "survey_authority": false,
+        "building_ffe_ft": 445.0,
+        "building_subgrade_ft": 443.5,
+        "entry_landing_ft": 444.98,
+        "arrival_court_origin_ft": 443.8,
+        "arrival_court_rise_percent_local_x": 0.5,
+        "arrival_court_rise_percent_local_y": 1.0,
+        "earthwork_quantity_status": "withheld_pending_survey_surface"
+      },
+      "rationale": "One reviewed test basis coordinates the finished building, entries, walks, ramp, parking, curb, landscape, sanitary service, and storm profile. The values exercise Model Studio and EveSite but do not establish survey control, accessibility compliance, hydraulic adequacy, or construction authority.",
       "source_ids": ["src-eugene-contours-vdatum", "src-project-brief"]
     }
   ]

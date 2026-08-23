@@ -66,7 +66,8 @@ class GradingSitePrepModelTests(unittest.TestCase):
         self.assertEqual("NAVD88", proposed["vertical_datum"])
         self.assertEqual(8, len(proposed["field_detail"]["elevation_samples"]))
         contour_ids = proposed["field_detail"]["contour_ids"]
-        self.assertEqual(3, len(contour_ids))
+        self.assertEqual(2, len(contour_ids))
+        self.assertNotIn("proposed-contour-445-00", contour_ids)
         for contour_id in contour_ids:
             contour = self.lines[contour_id]
             self.assertEqual("surface-proposed-grade", contour["field_detail"]["source_surface_id"])
@@ -82,27 +83,28 @@ class GradingSitePrepModelTests(unittest.TestCase):
         self.assertEqual(3, len(arrows))
         self.assertTrue(all(row["field_detail"]["downhill"] for row in arrows))
 
-    def test_cut_fill_quantities_are_derived_from_area_and_average_depth(self):
+    def test_cut_fill_quantities_are_withheld_without_a_complete_existing_tin(self):
         earthwork = self.model["earthwork_summary"]
-        fill = self.polygons["earthwork-fill-pad-01"]["field_detail"]
-        cut = self.polygons["earthwork-cut-east-01"]["field_detail"]
-        self.assertAlmostEqual(fill["area_sf"] * fill["average_depth_ft"] / 27.0, fill["volume_cy"], places=6)
-        self.assertAlmostEqual(cut["area_sf"] * cut["average_depth_ft"] / 27.0, cut["volume_cy"], places=6)
-        self.assertAlmostEqual(fill["volume_cy"] - cut["volume_cy"], earthwork["net_import_cy"], places=6)
-        self.assertEqual("screening_only", earthwork["quantity_status"])
+        self.assertEqual("withheld_pending_survey_surface", earthwork["quantity_status"])
+        self.assertFalse(earthwork["survey_to_surface_volume"])
+        for feature_id in ("earthwork-fill-pad-01", "earthwork-cut-east-01"):
+            detail = self.polygons[feature_id]["field_detail"]
+            self.assertEqual("unknown_pending_complete_existing_tin", detail["classification_status"])
+            self.assertNotIn("average_depth_ft", detail)
+            self.assertNotIn("volume_cy", detail)
 
     def test_site_prep_uses_temporary_phase_and_separate_areas(self):
         for feature_id in ("site-prep-disturbance-limit-01", "site-prep-construction-entrance-01", "site-prep-stockpile-01"):
             self.assertEqual("phase-02-clearing-site-prep", self.polygons[feature_id]["phase_id"])
         self.assertEqual("phase-02-clearing-site-prep", self.lines["erosion-silt-fence-01"]["phase_id"])
 
-    def test_validator_rejects_missing_surface_samples_bad_volume_and_fake_survey_claim(self):
+    def test_validator_rejects_missing_surface_samples_fabricated_volume_and_fake_survey_claim(self):
         missing = copy.deepcopy(self.model)
         next(row for row in missing["features"]["surfaces"] if row["id"] == "surface-proposed-grade")["field_detail"]["elevation_samples"] = []
         self.assertIn("grading.surface_samples_missing", self.error_codes(missing))
-        bad_volume = copy.deepcopy(self.model)
-        next(row for row in bad_volume["features"]["polygons"] if row["id"] == "earthwork-fill-pad-01")["field_detail"]["volume_cy"] = 999
-        self.assertIn("grading.earthwork_volume_mismatch", self.error_codes(bad_volume))
+        fabricated_volume = copy.deepcopy(self.model)
+        next(row for row in fabricated_volume["features"]["polygons"] if row["id"] == "earthwork-fill-pad-01")["field_detail"]["volume_cy"] = 999
+        self.assertIn("grading.earthwork_quantity_must_be_withheld", self.error_codes(fabricated_volume))
         fake_survey = copy.deepcopy(self.model)
         next(row for row in fake_survey["features"]["surfaces"] if row["id"] == "surface-existing-grade-reference")["field_detail"]["survey_authority"] = True
         self.assertIn("grading.unsupported_survey_claim", self.error_codes(fake_survey))
@@ -146,7 +148,7 @@ class GradingSitePrepBuildTests(unittest.TestCase):
             self.assertEqual("valid", parity["status"])
             self.assertEqual([], parity["mismatches"])
             self.assertEqual(0.0, parity["pdf_vs_geopackage"]["maximum_delta_ft"])
-            expected_counts = {"canonical_points": 50, "canonical_lines": 49, "canonical_polygons": 34, "canonical_surfaces": 5}
+            expected_counts = {"canonical_points": 50, "canonical_lines": 48, "canonical_polygons": 34, "canonical_surfaces": 5}
             for layer, expected in expected_counts.items():
                 result = subprocess.run([str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(output / "hilyard-site-layout.gpkg"), layer], text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)

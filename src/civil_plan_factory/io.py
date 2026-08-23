@@ -104,6 +104,18 @@ def _apply_design_slice(model: dict[str, Any], design: dict[str, Any]) -> None:
             copy.deepcopy(network) if row["id"] == network["id"] else row
             for row in model["networks"]
         ]
+    for update in design.get("network_updates", []):
+        network = next(row for row in model["networks"] if row["id"] == update["id"])
+        network_patch = {
+            key: value
+            for key, value in update.items()
+            if key not in {"id", "node_updates", "edge_updates"}
+        }
+        _deep_update(network, network_patch)
+        for group, update_key in (("nodes", "node_updates"), ("edges", "edge_updates")):
+            rows_by_id = {row["id"]: row for row in network.get(group, [])}
+            for row_update in update.get(update_key, []):
+                _deep_update(rows_by_id[row_update["id"]], row_update)
     for group, rows in design.get("deliverables", {}).items():
         model["deliverables"][group].extend(copy.deepcopy(rows))
     if coverage := design.get("contract_coverage"):
@@ -158,6 +170,18 @@ def _apply_fixture_transform(model: dict[str, Any], fixture: dict[str, Any]) -> 
             for key in ("coordinates", "boundary"):
                 if key in feature:
                     feature[key] = _map_coordinate_tree(feature[key], transform)
+    plane = model.get("vertical_design_basis", {}).get("arrival_court_plane")
+    if plane:
+        gradient_x = float(plane["rise_per_foot_local_x"])
+        gradient_y = float(plane["rise_per_foot_local_y"])
+        if mirror_x:
+            gradient_x = -gradient_x
+        plane["rise_per_foot_local_x"] = round(
+            gradient_x * cosine - gradient_y * sine, 12
+        )
+        plane["rise_per_foot_local_y"] = round(
+            gradient_x * sine + gradient_y * cosine, 12
+        )
 
 
 def _add_fixture_building_copies(model: dict[str, Any], count: int) -> None:
