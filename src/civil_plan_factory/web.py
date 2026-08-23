@@ -102,10 +102,12 @@ class StudioHTTPServer(ThreadingHTTPServer):
         return dict(operation)
 
     def start_authoring(self, slug: str) -> dict[str, Any]:
+        custom = self.workspace.custom_authoring(slug)
+        is_custom = custom.get("integrity_status") != "not_custom_mode"
         operation_id = uuid.uuid4().hex
         operation = {
             "operation_id": operation_id,
-            "kind": "reviewed_source_authoring",
+            "kind": "custom_plan_authoring" if is_custom else "reviewed_source_authoring",
             "project_slug": slug,
             "status": "queued",
             "stage": "queued",
@@ -121,15 +123,15 @@ class StudioHTTPServer(ThreadingHTTPServer):
                 with self.operations_lock:
                     operation.update(
                         status="running",
-                        stage="reviewed_source_authoring",
+                        stage="custom_plan_authoring" if is_custom else "reviewed_source_authoring",
                         progress_percent=35,
                         started_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                     )
-                result = self.workspace.author_reviewed_model(slug)
+                result = self.workspace.author_model(slug)
                 with self.operations_lock:
                     operation.update(
                         status="complete",
-                        stage="reviewed_source_authored",
+                        stage="custom_plan_authored" if is_custom else "reviewed_source_authored",
                         progress_percent=100,
                         result=result,
                         elapsed_seconds=round(time.monotonic() - operation["_queued_monotonic"], 3),
@@ -217,11 +219,25 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
             if parts == ["api", "projects"]:
                 self._send_json(HTTPStatus.OK, self.server.workspace.list_projects())
                 return
+            if parts == ["api", "authoring-profiles"]:
+                self._send_json(
+                    HTTPStatus.OK, self.server.workspace.authoring_profiles()
+                )
+                return
             if parts == ["api", "publications"]:
                 self._send_json(HTTPStatus.OK, self.server.workspace.publication_feed())
                 return
             if len(parts) == 3 and parts[:2] == ["api", "projects"]:
                 self._send_json(HTTPStatus.OK, self.server.workspace.project_detail(parts[2]))
+                return
+            if (
+                len(parts) == 4
+                and parts[:2] == ["api", "projects"]
+                and parts[3] == "design-brief"
+            ):
+                self._send_json(
+                    HTTPStatus.OK, self.server.workspace.design_brief(parts[2])
+                )
                 return
             if len(parts) == 3 and parts[:2] == ["api", "operations"]:
                 operation = self.server.operation(parts[2])
@@ -247,6 +263,16 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 result = self.server.workspace.create_project(
                     str(payload.get("name", "")),
                     str(payload["slug"]) if payload.get("slug") else None,
+                    authoring_mode=(
+                        str(payload["authoring_mode"])
+                        if payload.get("authoring_mode")
+                        else None
+                    ),
+                    profile_id=(
+                        str(payload["profile_id"])
+                        if payload.get("profile_id")
+                        else None
+                    ),
                 )
                 self._send_json(HTTPStatus.CREATED, result)
                 return
@@ -256,6 +282,14 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 except ValueError as error:
                     raise ValueError("content_base64 must be valid base64") from error
                 result = self.server.workspace.add_input(parts[2], str(payload.get("filename", "")), content)
+                self._send_json(HTTPStatus.CREATED, result)
+                return
+            if (
+                len(parts) == 4
+                and parts[:2] == ["api", "projects"]
+                and parts[3] == "design-brief"
+            ):
+                result = self.server.workspace.save_design_brief(parts[2], payload)
                 self._send_json(HTTPStatus.CREATED, result)
                 return
             if len(parts) == 4 and parts[:2] == ["api", "projects"] and parts[3] == "reviews":

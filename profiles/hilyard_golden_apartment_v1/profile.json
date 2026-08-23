@@ -1,0 +1,46 @@
+{
+  "schema_version": "civil-plan-factory.authoring-profile/v0.1.0",
+  "profile_id": "hilyard_golden_apartment_v1",
+  "name": "Hilyard Golden Apartment — Original Civil Plan",
+  "version": "1.0.0",
+  "description": "A registered, original semantic apartment-site recipe that produces the finished-job base model and coordinated civil work layers without adapting a found plan.",
+  "recipe": "recipe/project.json",
+  "geometry_origin": {
+    "reference_context_phase_ids": [
+      "phase-01-existing-control-erosion"
+    ],
+    "authored_feature_count": 108,
+    "authored_geometry_membership_sha256": "7511a7d93abf56fa26d429994d081ee4ff1d3e75b05e9b2fd6181f9eaea4dd43"
+  },
+  "default_brief": {
+    "goal": "Show field employees the complete finished job first, then place every work layer over that shared visual reference.",
+    "site_program": {
+      "archetype": "apartment_complex",
+      "building_width_ft": 45.0,
+      "building_length_ft": 90.0,
+      "parking_stall_count": 5,
+      "finished_site_scope": [
+        "building",
+        "entries",
+        "parking",
+        "drive_aisle",
+        "curbs",
+        "sidewalks",
+        "landscape"
+      ]
+    },
+    "vertical_design": {
+      "vertical_datum": "NAVD88",
+      "units": "feet",
+      "finished_floor_elevation_ft": 445.0,
+      "building_subgrade_elevation_ft": 443.5,
+      "status": "reviewed_assumption_not_for_staking"
+    },
+    "presentation": {
+      "base_view": "finished_site_first",
+      "layer_relationship": "work_layers_over_finished_job",
+      "plan_scale": "1 inch = 20 feet",
+      "phone_recovery_control": "fit_full_plan"
+    }
+  }
+}

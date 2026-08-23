@@ -1,0 +1,439 @@
+{
+  "schema_version": "civil-plan-factory.decision-ledger/v0.1.0",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "decisions": [
+    {
+      "id": "decision-canonical-crs",
+      "subject": "Canonical horizontal coordinate reference system",
+      "status": "reviewed_assumption",
+      "value": "EPSG:6823",
+      "rationale": "Selected project workflow CRS; City GIS EPSG:2914 inputs will be transformed once at ingestion.",
+      "source_ids": [
+        "src-design-constraints",
+        "src-project-brief"
+      ]
+    },
+    {
+      "id": "decision-benchmark",
+      "subject": "Project benchmark elevation and monument",
+      "status": "unknown",
+      "value": null,
+      "rationale": "No surveyed project benchmark has been supplied; no test elevation is invented in this foundation slice.",
+      "source_ids": [
+        "src-design-constraints"
+      ]
+    },
+    {
+      "id": "decision-site-design",
+      "subject": "Final building, grading, access geometry, and site layout",
+      "status": "unknown",
+      "value": null,
+      "rationale": "The research brief's concept is not a locked engineering design. East 34th Avenue is the confirmed access basis, but exact geometry requires later review.",
+      "source_ids": [
+        "src-rfp-appendix",
+        "src-project-brief"
+      ]
+    },
+    {
+      "id": "decision-utility-tie-ins",
+      "subject": "Utility tie-in points, sizes, routes, and capacities",
+      "status": "unknown",
+      "value": null,
+      "rationale": "Agency-approved tie-ins and capacities are not established; gas and non-EWEB telecom locations are also unknown.",
+      "source_ids": [
+        "src-design-constraints",
+        "src-project-brief"
+      ]
+    },
+    {
+      "id": "decision-stormwater",
+      "subject": "Stormwater treatment, detention, infiltration, and outfall design",
+      "status": "unknown",
+      "value": null,
+      "rationale": "Geotechnical, groundwater, infiltration, downstream HGL, and final sizing inputs remain unavailable.",
+      "source_ids": [
+        "src-design-constraints",
+        "src-project-brief"
+      ]
+    },
+    {
+      "id": "decision-materials",
+      "subject": "Final utility and civil materials and specifications",
+      "status": "unknown",
+      "value": null,
+      "rationale": "Research defaults are not adopted as final engineering choices in this foundation slice.",
+      "source_ids": [
+        "src-design-constraints"
+      ]
+    },
+    {
+      "id": "decision-reference-geometry",
+      "subject": "Reference geometry derivation for ROW, easements, wetland, and street edges",
+      "status": "reviewed_assumption",
+      "value": {
+        "method": "dimensioned and visually digitized from City Appendix A maps against City GIS taxlot coordinates",
+        "coordinate_precision_ft": 0.000001,
+        "source_accuracy": "reference-scale; not surveyed",
+        "output_parity_tolerance_ft": 0.01
+      },
+      "rationale": "The official appendix confirms location and dimensions but expressly labels mapped GIS data imprecise/general-reference. Geometry is frozen for repeatable test data without claiming survey authority.",
+      "source_ids": [
+        "src-rfp-appendix",
+        "src-eugene-taxlots-gis"
+      ]
+    },
+    {
+      "id": "decision-building-footprint",
+      "subject": "Reviewed-assumption apartment building and pad footprint",
+      "status": "reviewed_assumption",
+      "value": {
+        "building_dimensions_ft": [
+          45.0,
+          90.0
+        ],
+        "building_area_sf": 4050.0,
+        "orientation": "long axis north-south",
+        "location": "southeast usable-area test placement",
+        "pad_dimensions_ft": [
+          55.0,
+          100.0
+        ],
+        "minimum_modeled_clearances_ft": {
+          "row_dedication": 8.0,
+          "eweb_west": 63.0,
+          "eweb_south": 6.0,
+          "sanitary_easement": 18.75,
+          "wetland": 14.0
+        },
+        "finished_floor_elevation_ft": null,
+        "finished_floor_elevation_status": "unknown",
+        "pad_elevation_ft": null,
+        "pad_elevation_status": "unknown"
+      },
+      "rationale": "A compact 45-by-90-foot bar follows the prior research concept, fits east of the reference wetland and west of the reference ROW, and avoids all modeled constraints. Clearances prove geometry separation only; they are not code setbacks or approvals.",
+      "source_ids": [
+        "src-rfp-appendix",
+        "src-project-brief",
+        "src-eugene-taxlots-gis"
+      ]
+    },
+    {
+      "id": "decision-building-interfaces",
+      "subject": "Exterior entries and future utility wall terminals",
+      "status": "reviewed_assumption",
+      "value": {
+        "entries": [
+          "south primary",
+          "east service",
+          "north pedestrian"
+        ],
+        "terminal_systems": [
+          "sanitary",
+          "domestic_water",
+          "fire_water",
+          "roof_drainage",
+          "electric",
+          "telecom_fiber",
+          "gas",
+          "site_lighting"
+        ],
+        "routing_status": "not designed",
+        "elevation_status": "unknown"
+      },
+      "rationale": "Stable wall interfaces let later systems connect to one building contract without implying routes, sizes, capacities, inverts, or approved penetrations.",
+      "source_ids": [
+        "src-project-brief"
+      ]
+    },
+    {
+      "id": "decision-finished-site-layout",
+      "subject": "Fictional finished-job flatwork, arrival court, and landscape layout",
+      "status": "reviewed_assumption",
+      "value": {
+        "finished_base_features": [
+          "building and pad",
+          "south, north, and east entry walks",
+          "arrival-court sidewalk link",
+          "arrival and parking court",
+          "north landscape court"
+        ],
+        "controlling_plan_distances_ft": {
+          "building_sw_to_south_walk_west_edge": 18.5,
+          "building_nw_to_north_walk_west_edge": 18.5,
+          "building_east_wall_to_service_walk_east_edge": 12.5
+        },
+        "ada_compliance_status": "not evaluated",
+        "pavement_and_flatwork_sections_status": "not designed",
+        "survey_and_staking_authority": false
+      },
+      "rationale": "A complete, easy-to-read finished-job base is required to test worker orientation, layer context, calibrated pre-measurements, and location tips. Geometry is exact inside the fictional model while remaining explicitly unapproved and not for field staking.",
+      "source_ids": [
+        "src-rfp-appendix",
+        "src-project-brief",
+        "src-eugene-taxlots-gis"
+      ]
+    },
+    {
+      "id": "decision-sanitary-vertical-basis",
+      "subject": "Minimum fictional vertical basis for the sanitary gravity envelope",
+      "status": "reviewed_assumption",
+      "value": {
+        "provisional_building_ffe_navd88_ft": 445.0,
+        "building_terminal_invert_navd88_ft": 439.7,
+        "reference_surface_method": "low-confidence profile anchored to City GIS manhole rims and extrapolated to the building terminal",
+        "fitness_for_use": "sanitary-envelope-only",
+        "survey_authority": false
+      },
+      "rationale": "The mock gravity system needs an explicit elevation envelope. The provisional FFE and extrapolated surface are deliberately reviewable assumptions; City GIS NAVD88 rims/inverts remain reference-derived and do not create project control.",
+      "source_ids": [
+        "src-eugene-wastewater-gis",
+        "src-design-constraints"
+      ]
+    },
+    {
+      "id": "decision-sanitary-alignment",
+      "subject": "Fictional sanitary service alignment, material, and assumed public connection",
+      "status": "reviewed_assumption",
+      "value": {
+        "terminal_id": "penetration-sanitary",
+        "service_diameter_in": 6,
+        "service_material": "PVC SDR35",
+        "design_slope_percent": 1.0,
+        "minimum_cover_ft": 4.0,
+        "cleanout_id": "sanitary-cleanout-01",
+        "tie_in_id": "sanitary-tie-in-01",
+        "public_source_asset_id": 4589,
+        "tie_in_approval_status": "unknown",
+        "capacity_status": "unknown"
+      },
+      "rationale": "A short westward run to a two-way cleanout and a straight northward run to the crossing main creates maintainable topology without inventing a site manhole. The 6-inch PVC SDR35 and 1.0% slope are reviewed mock defaults from the cited constraint ledger. The connection is a test assumption pending potholing, survey, City approval, and capacity review.",
+      "source_ids": [
+        "src-eugene-wastewater-gis",
+        "src-design-constraints",
+        "src-eugene-pids-2023",
+        "src-eugene-construction-2024-a4"
+      ]
+    },
+    {
+      "id": "decision-storm-hydrology",
+      "subject": "Fictional roof-drainage hydrologic screening basis",
+      "status": "reviewed_assumption",
+      "value": {
+        "contributing_area_sf": 4050.0,
+        "runoff_coefficient": 1.0,
+        "water_quality_storm_in": 1.4,
+        "water_quality_capture_volume_cf": 472.5,
+        "ten_year_storm_in": 4.46,
+        "ten_year_unrouted_roof_volume_cf": 1505.25,
+        "method": "full-roof rainfall-volume screening only",
+        "permit_compliance_claim": false
+      },
+      "rationale": "The complete reviewed building roof area is conservatively treated as impervious for deterministic test-data arithmetic. These volumes are screening quantities, not a routed hydrograph, capacity approval, or compliance finding.",
+      "source_ids": [
+        "src-eugene-stormwater-manual-2025",
+        "src-eugene-pids-2023"
+      ]
+    },
+    {
+      "id": "decision-storm-vertical-basis",
+      "subject": "Minimum fictional vertical basis for roof and storm gravity routing",
+      "status": "reviewed_assumption",
+      "value": {
+        "provisional_building_ffe_navd88_ft": 445.0,
+        "fitness_for_use": "storm-envelope-only",
+        "survey_authority": false,
+        "public_capacity_status": "unknown",
+        "downstream_hgl_status": "unknown"
+      },
+      "rationale": "The mock network reuses the provisional FFE and establishes an explicit generated surface envelope tied to reference City GIS rim context. It is sufficient only to test positive gravity, cover, and conflicts; survey control, final grading, capacity, and HGL remain unresolved.",
+      "source_ids": [
+        "src-eugene-storm-gis",
+        "src-eugene-stormwater-manual-2025",
+        "src-design-constraints"
+      ]
+    },
+    {
+      "id": "decision-storm-facility",
+      "subject": "Lined extended-filtration planter and flow-control test objects",
+      "status": "reviewed_assumption",
+      "value": {
+        "facility_id": "storm-planter-01",
+        "surface_area_sf": 400.0,
+        "surface_storage_depth_ft": 1.25,
+        "declared_surface_storage_cf": 500.0,
+        "infiltration_credit": false,
+        "flood_control_bypass_status": "unknown"
+      },
+      "rationale": "A compact lined planter provides a real treatment/topology object and exceeds the simple water-quality volume screen. It is intentionally not credited for infiltration and is undersized for the unrouted 10-year roof-volume screen; routing, overflow, geotechnical suitability, and agency acceptance remain unknown.",
+      "source_ids": [
+        "src-eugene-stormwater-manual-2025"
+      ]
+    },
+    {
+      "id": "decision-storm-alignment",
+      "subject": "Fictional roof and storm conveyance alignment to City reference context",
+      "status": "reviewed_assumption",
+      "value": {
+        "terminal_id": "penetration-roof-drainage",
+        "private_lateral_diameter_in": 6,
+        "public_connection_diameter_in": 10,
+        "public_source_asset_id": 4183,
+        "tie_in_approval_status": "unknown",
+        "capacity_status": "unknown",
+        "sanitary_crossing_minimum_clearance_ft": 1.0
+      },
+      "rationale": "Two permanent roof leaders combine at the existing building terminal, pass through a lined planter and flow-control structure, and connect through an external-drop site manhole to an assumed point at the reference 21-inch City main. The alignment preserves a modeled storm-below-sanitary clearance but requires survey/potholing and owner review.",
+      "source_ids": [
+        "src-eugene-storm-gis",
+        "src-eugene-stormwater-manual-2025",
+        "src-eugene-pids-2023",
+        "src-eugene-construction-2024-a4"
+      ]
+    },
+    {
+      "id": "decision-domestic-water-service",
+      "subject": "Fictional domestic master-meter service basis",
+      "status": "reviewed_assumption",
+      "value": {
+        "reference_main": "8-inch cast-iron EWEB GIS main along East 34th Avenue",
+        "service_diameter_in": 2,
+        "service_material": "HDPE DR11",
+        "meter_basis": "2-inch master meter",
+        "backflow_basis": "2-inch RPBA",
+        "modeled_cover_ft": 3.5,
+        "demand_pressure_capacity_status": "unknown",
+        "approval_status": "unknown"
+      },
+      "rationale": "A straight two-inch service to the permanent south-wall terminal exercises meter, backflow, pressure-network, and field-detail contracts for a multi-unit fictional building. Fixture demand, pressure, meter selection, hazard classification, exact backflow assembly, and EWEB tie/capacity approval are intentionally not inferred.",
+      "source_ids": [
+        "src-eweb-water-standards-2017",
+        "src-eweb-water-gis",
+        "src-oha-water-sewer"
+      ]
+    },
+    {
+      "id": "decision-fire-water-service",
+      "subject": "Fictional private fire service, backflow, and FDC basis",
+      "status": "reviewed_assumption",
+      "value": {
+        "reference_main": "8-inch cast-iron EWEB GIS main along East 34th Avenue",
+        "service_diameter_in": 6,
+        "service_material": "C900 PVC DR18",
+        "backflow_basis": "6-inch detector double check",
+        "fdc_branch_diameter_in": 4,
+        "modeled_cover_ft": 3.5,
+        "fire_flow_pressure_hydraulics_status": "unknown",
+        "eweb_fire_marshal_approval_status": "unknown"
+      },
+      "rationale": "A separate six-inch service with valve, detector backflow, FDC branch, and permanent sprinkler terminal creates coordinated test topology without representing a sprinkler calculation or public-main capacity finding. Occupancy, required fire flow, static/residual pressure, hydrant test, hydraulic losses, thrust/restraint design, exact devices, and agency approvals remain unresolved.",
+      "source_ids": [
+        "src-eweb-water-standards-2017",
+        "src-eweb-water-gis",
+        "src-oha-water-sewer"
+      ]
+    },
+    {
+      "id": "decision-dry-joint-trench",
+      "subject": "Fictional electric and telecom joint-trench corridor with separate owner enclosures",
+      "status": "reviewed_assumption",
+      "value": {
+        "shared_systems": ["power", "telecom_fiber"],
+        "corridor_width_ft": 4.0,
+        "enclosure_basis": "separate owner boxes in one coordination zone",
+        "telecom_provider_status": "unknown",
+        "owner_design_approval_status": "unknown"
+      },
+      "rationale": "A coordinated south access corridor exercises shared-trench topology while keeping electric vault and telecom handhole distinct. The route, conduit banks, owner separations, service points, loads, provider, and approvals are test assumptions, not located utilities.",
+      "source_ids": ["src-eweb-electric-trench-2014", "src-eweb-electric-service-2020", "src-eugene-telecom-providers-2023"]
+    },
+    {
+      "id": "decision-dry-gas-service",
+      "subject": "Fictional separate NW Natural gas-service route",
+      "status": "reviewed_assumption",
+      "value": {
+        "route_basis": "separate from electric/telecom joint trench and modeled wet utilities",
+        "service_material": "polyethylene gas service placeholder",
+        "main_location_pressure_capacity_status": "unknown",
+        "meter_regulator_approval_status": "unknown"
+      },
+      "rationale": "The separate south/east route tests gas topology without presenting a fictional point of connection as a located main. Final availability, size, material specification, pressure, capacity, meter/regulator, route, separation, and approvals require NW Natural design.",
+      "source_ids": ["src-nw-natural-builder-guidance-2026"]
+    },
+    {
+      "id": "decision-site-lighting-service",
+      "subject": "Fictional exterior site-lighting circuit",
+      "status": "reviewed_assumption",
+      "value": {
+        "terminal_id": "penetration-site-lighting",
+        "pole_count": 2,
+        "photometric_design_status": "unknown",
+        "electrical_load_and_circuit_status": "unknown"
+      },
+      "rationale": "A two-pole east-side branch exercises a separate field layer and building terminal. Fixture selection, circuiting, photometrics, voltage drop, controls, grounding, and electrical approval remain unresolved.",
+      "source_ids": ["src-project-brief", "src-eweb-electric-service-2020"]
+    },
+    {
+      "id": "decision-existing-grade-basis",
+      "subject": "Reference existing-grade surface and vertical-datum conversion",
+      "status": "reviewed_assumption",
+      "value": {
+        "source": "City of Eugene two-foot contours derived from 1999 orthophotos",
+        "source_vertical_datum": "NGVD29",
+        "model_vertical_datum": "NAVD88",
+        "vdatum_shift_ft": 3.698,
+        "vdatum_reported_uncertainty_ft": 0.165,
+        "survey_authority": false,
+        "fitness_for_use": "reference_grade_for_product_testing_only"
+      },
+      "rationale": "The City contour geometry is the best consistent public reference available for this fictional site. NOAA VDatum / VERTCON 3.0 converts the historical NGVD29 elevations into the canonical NAVD88 model. Original and converted elevations remain side by side, and the entire surface must be replaced by current project survey before real work.",
+      "source_ids": ["src-eugene-contours-vdatum"]
+    },
+    {
+      "id": "decision-proposed-grading-basis",
+      "subject": "Fictional apartment pad grading and positive surface drainage concept",
+      "status": "reviewed_assumption",
+      "value": {
+        "building_ffe_navd88_ft": 445.0,
+        "building_corner_grade_range_navd88_ft": [444.45, 444.6],
+        "minimum_modeled_ffe_freeboard_ft": 0.4,
+        "proposed_contour_interval_ft": 0.5,
+        "surface_design_status": "screening_only",
+        "drainage_hydraulics_status": "unknown"
+      },
+      "rationale": "A simple crowned pad with spot grades and arrows exercises surface, contour, freeboard, and app-layer behavior without claiming final grading, ADA, inlet capacity, overflow routing, or permit compliance.",
+      "source_ids": ["src-eugene-contours-vdatum", "src-project-brief"]
+    },
+    {
+      "id": "decision-earthwork-site-prep-basis",
+      "subject": "Screening-only cut/fill and temporary site-preparation concept",
+      "status": "reviewed_assumption",
+      "value": {
+        "quantity_method": "withheld until a complete existing TIN can be compared with proposed grades",
+        "quantity_status": "withheld_pending_survey_surface",
+        "temporary_features": ["disturbance limit", "construction entrance", "stockpile", "silt fence"],
+        "erosion_control_approval_status": "unknown"
+      },
+      "rationale": "The temporary controls create testable site-prep layers, but the sparse 1999 reference contours cannot support honest cut/fill classification or quantities. Earthwork values remain withheld until a complete existing surface exists.",
+      "source_ids": ["src-eugene-contours-vdatum", "src-project-brief"]
+    },
+    {
+      "id": "decision-whole-job-vertical-coordination",
+      "subject": "Fictional whole-job finished-grade and gravity-network coordination basis",
+      "status": "reviewed_assumption",
+      "value": {
+        "vertical_datum": "NAVD88",
+        "benchmark_status": "unknown",
+        "survey_authority": false,
+        "building_ffe_ft": 445.0,
+        "building_subgrade_ft": 443.5,
+        "entry_landing_ft": 444.98,
+        "arrival_court_origin_ft": 443.8,
+        "arrival_court_rise_percent_local_x": 0.5,
+        "arrival_court_rise_percent_local_y": 1.0,
+        "earthwork_quantity_status": "withheld_pending_survey_surface"
+      },
+      "rationale": "One reviewed test basis coordinates the finished building, entries, walks, ramp, parking, curb, landscape, sanitary service, and storm profile. The values exercise Model Studio and EveSite but do not establish survey control, accessibility compliance, hydraulic adequacy, or construction authority.",
+      "source_ids": ["src-eugene-contours-vdatum", "src-project-brief"]
+    }
+  ]
+}

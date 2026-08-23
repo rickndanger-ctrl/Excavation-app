@@ -1,0 +1,137 @@
+schema_version: 1
+status: fictional_test_data_not_for_construction
+project:
+  name: Hilyard Apartment Civil Plan Test
+  jurisdiction: City of Eugene, Oregon
+  site_anchor: 3400 Hilyard Street, Eugene, Oregon
+  horizontal_crs:
+    canonical: EPSG:6823
+    name: NAD83(2011) / Oregon Eugene zone (international feet)
+    city_gis_source: EPSG:2914
+  vertical_datum:
+    canonical: NAVD88 orthometric feet
+    benchmark_status: assumed_test_until_surveyed
+
+governing_sources:
+  - id: eugene_pids_2023
+    title: 2023 Public Improvement Design Standards Manual
+    authority: City of Eugene
+    effective: "2023-11-22"
+    url: https://www.eugene-or.gov/DocumentCenter/View/71912/2023-PIDS-Manual-With-Admin-Order-58-23-42
+  - id: eugene_construction_2024_a4
+    title: 2024 Oregon Specifications with Eugene Amendments 1-4
+    authority: City of Eugene
+    applies_after: "2026-03-12"
+    url: https://www.eugene-or.gov/444/Standard-Specifications-for-Construction
+  - id: eugene_swmm_2025
+    title: 2025 Stormwater Management Manual
+    authority: City of Eugene
+    url: https://www.eugene-or.gov/DocumentCenter/View/79289
+  - id: eweb_water
+    title: EWEB Water Design and Construction Standards
+    authority: Eugene Water & Electric Board
+    effective: "2017-04-25"
+    url: https://www.eweb.org/documents/Policies%20and%20Procedures/contractor-developer/eweb-water-design-and-construction-standards%280%29.pdf
+  - id: oha_water_sewer
+    title: OAR 333-061-0050
+    authority: Oregon Health Authority
+  - id: deq_div52_appendix_a
+    title: Division 52 Appendix A — Minimum Requirements for Sewer Pipelines
+    authority: Oregon DEQ
+    status: state_guidance_local_stricter_values_control
+    url: https://www.oregon.gov/deq/FilterRulemakingDocs/div52appxa.pdf
+
+constraints:
+  sanitary_public:
+    main_min_diameter_in: {value: 8, source: eugene_pids_2023}
+    slope_8in_min_desirable_pct: {value: 0.40, source: eugene_pids_2023}
+    slope_6in_min_desirable_pct: {value: 1.0, source: eugene_pids_2023}
+    velocity_min_fps: {value: 2.0, source: eugene_pids_2023}
+    design_depth_max_ratio: {value: 0.80, source: eugene_pids_2023}
+    cover_min_ft: {value: 4.0, source: eugene_pids_2023}
+    cover_desirable_upstream_ft: {value: 5.0, source: eugene_pids_2023}
+    manhole_spacing_max_ft: {value: 400, source: eugene_pids_2023}
+    manhole_drop_normal_ft: {value: 0.1, source: eugene_pids_2023}
+    internal_channel_drop_max_in: {value: 24, source: eugene_pids_2023}
+    shallow_manhole_trigger_cover_ft: {value: 5.0, source: eugene_pids_2023}
+    service_min_in_public_row_in: {value: 6, source: eugene_pids_2023}
+    cleanout_required_at_row_for_6in_service: {value: true, source: eugene_pids_2023}
+    service_8in_or_larger_requires_manhole: {value: true, source: eugene_pids_2023}
+    preferred_mock_material: {value: PVC_SDR35, status: conservative_assumption}
+
+  storm_public:
+    pipe_min_diameter_in: {value: 10, source: eugene_pids_2023}
+    cover_min_ft: {value: 4.0, source: eugene_pids_2023}
+    design_velocity_min_fps: {value: 3.0, source: eugene_pids_2023}
+    target_depth_ratio: {value: 0.80, source: eugene_pids_2023}
+    manhole_spacing_max_ft_le_24in: {value: 400, source: eugene_pids_2023}
+    manhole_spacing_max_ft_ge_30in: {value: 800, source: eugene_pids_2023, condition: City_direction_required}
+    shallow_manhole_trigger_cover_ft: {value: 5.0, source: eugene_pids_2023}
+    gutter_capture_max_ft: {value: 400, source: eugene_pids_2023, condition: or_one_block_whichever_is_shorter}
+    surcharge_hgl_below_gutter_min_in: {value: 6, source: eugene_pids_2023}
+
+  water:
+    main_cover_minor_road_in: {value: 36, source: eweb_water}
+    main_cover_major_road_in: {value: 42, source: eweb_water}
+    standard_residential_distribution_main_in: {value: 8, source: eweb_water, status: not_automatic_for_apartment}
+    hydrant_main_min_in: {value: 8, source: eweb_water}
+    service_min_in: {value: 1, source: eweb_water, status: final_size_requires_EWEB_design}
+    pressure_normal_psi: {min: 40, max: 120, source: eweb_water}
+    pressure_min_under_fire_flow_psi: {value: 20, source: eweb_water}
+    residential_fire_flow_baseline_gpm: {value: 1500, source: eweb_water, status: Fire_Marshal_and_EWEB_review_required}
+    hydrant_spacing_eweb_max_ft: {value: 500, source: eweb_water, status: Fire_Marshal_may_require_closer}
+
+  separations:
+    water_sewer_horizontal_ft:
+      preferred: 10
+      reduced: 5
+      reduced_condition: water_more_than_18in_above_sewer
+      source: eweb_water
+    water_sewer_vertical_min_in: {value: 12, source: eweb_water}
+    water_above_sewer_preferred_in: {value: 18, source: oha_water_sewer}
+    water_other_utility_horizontal_ft: {value: 2, source: eweb_water}
+    water_other_utility_vertical_in: {value: 12, source: eweb_water}
+    electric_other_utility_vertical_in: {value: 12, source: EWEB_EC5-B.1000}
+
+  stormwater:
+    water_quality_trigger_new_or_replaced_impervious_sf: {value: 1000, source: eugene_swmm_2025}
+    water_quality_storm_in_24hr: {value: 1.4, distribution: NRCS_Type_1A, source: eugene_swmm_2025}
+    flood_control_10yr_storm_in_24hr: {value: 4.46, condition: basin_under_40_acres, source: eugene_swmm_2025}
+    simplified_sizing_max_site_impervious_sf: {value: 15000, source: eugene_swmm_2025, status: not_recommended_for_this_mock}
+    mock_treatment: {value: lined_extended_filtration_planters_with_underdrain, status: conservative_assumption}
+    detention: {value: included_for_test_complexity, status: assumption_pending_headwaters_and_downstream_capacity}
+
+  trenching:
+    pipe_zone_above_pipe_min_in: {value: 8, source: eugene_construction_2024_a4}
+    trench_width_min_in: {value: 24, source: eugene_construction_2024_a4}
+    structure_excavation_clearance_min_in: {value: 12, source: eugene_construction_2024_a4}
+    pipe_zone_lift_max_in: {value: 6, source: eugene_construction_2024_a4}
+    row_compaction_daily_average_pct: {value: 95, source: eugene_construction_2024_a4}
+    row_compaction_individual_min_pct: {value: 93, source: eugene_construction_2024_a4}
+    other_area_compaction_min_pct: {value: 90, source: eugene_construction_2024_a4}
+
+  erosion_control:
+    eugene_permit_disturbance_trigger_ac: {value: 1.0, source: City_of_Eugene_erosion_FAQ}
+    sensitive_area_trigger_sf: {value: 500, source: City_of_Eugene_erosion_FAQ}
+    sensitive_area_trigger_cy: {value: 20, source: City_of_Eugene_erosion_FAQ}
+    deq_1200c_general_trigger_ac: {value: 1.0, source: Oregon_DEQ_1200-C}
+    mock_plan_requires_full_csmp: {value: true, status: conservative_assumption}
+
+mock_design_defaults:
+  sanitary_main: {diameter_in: 8, material: PVC_SDR35, slope_min_pct: 0.50, cover_target_ft: 5.0}
+  sanitary_building_service: {diameter_in: 6, material: PVC_SDR35, slope_min_pct: 1.0}
+  storm_main: {diameter_in: 10, material: PVC, slope_placeholder_pct: 1.0, verify_velocity_fps: 3.0}
+  water_main: {diameter_in: 8, material: ductile_iron, status: placeholder_pending_EWEB_hydraulics}
+  water_sewer_separation: {horizontal_ft: 10, vertical_water_above_sewer_in: 18}
+  roof_drainage: {route: separate_roof_collector_to_lined_treatment_planter}
+
+unresolved_inputs:
+  - approved tie-in points and capacities
+  - EWEB water pressure, fire flow, main size and material
+  - final domestic meter and fire-service size
+  - surveyed topography, benchmark and boundary
+  - geotechnical and groundwater data
+  - infiltration rate and final stormwater facility sizing
+  - downstream hydraulic grade line and detention requirement
+  - current Eugene-specific 2025 Oregon Fire Code amendments
+  - gas, power and telecom tie-in locations and owner-approved easements

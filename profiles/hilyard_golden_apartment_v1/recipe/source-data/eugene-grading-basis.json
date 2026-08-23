@@ -1,0 +1,52 @@
+{
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "retrieved_date": "2026-08-21",
+  "contour_source": {
+    "authority": "City of Eugene Geographic Information Services",
+    "service": "https://gis.eugene-or.gov/arcgis/rest/services/CatalogOfEugeneLayers/Eug_2ft_Contours_FC/MapServer/0",
+    "description": "Two-foot contours derived from 1999 orthophotos of the Eugene UGB.",
+    "source_horizontal_crs": "EPSG:2914 NAD83(HARN) / Oregon South (ftUS)",
+    "query_output_crs": "EPSG:6823 NAD83(2011) / Oregon Eugene zone (international ft)",
+    "source_vertical_datum": "NGVD29",
+    "contour_interval_ft": 2.0,
+    "query_envelope_epsg_6823": [186200.0, 98420.0, 186450.0, 98800.0],
+    "clip_feature_id": "property-site-boundary",
+    "geometry_precision_ft": 0.001,
+    "simplification_tolerance_ft": 0.25,
+    "survey_authority": false
+  },
+  "vertical_conversion": {
+    "authority": "NOAA National Geodetic Survey / VDatum",
+    "api": "https://vdatum.noaa.gov/vdatumweb/api/convert",
+    "model": "VERTCON 3.0 release 20190601",
+    "source_datum": "NGVD29",
+    "target_datum": "NAVD88",
+    "applied_shift_ft": 3.698,
+    "reported_uncertainty_ft": 0.165,
+    "parcel_shift_min_ft": 3.694,
+    "parcel_shift_max_ft": 3.698,
+    "application_method": "Centroid shift applied to the clipped reference contours; parcel-corner checks vary by 0.004 ft.",
+    "survey_authority": false,
+    "samples": [
+      {"location": "southwest", "nad27_longitude": -123.081104701641, "nad27_latitude": 44.0202288103841, "shift_ft": 3.698, "uncertainty_ft": 0.165},
+      {"location": "southeast", "nad27_longitude": -123.080425882142, "nad27_latitude": 44.0202303414824, "shift_ft": 3.698, "uncertainty_ft": 0.165},
+      {"location": "northeast", "nad27_longitude": -123.080425217571, "nad27_latitude": 44.0206611029608, "shift_ft": 3.698, "uncertainty_ft": 0.165},
+      {"location": "northwest", "nad27_longitude": -123.081064422288, "nad27_latitude": 44.0210296861384, "shift_ft": 3.694, "uncertainty_ft": 0.165},
+      {"location": "centroid", "nad27_longitude": -123.080764810223, "nad27_latitude": 44.020629784888, "shift_ft": 3.698, "uncertainty_ft": 0.165}
+    ]
+  },
+  "clipped_contour_segments": [
+    {"source_object_id": 14176, "segment": 1, "source_elevation_ngvd29_ft": 440.0, "model_elevation_navd88_ft": 443.698, "coordinates_epsg_6823": [[186298.487, 98720.712], [186292.25, 98725.546], [186292.573739, 98725.776343]]},
+    {"source_object_id": 14176, "segment": 2, "source_elevation_ngvd29_ft": 440.0, "model_elevation_navd88_ft": 443.698, "coordinates_epsg_6823": [[186300.040427, 98719.928096], [186298.487, 98720.712]]},
+    {"source_object_id": 14177, "segment": 1, "source_elevation_ngvd29_ft": 440.0, "model_elevation_navd88_ft": 443.698, "coordinates_epsg_6823": [[186303.359, 98609.29], [186305.743, 98607.635], [186306.22, 98606.479], [186306.049, 98588.935], [186305.616, 98584.299], [186302.056, 98599.303], [186298.193, 98604.373], [186293.327, 98606.349], [186302.148, 98609.281], [186303.359, 98609.29]]},
+    {"source_object_id": 14183, "segment": 1, "source_elevation_ngvd29_ft": 442.0, "model_elevation_navd88_ft": 445.698, "coordinates_epsg_6823": [[186352.311, 98483.184], [186357.035, 98486.256], [186358.833, 98488.574], [186350.081, 98488.165], [186343.964, 98490.472], [186337.026, 98494.693], [186333.377, 98494.296], [186326.222, 98492.758], [186322.479, 98489.967], [186328.467, 98486.066], [186338.717, 98482.77], [186346.593, 98481.781], [186352.311, 98483.184]]},
+    {"source_object_id": 28394, "segment": 1, "source_elevation_ngvd29_ft": 442.0, "model_elevation_navd88_ft": 445.698, "coordinates_epsg_6823": [[186331.362, 98678.397], [186326.003, 98673.564], [186325.594, 98672.581], [186333.381, 98647.996], [186338.248, 98635.955], [186360.531, 98586.609], [186360.608, 98582.92], [186359.801, 98578.421], [186360.813, 98575.542], [186362.87, 98565.953], [186369.757, 98511.204], [186371.626, 98506.241], [186374.708, 98507.8], [186377.893, 98512.404], [186379.72, 98517.875], [186379.593, 98528.756], [186375.6, 98568.68], [186375.619, 98581.877], [186377.975, 98593.048], [186382.027, 98608.745], [186384.859, 98628.516], [186383.764606, 98648.451739]]},
+    {"source_object_id": 28394, "segment": 2, "source_elevation_ngvd29_ft": 442.0, "model_elevation_navd88_ft": 445.698, "coordinates_epsg_6823": [[186340.706737, 98685.211104], [186337.876, 98683.417], [186331.362, 98678.397]]}
+  ],
+  "limitations": [
+    "Reference-scale 1999 photogrammetric contours are not a boundary or topographic survey.",
+    "The NOAA transformation is a datum model, not a replacement for project vertical control.",
+    "Do not use these contours, converted elevations, or derived earthwork quantities for construction, bidding, staking, or permitting.",
+    "Supersede the entire existing-grade surface when a current project survey is available."
+  ]
+}

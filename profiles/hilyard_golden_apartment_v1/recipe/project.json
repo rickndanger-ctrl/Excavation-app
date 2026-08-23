@@ -1,0 +1,1854 @@
+{
+  "schema_version": "civil-plan-factory.project/v0.1.0",
+  "project": {
+    "id": "hilyard-apartment-test",
+    "name": "Hilyard Apartment Civil Plan Test",
+    "revision": "site-layout-0.2.0",
+    "authoring_mode": "custom_semantic_design",
+    "purpose": "product-development test data; not professional engineering services",
+    "jurisdiction": "City of Eugene, Oregon",
+    "site_description": "City-owned Hilyard Street property between East 33rd and East 34th Avenue",
+    "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"
+  },
+  "authoring_contract": {
+    "mode": "custom_semantic_design",
+    "canonical_authority": "semantic_model",
+    "deliverable_origin": "generated_from_canonical_model",
+    "reference_material_policy": "context_and_conventions_only"
+  },
+  "source_ledger": "sources.lock.json",
+  "decision_ledger": "decisions.json",
+  "design_slices": ["sanitary.json", "storm.json", "water-fire.json", "dry-utilities.json", "grading-site-prep.json", "golden-package.json", "vertical-coordination.json"],
+  "spatial_reference": {
+    "horizontal_crs": "EPSG:6823",
+    "horizontal_crs_name": "NAD83(2011) / Oregon Eugene zone",
+    "horizontal_units": "international_foot",
+    "source_crs_common": "EPSG:2914",
+    "vertical_datum": "NAVD88",
+    "vertical_units": "foot",
+    "benchmark": {
+      "status": "unknown",
+      "elevation": null,
+      "monument": null,
+      "decision_id": "decision-benchmark"
+    },
+    "transformations": [
+      {
+        "from": "EPSG:2914",
+        "to": "EPSG:6823",
+        "status": "declared_not_executed"
+      }
+    ],
+    "tolerances": {
+      "output_parity_horizontal_ft": 0.01,
+      "source_geometry_accuracy": "reference-scale; not surveyed",
+      "survey_control_tolerance": {
+        "status": "unknown",
+        "reason": "No surveyed control has been supplied."
+      }
+    }
+  },
+  "site_basis": {
+    "taxlot_count": {
+      "value": 4,
+      "provenance_status": "confirmed",
+      "source_ids": [
+        "src-rfp-appendix"
+      ]
+    },
+    "gross_area_acres_approx": {
+      "value": 0.9485,
+      "provenance_status": "confirmed",
+      "source_ids": [
+        "src-rfp-appendix"
+      ]
+    },
+    "post_row_area_acres_approx": {
+      "value": 0.76,
+      "provenance_status": "reference-derived",
+      "source_ids": [
+        "src-rfp-appendix",
+        "src-project-brief"
+      ]
+    },
+    "sanitary_easement_width_ft": {
+      "value": 12,
+      "orientation": "east-west",
+      "provenance_status": "confirmed",
+      "source_ids": [
+        "src-rfp-appendix"
+      ]
+    },
+    "eweb_easements": {
+      "description": "30-foot west and 15-foot south corridors",
+      "provenance_status": "confirmed",
+      "source_ids": [
+        "src-rfp-appendix"
+      ]
+    },
+    "sanitary_system": {
+      "description": "City GIS identifies an 8-inch line crossing the site",
+      "provenance_status": "reference-derived",
+      "source_ids": [
+        "src-project-brief"
+      ]
+    },
+    "storm_system": {
+      "description": "City GIS identifies a 21-inch line near the east side",
+      "provenance_status": "reference-derived",
+      "source_ids": [
+        "src-project-brief"
+      ]
+    },
+    "wetland_area_acres_approx": {
+      "value": 0.13,
+      "provenance_status": "confirmed",
+      "source_ids": [
+        "src-rfp-appendix"
+      ]
+    },
+    "soil": {
+      "description": "hydric, poorly drained, high-clay",
+      "provenance_status": "reference-derived",
+      "source_ids": [
+        "src-project-brief"
+      ]
+    },
+    "access_basis": {
+      "street": "East 34th Avenue",
+      "hilyard_driveway_prohibited_by_site_basis": true,
+      "provenance_status": "confirmed",
+      "source_ids": [
+        "src-rfp-appendix"
+      ]
+    }
+  },
+  "phases": [
+    {
+      "id": "existing",
+      "name": "Existing / source basis",
+      "summary": "Reference-scale existing conditions only."
+    },
+    {
+      "id": "proposed",
+      "name": "Proposed",
+      "summary": "Declared but not designed in this foundation slice."
+    },
+    {
+      "id": "temporary",
+      "name": "Temporary construction",
+      "summary": "Declared but not designed in this foundation slice."
+    }
+  ],
+  "layers": [
+    {
+      "id": "control",
+      "name": "Control",
+      "color": "#6b7280",
+      "defaultVisible": true
+    },
+    {
+      "id": "property",
+      "name": "Property / Easements / Resources",
+      "color": "#7c3aed",
+      "defaultVisible": true
+    },
+    {
+      "id": "grading",
+      "name": "Grading / Surfaces",
+      "color": "#92400e",
+      "defaultVisible": true
+    },
+    {
+      "id": "sanitary",
+      "name": "Sanitary",
+      "color": "#9333ea",
+      "defaultVisible": true
+    },
+    {
+      "id": "storm",
+      "name": "Storm / Roof Drainage",
+      "color": "#1d8fe1",
+      "defaultVisible": true
+    },
+    {
+      "id": "water",
+      "name": "Domestic / Fire Water",
+      "color": "#16a34a",
+      "defaultVisible": true
+    },
+    {
+      "id": "dry-utilities",
+      "name": "Gas / Power / Telecom / Lighting",
+      "color": "#f97316",
+      "defaultVisible": true
+    },
+    {
+      "id": "site",
+      "name": "Buildings / Paving / Flatwork / ADA",
+      "color": "#b45309",
+      "defaultVisible": true
+    },
+    {
+      "id": "construction-erosion",
+      "name": "Construction / Erosion Control",
+      "color": "#dc2626",
+      "defaultVisible": true
+    }
+  ],
+  "features": {
+    "points": [
+      {
+        "id": "entry-south-primary",
+        "feature_type": "building_entry",
+        "system": "pedestrian",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "Primary south entry",
+        "coordinates": [
+          186357.5,
+          98490.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "entry-south-primary",
+          "entry_type": "primary pedestrian",
+          "unavailable": {
+            "elevation_ft": "No final FFE or entry elevation is established.",
+            "ada_compliance": "Not evaluated in this slice."
+          }
+        }
+      },
+      {
+        "id": "entry-east-service",
+        "feature_type": "building_entry",
+        "system": "service",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "East service entry",
+        "coordinates": [
+          186380.0,
+          98535.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "entry-east-service",
+          "entry_type": "service",
+          "unavailable": {
+            "elevation_ft": "No final FFE or entry elevation is established.",
+            "service_layout": "Not designed in this slice."
+          }
+        }
+      },
+      {
+        "id": "entry-north-pedestrian",
+        "feature_type": "building_entry",
+        "system": "pedestrian",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "North pedestrian entry",
+        "coordinates": [
+          186357.5,
+          98580.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "entry-north-pedestrian",
+          "entry_type": "secondary pedestrian",
+          "unavailable": {
+            "elevation_ft": "No final FFE or entry elevation is established.",
+            "ada_compliance": "Not evaluated in this slice."
+          }
+        }
+      },
+      {
+        "id": "penetration-sanitary",
+        "network_terminal_id": "penetration-sanitary",
+        "feature_type": "wall_penetration",
+        "system": "sanitary",
+        "layer_id": "sanitary",
+        "phase_id": "proposed",
+        "label": "Future sanitary terminal",
+        "coordinates": [
+          186335.0,
+          98552.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "wall": "west",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "penetration-sanitary",
+          "terminal_only": true,
+          "permanent_terminal_reference": true,
+          "unavailable": {
+            "invert_ft": "Unknown until sanitary vertical basis is established.",
+            "size_material_route": "Not designed in this slice."
+          }
+        }
+      },
+      {
+        "id": "penetration-domestic-water",
+        "network_terminal_id": "penetration-domestic-water",
+        "feature_type": "wall_penetration",
+        "system": "domestic_water",
+        "layer_id": "water",
+        "phase_id": "proposed",
+        "label": "Future domestic water terminal",
+        "coordinates": [
+          186345.0,
+          98490.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "wall": "south",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "penetration-domestic-water",
+          "terminal_only": true,
+          "permanent_terminal_reference": true,
+          "unavailable": {
+            "elevation_ft": "Unknown.",
+            "size_capacity_route": "Not designed or approved in this slice."
+          }
+        }
+      },
+      {
+        "id": "penetration-fire-water",
+        "network_terminal_id": "penetration-fire-water",
+        "feature_type": "wall_penetration",
+        "system": "fire_water",
+        "layer_id": "water",
+        "phase_id": "proposed",
+        "label": "Future fire service terminal",
+        "coordinates": [
+          186352.0,
+          98490.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "wall": "south",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "penetration-fire-water",
+          "terminal_only": true,
+          "permanent_terminal_reference": true,
+          "unavailable": {
+            "elevation_ft": "Unknown.",
+            "fire_flow_size_route": "Not designed or approved in this slice."
+          }
+        }
+      },
+      {
+        "id": "penetration-roof-drainage",
+        "network_terminal_id": "penetration-roof-drainage",
+        "feature_type": "wall_penetration",
+        "system": "roof_drainage",
+        "layer_id": "storm",
+        "phase_id": "proposed",
+        "label": "Future roof drainage terminal",
+        "coordinates": [
+          186380.0,
+          98565.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "wall": "east",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "penetration-roof-drainage",
+          "terminal_only": true,
+          "permanent_terminal_reference": true,
+          "unavailable": {
+            "invert_ft": "Unknown.",
+            "size_route_outfall": "Not designed in this slice."
+          }
+        }
+      },
+      {
+        "id": "penetration-electric",
+        "network_terminal_id": "penetration-electric",
+        "feature_type": "wall_penetration",
+        "system": "electric",
+        "layer_id": "dry-utilities",
+        "phase_id": "proposed",
+        "label": "Future electric terminal",
+        "coordinates": [
+          186335.0,
+          98525.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "wall": "west",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "penetration-electric",
+          "terminal_only": true,
+          "permanent_terminal_reference": true,
+          "unavailable": {
+            "elevation_ft": "Unknown.",
+            "equipment_capacity_route": "Not designed or EWEB-approved in this slice."
+          }
+        }
+      },
+      {
+        "id": "penetration-telecom-fiber",
+        "network_terminal_id": "penetration-telecom-fiber",
+        "feature_type": "wall_penetration",
+        "system": "telecom_fiber",
+        "layer_id": "dry-utilities",
+        "phase_id": "proposed",
+        "label": "Future EWEB fiber/telecom terminal",
+        "coordinates": [
+          186335.0,
+          98515.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "wall": "west",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "penetration-telecom-fiber",
+          "terminal_only": true,
+          "permanent_terminal_reference": true,
+          "unavailable": {
+            "elevation_ft": "Unknown.",
+            "conduit_count_route": "Not designed or owner-approved in this slice."
+          }
+        }
+      },
+      {
+        "id": "penetration-gas",
+        "network_terminal_id": "penetration-gas",
+        "feature_type": "wall_penetration",
+        "system": "gas",
+        "layer_id": "dry-utilities",
+        "phase_id": "proposed",
+        "label": "Future gas terminal",
+        "coordinates": [
+          186370.0,
+          98490.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "wall": "south",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "penetration-gas",
+          "terminal_only": true,
+          "permanent_terminal_reference": true,
+          "unavailable": {
+            "elevation_ft": "Unknown.",
+            "provider_size_capacity_route": "Gas availability and design are unknown."
+          }
+        }
+      },
+      {
+        "id": "penetration-site-lighting",
+        "network_terminal_id": "penetration-site-lighting",
+        "feature_type": "wall_penetration",
+        "system": "site_lighting",
+        "layer_id": "dry-utilities",
+        "phase_id": "proposed",
+        "label": "Future site lighting feed terminal",
+        "coordinates": [
+          186380.0,
+          98510.0
+        ],
+        "wall_association_id": "building-apartment-1",
+        "wall": "east",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-interfaces"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "penetration-site-lighting",
+          "terminal_only": true,
+          "permanent_terminal_reference": true,
+          "unavailable": {
+            "elevation_ft": "Unknown.",
+            "circuit_conduit_route": "Not designed in this slice."
+          }
+        }
+      }
+    ],
+    "lines": [
+      {
+        "id": "access-edge-east-34th",
+        "feature_type": "street_access_edge",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "East 34th Avenue frontage - access basis",
+        "coordinates": [
+          [
+            186236.737402,
+            98463.73314
+          ],
+          [
+            186415.312443,
+            98464.475611
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-rfp-appendix",
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "access-edge-east-34th",
+          "access_status": "required street basis; driveway geometry not designed",
+          "accuracy_note": "reference-scale; not surveyed"
+        }
+      },
+      {
+        "id": "street-edge-hilyard",
+        "feature_type": "street_edge",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "Hilyard Street property edge - no driveway basis",
+        "coordinates": [
+          [
+            186415.312443,
+            98464.475611
+          ],
+          [
+            186415.323411,
+            98621.509356
+          ],
+          [
+            186303.173722,
+            98717.25379
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-rfp-appendix",
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "street-edge-hilyard",
+          "access_status": "Hilyard driveway prohibited by site basis",
+          "accuracy_note": "reference-scale; not surveyed"
+        }
+      }
+    ],
+    "polygons": [
+      {
+        "id": "taxlot-10900",
+        "feature_type": "taxlot",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "Taxlot 18-03-08-24-10900",
+        "coordinates": [
+          [
+            186302.989091,
+            98609.991274
+          ],
+          [
+            186237.392951,
+            98609.718703
+          ],
+          [
+            186236.989909,
+            98609.717019
+          ],
+          [
+            186236.979499,
+            98603.791376
+          ],
+          [
+            186236.737402,
+            98463.73314
+          ],
+          [
+            186302.737892,
+            98464.007764
+          ],
+          [
+            186302.989091,
+            98609.991274
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "taxlot-10900",
+          "map_taxlot": "1803082410900",
+          "owner_attribute": "City of Eugene",
+          "survey_authority": false,
+          "replacement_priority": "supersede_first_when_boundary_survey_arrives",
+          "accuracy_note": "City GIS reference-scale; not surveyed"
+        }
+      },
+      {
+        "id": "taxlot-11000",
+        "feature_type": "taxlot",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "Taxlot 18-03-08-24-11000",
+        "coordinates": [
+          [
+            186304.538902,
+            98609.997663
+          ],
+          [
+            186302.989091,
+            98609.991274
+          ],
+          [
+            186302.737892,
+            98464.007764
+          ],
+          [
+            186415.312443,
+            98464.475611
+          ],
+          [
+            186415.321498,
+            98604.55334
+          ],
+          [
+            186415.32241,
+            98610.457672
+          ],
+          [
+            186304.538902,
+            98609.997663
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "taxlot-11000",
+          "map_taxlot": "1803082411000",
+          "owner_attribute": "City of Eugene",
+          "survey_authority": false,
+          "replacement_priority": "supersede_first_when_boundary_survey_arrives",
+          "accuracy_note": "City GIS reference-scale; not surveyed"
+        }
+      },
+      {
+        "id": "taxlot-11200",
+        "feature_type": "taxlot",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "Taxlot 18-03-08-24-11200",
+        "coordinates": [
+          [
+            186415.323411,
+            98621.509356
+          ],
+          [
+            186303.173722,
+            98717.25379
+          ],
+          [
+            186302.989091,
+            98609.991274
+          ],
+          [
+            186304.538902,
+            98609.997663
+          ],
+          [
+            186415.32241,
+            98610.457672
+          ],
+          [
+            186415.323411,
+            98621.509356
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "taxlot-11200",
+          "map_taxlot": "1803082411200",
+          "owner_attribute": "City of Eugene",
+          "survey_authority": false,
+          "replacement_priority": "supersede_first_when_boundary_survey_arrives",
+          "accuracy_note": "City GIS reference-scale; not surveyed"
+        }
+      },
+      {
+        "id": "taxlot-11400",
+        "feature_type": "taxlot",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "Taxlot 18-03-08-24-11400",
+        "coordinates": [
+          [
+            186247.031228,
+            98755.702308
+          ],
+          [
+            186237.241405,
+            98755.660476
+          ],
+          [
+            186236.999954,
+            98615.901314
+          ],
+          [
+            186236.989909,
+            98609.717019
+          ],
+          [
+            186237.392951,
+            98609.718703
+          ],
+          [
+            186302.989091,
+            98609.991274
+          ],
+          [
+            186303.173722,
+            98717.25379
+          ],
+          [
+            186299.418778,
+            98720.458681
+          ],
+          [
+            186282.772537,
+            98733.39054
+          ],
+          [
+            186265.282747,
+            98745.156476
+          ],
+          [
+            186247.031228,
+            98755.702308
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "taxlot-11400",
+          "map_taxlot": "1803082411400",
+          "owner_attribute": "City of Eugene",
+          "survey_authority": false,
+          "replacement_priority": "supersede_first_when_boundary_survey_arrives",
+          "accuracy_note": "City GIS reference-scale; not surveyed"
+        }
+      },
+      {
+        "id": "property-site-boundary",
+        "feature_type": "property_limit",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "Four-taxlot project site boundary",
+        "coordinates": [
+          [
+            186236.737402,
+            98463.73314
+          ],
+          [
+            186415.312443,
+            98464.475611
+          ],
+          [
+            186415.323411,
+            98621.509356
+          ],
+          [
+            186303.173722,
+            98717.25379
+          ],
+          [
+            186299.418778,
+            98720.458681
+          ],
+          [
+            186282.772537,
+            98733.39054
+          ],
+          [
+            186265.282747,
+            98745.156476
+          ],
+          [
+            186247.031228,
+            98755.702308
+          ],
+          [
+            186237.241405,
+            98755.660476
+          ],
+          [
+            186236.737402,
+            98463.73314
+          ]
+        ],
+        "provenance": {
+          "status": "generated",
+          "source_ids": [
+            "src-eugene-taxlots-gis"
+          ],
+          "decision_ids": [
+            "decision-reference-geometry"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "property-site-boundary",
+          "taxlot_ids": [
+            "taxlot-10900",
+            "taxlot-11000",
+            "taxlot-11200",
+            "taxlot-11400"
+          ],
+          "survey_authority": false,
+          "accuracy_note": "reference-scale union; not surveyed"
+        }
+      },
+      {
+        "id": "constraint-eweb-west",
+        "feature_type": "utility_easement",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "EWEB west 30-foot corridor",
+        "coordinates": [
+          [
+            186236.737402,
+            98463.73314
+          ],
+          [
+            186266.737402,
+            98463.857865
+          ],
+          [
+            186267.241405,
+            98755.788684
+          ],
+          [
+            186237.241405,
+            98755.660476
+          ],
+          [
+            186236.737402,
+            98463.73314
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-rfp-appendix",
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "constraint-eweb-west",
+          "nominal_width_ft": 30.0,
+          "accuracy_note": "reference-scale dimensioned derivative; not surveyed"
+        }
+      },
+      {
+        "id": "constraint-eweb-south",
+        "feature_type": "utility_easement",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "EWEB south 15-foot corridor",
+        "coordinates": [
+          [
+            186236.737402,
+            98463.73314
+          ],
+          [
+            186415.312443,
+            98464.475611
+          ],
+          [
+            186415.312443,
+            98479.475611
+          ],
+          [
+            186236.763402,
+            98478.73314
+          ],
+          [
+            186236.737402,
+            98463.73314
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-rfp-appendix",
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "constraint-eweb-south",
+          "nominal_width_ft": 15.0,
+          "accuracy_note": "reference-scale dimensioned derivative; not surveyed"
+        }
+      },
+      {
+        "id": "constraint-sanitary-easement",
+        "feature_type": "sanitary_easement",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "12-foot sanitary easement",
+        "coordinates": [
+          [
+            186236.979499,
+            98603.791376
+          ],
+          [
+            186415.321498,
+            98604.55334
+          ],
+          [
+            186415.32241,
+            98616.55334
+          ],
+          [
+            186236.999954,
+            98615.901314
+          ],
+          [
+            186236.979499,
+            98603.791376
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-rfp-appendix",
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "constraint-sanitary-easement",
+          "nominal_width_ft": 12.0,
+          "development_over_easement": "prohibited by site source",
+          "accuracy_note": "reference-scale dimensioned derivative; not surveyed"
+        }
+      },
+      {
+        "id": "constraint-row-dedication",
+        "feature_type": "right_of_way_dedication",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "Anticipated east-side ROW dedication",
+        "coordinates": [
+          [
+            186393.0,
+            98464.383
+          ],
+          [
+            186415.312443,
+            98464.475611
+          ],
+          [
+            186415.323411,
+            98621.509356
+          ],
+          [
+            186303.173722,
+            98717.25379
+          ],
+          [
+            186292.0,
+            98707.0
+          ],
+          [
+            186393.0,
+            98614.0
+          ],
+          [
+            186393.0,
+            98464.383
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-rfp-appendix",
+            "src-eugene-taxlots-gis"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "constraint-row-dedication",
+          "area_acres_approx": 0.19,
+          "basis": "two feet west of multi-use path to east property line",
+          "accuracy_note": "reference-scale visual digitization; not surveyed"
+        }
+      },
+      {
+        "id": "constraint-wetland",
+        "feature_type": "wetland_resource_area",
+        "layer_id": "property",
+        "phase_id": "existing",
+        "label": "Approximate 0.13-acre delineated wetland",
+        "coordinates": [
+          [
+            186260.0,
+            98700.0
+          ],
+          [
+            186270.0,
+            98680.0
+          ],
+          [
+            186272.0,
+            98645.0
+          ],
+          [
+            186292.0,
+            98620.0
+          ],
+          [
+            186310.0,
+            98600.0
+          ],
+          [
+            186306.0,
+            98575.0
+          ],
+          [
+            186316.0,
+            98540.0
+          ],
+          [
+            186292.0,
+            98525.0
+          ],
+          [
+            186275.0,
+            98520.0
+          ],
+          [
+            186266.0,
+            98555.0
+          ],
+          [
+            186251.0,
+            98570.0
+          ],
+          [
+            186255.0,
+            98600.0
+          ],
+          [
+            186268.0,
+            98615.0
+          ],
+          [
+            186258.0,
+            98645.0
+          ],
+          [
+            186254.0,
+            98675.0
+          ],
+          [
+            186260.0,
+            98700.0
+          ]
+        ],
+        "provenance": {
+          "status": "reference-derived",
+          "source_ids": [
+            "src-rfp-appendix"
+          ],
+          "decision_ids": [
+            "decision-reference-geometry"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "constraint-wetland",
+          "area_acres_model": 0.12775,
+          "area_acres_source_approx": 0.13,
+          "permit_status": "requires agency review",
+          "accuracy_note": "reference-scale visual digitization from delineation map; not surveyed"
+        }
+      },
+      {
+        "id": "pad-apartment-1",
+        "feature_type": "building_pad",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "Apartment pad - reviewed assumption",
+        "coordinates": [
+          [
+            186330.0,
+            98485.0
+          ],
+          [
+            186385.0,
+            98485.0
+          ],
+          [
+            186385.0,
+            98585.0
+          ],
+          [
+            186330.0,
+            98585.0
+          ],
+          [
+            186330.0,
+            98485.0
+          ]
+        ],
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-rfp-appendix",
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-footprint"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "pad-apartment-1",
+          "dimensions_ft": [
+            55.0,
+            100.0
+          ],
+          "area_sf": 5500.0,
+          "pad_elevation_ft": null,
+          "pad_elevation_status": "unknown",
+          "unavailable": {
+            "subgrade_elevation_ft": "No surveyed surface or final grading design.",
+            "section_materials": "Not selected in this slice."
+          }
+        }
+      },
+      {
+        "id": "building-apartment-1",
+        "feature_type": "building",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "Fictional apartment building - reviewed assumption",
+        "coordinates": [
+          [
+            186335.0,
+            98490.0
+          ],
+          [
+            186380.0,
+            98490.0
+          ],
+          [
+            186380.0,
+            98580.0
+          ],
+          [
+            186335.0,
+            98580.0
+          ],
+          [
+            186335.0,
+            98490.0
+          ]
+        ],
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": [
+            "src-rfp-appendix",
+            "src-project-brief"
+          ],
+          "decision_ids": [
+            "decision-building-footprint"
+          ]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "building-apartment-1",
+          "dimensions_ft": [
+            45.0,
+            90.0
+          ],
+          "area_sf": 4050.0,
+          "orientation": "long axis north-south",
+          "finished_floor_elevation_ft": null,
+          "finished_floor_elevation_status": "unknown",
+          "unavailable": {
+            "final_architecture": "Not designed in this civil test-data slice.",
+            "ffe_basis": "No surveyed existing surface or reviewed grading design."
+          }
+        }
+      },
+      {
+        "id": "sidewalk-south-entry",
+        "feature_type": "pedestrian_flatwork",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "South entry walk — fictional finished layout",
+        "coordinates": [
+          [186353.5, 98479.5],
+          [186361.5, 98479.5],
+          [186361.5, 98490.0],
+          [186353.5, 98490.0],
+          [186353.5, 98479.5]
+        ],
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": ["src-rfp-appendix", "src-project-brief"],
+          "decision_ids": ["decision-finished-site-layout"]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "sidewalk-south-entry",
+          "dimensions_ft": [8.0, 10.5],
+          "surface_status": "fictional finished-layout test geometry",
+          "ada_compliance_status": "not evaluated",
+          "measurement_tips": [
+            {
+              "id": "tip-building-sw-to-south-walk-west",
+              "label": "West edge of south entry walk is 18.5 FT east of the building southwest corner.",
+              "from": {"feature_id": "building-apartment-1", "vertex_index": 0},
+              "to": {"feature_id": "sidewalk-south-entry", "vertex_index": 3},
+              "distance_ft": 18.5,
+              "method": "horizontal_plan_distance",
+              "staking_authority": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "sidewalk-north-entry",
+        "feature_type": "pedestrian_flatwork",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "North entry walk — fictional finished layout",
+        "coordinates": [
+          [186353.5, 98580.0],
+          [186361.5, 98580.0],
+          [186361.5, 98603.5],
+          [186353.5, 98603.5],
+          [186353.5, 98580.0]
+        ],
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": ["src-rfp-appendix", "src-project-brief"],
+          "decision_ids": ["decision-finished-site-layout"]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "sidewalk-north-entry",
+          "dimensions_ft": [8.0, 23.5],
+          "surface_status": "fictional finished-layout test geometry",
+          "ada_compliance_status": "not evaluated",
+          "measurement_tips": [
+            {
+              "id": "tip-building-nw-to-north-walk-west",
+              "label": "West edge of north entry walk is 18.5 FT east of the building northwest corner.",
+              "from": {"feature_id": "building-apartment-1", "vertex_index": 3},
+              "to": {"feature_id": "sidewalk-north-entry", "vertex_index": 0},
+              "distance_ft": 18.5,
+              "method": "horizontal_plan_distance",
+              "staking_authority": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "sidewalk-east-service",
+        "feature_type": "pedestrian_flatwork",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "East service walk — fictional finished layout",
+        "coordinates": [
+          [186380.0, 98531.0],
+          [186392.5, 98531.0],
+          [186392.5, 98539.0],
+          [186380.0, 98539.0],
+          [186380.0, 98531.0]
+        ],
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": ["src-rfp-appendix", "src-project-brief"],
+          "decision_ids": ["decision-finished-site-layout"]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "sidewalk-east-service",
+          "dimensions_ft": [12.5, 8.0],
+          "surface_status": "fictional finished-layout test geometry",
+          "ada_compliance_status": "not evaluated",
+          "measurement_tips": [
+            {
+              "id": "tip-building-east-to-row-side-walk",
+              "label": "East edge of service walk is 12.5 FT east of the building wall.",
+              "from": {"feature_id": "sidewalk-east-service", "vertex_index": 0},
+              "to": {"feature_id": "sidewalk-east-service", "vertex_index": 1},
+              "distance_ft": 12.5,
+              "method": "horizontal_plan_distance",
+              "staking_authority": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "sidewalk-arrival-link",
+        "feature_type": "pedestrian_flatwork",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "Arrival court sidewalk link — fictional finished layout",
+        "coordinates": [
+          [186329.0, 98480.0],
+          [186353.5, 98480.0],
+          [186353.5, 98485.0],
+          [186329.0, 98485.0],
+          [186329.0, 98480.0]
+        ],
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": ["src-rfp-appendix", "src-project-brief"],
+          "decision_ids": ["decision-finished-site-layout"]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "sidewalk-arrival-link",
+          "dimensions_ft": [24.5, 5.0],
+          "surface_status": "fictional finished-layout test geometry",
+          "ada_compliance_status": "not evaluated"
+        }
+      },
+      {
+        "id": "paving-arrival-court",
+        "feature_type": "pavement_area",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "Arrival and parking court — fictional finished layout",
+        "coordinates": [
+          [186267.0, 98480.0],
+          [186329.0, 98480.0],
+          [186329.0, 98519.0],
+          [186267.0, 98519.0],
+          [186267.0, 98480.0]
+        ],
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": ["src-rfp-appendix", "src-project-brief"],
+          "decision_ids": ["decision-finished-site-layout"]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "paving-arrival-court",
+          "dimensions_ft": [62.0, 39.0],
+          "area_sf": 2418.0,
+          "surface_status": "fictional finished-layout test geometry",
+          "parking_layout_status": "concept only; stalls and code compliance not evaluated",
+          "utility_crossing_status": "south access crosses reference EWEB corridor; owner review required"
+        }
+      },
+      {
+        "id": "landscape-north-court",
+        "feature_type": "landscape_area",
+        "layer_id": "site",
+        "phase_id": "proposed",
+        "label": "North landscape court — fictional finished layout",
+        "coordinates": [
+          [186362.0, 98580.0],
+          [186392.5, 98580.0],
+          [186392.5, 98603.5],
+          [186362.0, 98603.5],
+          [186362.0, 98580.0]
+        ],
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": ["src-rfp-appendix", "src-project-brief"],
+          "decision_ids": ["decision-finished-site-layout"]
+        },
+        "field_detail": {
+          "searchable": true,
+          "map_target": "landscape-north-court",
+          "dimensions_ft": [30.5, 23.5],
+          "area_sf": 716.75,
+          "surface_status": "fictional finished-layout test geometry",
+          "planting_irrigation_status": "not designed"
+        }
+      }
+    ],
+    "surfaces": []
+  },
+  "networks": [
+    {
+      "id": "network-sanitary",
+      "system": "sanitary",
+      "network_kind": "gravity",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "id": "network-storm",
+      "system": "storm",
+      "network_kind": "gravity",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "id": "network-roof-drainage",
+      "system": "roof_drainage",
+      "network_kind": "drainage",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "id": "network-domestic-water",
+      "system": "domestic_water",
+      "network_kind": "pressure",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "id": "network-fire-water",
+      "system": "fire_water",
+      "network_kind": "pressure",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "id": "network-gas",
+      "system": "gas",
+      "network_kind": "pressure",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "id": "network-power",
+      "system": "power",
+      "network_kind": "dry",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "id": "network-telecom-fiber",
+      "system": "telecom_fiber",
+      "network_kind": "dry",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "id": "network-site-lighting",
+      "system": "site_lighting",
+      "network_kind": "dry",
+      "nodes": [],
+      "edges": []
+    }
+  ],
+  "field_detail_contract": {
+    "dimensions": [
+      "diameter",
+      "pipe_size",
+      "width",
+      "depth",
+      "length",
+      "structure_type",
+      "wall_thickness",
+      "sdr"
+    ],
+    "elevations": [
+      "elevation",
+      "rim",
+      "invert_in",
+      "invert_out",
+      "drop",
+      "cover",
+      "finished_grade",
+      "subgrade"
+    ],
+    "materials": [
+      "primary",
+      "pipe",
+      "fitting",
+      "bedding",
+      "backfill",
+      "concrete",
+      "compaction",
+      "geotextile",
+      "tracer",
+      "warning_tape"
+    ],
+    "relationships": [
+      "upstream",
+      "downstream",
+      "laterals",
+      "crossings",
+      "related_object_ids"
+    ],
+    "workflow_groups": [
+      "pre_task",
+      "layout",
+      "excavation",
+      "installation",
+      "backfill",
+      "testing",
+      "inspection",
+      "as_built"
+    ],
+    "interaction": [
+      "searchable_label",
+      "map_target",
+      "detail_refs",
+      "location_guidance",
+      "nearby_reference",
+      "warnings",
+      "checklist"
+    ]
+  },
+  "deliverables": {
+    "plans": [
+      {
+        "id": "plan-site-layout",
+        "title": "Hilyard site layout and building interfaces",
+        "asset_ids": [
+          "property-site-boundary",
+          "constraint-row-dedication",
+          "constraint-eweb-west",
+          "constraint-eweb-south",
+          "constraint-sanitary-easement",
+          "constraint-wetland",
+          "pad-apartment-1",
+          "building-apartment-1"
+        ],
+        "scale": "1 in = 50 ft",
+        "status": "generated_from_canonical_model"
+      }
+    ],
+    "profiles": [],
+    "sections": [],
+    "schedules": [
+      {
+        "id": "schedule-building-interfaces",
+        "schedule_type": "entries_and_permanent_wall_terminals",
+        "asset_ids": [
+          "entry-south-primary",
+          "entry-east-service",
+          "entry-north-pedestrian",
+          "penetration-sanitary",
+          "penetration-domestic-water",
+          "penetration-fire-water",
+          "penetration-roof-drainage",
+          "penetration-electric",
+          "penetration-telecom-fiber",
+          "penetration-gas",
+          "penetration-site-lighting"
+        ]
+      }
+    ],
+    "detail_cards": []
+  },
+  "export_targets": [
+    {
+      "type": "semantic_manifest",
+      "status": "available"
+    },
+    {
+      "type": "validation_report",
+      "status": "available"
+    },
+    {
+      "type": "geopackage",
+      "status": "available"
+    },
+    {
+      "type": "vector_pdf",
+      "status": "available"
+    },
+    {
+      "type": "dxf",
+      "status": "declared_unavailable"
+    },
+    {
+      "type": "layered_vector_geopdf",
+      "status": "declared_unavailable"
+    }
+  ],
+  "contract_coverage": [
+    {
+      "system": "coordinates_control",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Surveyed boundary, topography, and control are unavailable."
+    },
+    {
+      "system": "property_limits",
+      "availability": "modeled",
+      "provenance_status": "reference-derived",
+      "reason": "Four City GIS taxlots and their generated union are modeled as reference-scale geometry; a real boundary survey must supersede them first."
+    },
+    {
+      "system": "easements_row_resource_limits",
+      "availability": "modeled",
+      "provenance_status": "reference-derived",
+      "reason": "ROW, EWEB corridors, sanitary easement, and wetland are frozen reference-scale derivatives, not surveyed geometry."
+    },
+    {
+      "system": "surfaces",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "No surveyed terrain or reviewed design surfaces exist."
+    },
+    {
+      "system": "sanitary",
+      "availability": "reference_only",
+      "provenance_status": "reference-derived",
+      "reason": "Nearby/crossing system is reported; exact topology, elevations, tie-in, and capacity are unknown."
+    },
+    {
+      "system": "storm",
+      "availability": "reference_only",
+      "provenance_status": "reference-derived",
+      "reason": "Nearby system is reported; exact topology, elevations, tie-in, HGL, and capacity are unknown."
+    },
+    {
+      "system": "domestic_water",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Pressure, flow, main data, meter, service size, and approved route are unknown."
+    },
+    {
+      "system": "fire_water",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Fire flow, Fire Marshal criteria, service size, and approved route are unknown."
+    },
+    {
+      "system": "gas",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Gas facilities, tie-in, and owner criteria are unknown."
+    },
+    {
+      "system": "power",
+      "availability": "reference_only",
+      "provenance_status": "reference-derived",
+      "reason": "EWEB easement basis is known; route, equipment, capacity, and approval are unknown."
+    },
+    {
+      "system": "telecom_fiber",
+      "availability": "reference_only",
+      "provenance_status": "reference-derived",
+      "reason": "EWEB fiber corridor basis is known; non-EWEB telecom and final routes are unknown."
+    },
+    {
+      "system": "site_lighting",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Lighting design is outside this foundation slice."
+    },
+    {
+      "system": "roof_drainage",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Building and stormwater designs are not locked."
+    },
+    {
+      "system": "structures",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "No civil structures are designed."
+    },
+    {
+      "system": "buildings_pads",
+      "availability": "modeled",
+      "provenance_status": "reviewed_assumption",
+      "reason": "One 45-by-90-foot building and 55-by-100-foot pad are modeled solely as reviewed fictional test assumptions; elevations remain unknown."
+    },
+    {
+      "system": "grading",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Existing and proposed surfaces are unavailable."
+    },
+    {
+      "system": "curbs",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "No site design is locked."
+    },
+    {
+      "system": "sidewalks",
+      "availability": "modeled",
+      "provenance_status": "reviewed_assumption",
+      "reason": "Four fictional finished-layout pedestrian flatwork polygons are modeled with exact plan dimensions; ADA compliance and construction sections remain unverified."
+    },
+    {
+      "system": "paving",
+      "availability": "modeled",
+      "provenance_status": "reviewed_assumption",
+      "reason": "One fictional finished-layout arrival court is modeled for product testing; stall layout, section, drainage, and code compliance remain unverified."
+    },
+    {
+      "system": "ada",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "No accessibility geometry or compliance determination exists."
+    },
+    {
+      "system": "demolition",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Existing surveyed objects and demolition scope are unavailable."
+    },
+    {
+      "system": "construction_erosion",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Disturbance limits and construction sequence are not designed."
+    },
+    {
+      "system": "materials_specifications",
+      "availability": "declared_unavailable",
+      "provenance_status": "unknown",
+      "reason": "Research defaults are not final selections."
+    },
+    {
+      "system": "plans_profiles_sections_schedules",
+      "availability": "partial",
+      "provenance_status": "generated",
+      "reason": "One site-layout plan and interface schedule are generated; profiles, sections, and later system plans remain unavailable. Sheet count is not fixed."
+    },
+    {
+      "system": "field_details_workflows_checklists",
+      "availability": "partial",
+      "provenance_status": "reviewed_assumption",
+      "reason": "Property, constraint, building, entry, and terminal details are populated; later construction workflows/checklists remain unavailable."
+    },
+    {
+      "system": "relationships",
+      "availability": "contract_only",
+      "provenance_status": "unknown",
+      "reason": "Relationship types are declared, but there are no designed objects to connect."
+    }
+  ],
+  "limitations": [
+    "Taxlot and constraint coordinates are frozen reference-scale geometry, not a survey; replace them first when a real boundary survey arrives.",
+    "The building, pad, entries, and wall terminals are reviewed fictional assumptions, not architecture, grading, or approved utility design.",
+    "No utility tie-in, location, size, elevation, pressure, flow, fire flow, or capacity is approved or asserted.",
+    "No geotechnical, groundwater, infiltration, wetland approval, hydraulic, fire-code, or agency review is complete.",
+    "No permit readiness, code compliance, professional engineering, or construction usability is claimed."
+  ]
+}

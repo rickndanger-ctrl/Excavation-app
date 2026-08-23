@@ -1,0 +1,335 @@
+{
+  "schema_version": "civil-plan-factory.source-ledger/v0.1.0",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "sources": [
+    {
+      "id": "src-rfp-appendix",
+      "title": "Appendix A — 2026 AHTF RFP Land Information, 34th & Hilyard",
+      "authority": "City of Eugene",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eugene-or.gov/DocumentCenter/View/81457/Appendix-A-2026-AHTF-RFP-Land-info-34th-Hilyard",
+      "lock": {
+        "kind": "url",
+        "status": "checksum_locked",
+        "sha256": "36690372f31d7db36027f52311d9fff32342402826a3f7f599b7c7e15b8d9bd7"
+      },
+      "supports": [
+        "site ownership and location",
+        "four-taxlot aggregate area",
+        "anticipated right-of-way dedication",
+        "site easements",
+        "wetland area",
+        "East 34th Avenue access basis"
+      ]
+    },
+    {
+      "id": "src-eugene-taxlots-gis",
+      "title": "PDD Taxlots feature layer query for map 18-03-08-24 taxlots 10900, 11000, 11200, and 11400",
+      "authority": "City of Eugene Geographic Information Services",
+      "provenance_status": "reference-derived",
+      "citation": "https://gis.eugene-or.gov/arcgis/rest/services/PDD/PDDTaxlots/MapServer/1/query?where=taxlot%20IN%20(%2710900%27,%2711000%27,%2711200%27,%2711400%27)%20AND%20map=%2718030824%27&outFields=maptaxlot,taxlot,map,Shape_Area,Shape_Length,ownname&returnGeometry=true&outSR=6823&f=geojson",
+      "lock": {
+        "kind": "url",
+        "status": "checksum_locked",
+        "sha256": "1c8de6daadd62628434ee4837a2996a1b6bc93da452c957ea2afb963eb6161c1"
+      },
+      "retrieved_date": "2026-08-20",
+      "supports": [
+        "reference-scale taxlot polygons transformed by the service to EPSG:6823; not survey authority"
+      ]
+    },
+    {
+      "id": "src-design-constraints",
+      "title": "Eugene Hilyard design constraints research artifact",
+      "authority": "Richard Holguin project research",
+      "provenance_status": "reference-derived",
+      "citation": "source-data/eugene-hilyard-design-constraints.yaml",
+      "citation_scope": "project_bundle",
+      "lock": {
+        "kind": "local_file",
+        "status": "checksum_locked",
+        "sha256": "58fb80e180bb442ef2d65e94aeab1a51b5a03d8e5787a93c143aa798fdb00dc5"
+      },
+      "supports": [
+        "canonical CRS and datum selection",
+        "governing-source citations",
+        "unresolved engineering inputs"
+      ]
+    },
+    {
+      "id": "src-project-brief",
+      "title": "Eugene Hilyard Civil Plan Factory research brief",
+      "authority": "Richard Holguin project research",
+      "provenance_status": "reference-derived",
+      "citation": "source-data/eugene-hilyard-project-brief.md",
+      "citation_scope": "project_bundle",
+      "lock": {
+        "kind": "local_file",
+        "status": "checksum_locked",
+        "sha256": "420275b6ebca6adc625497aa3b4d1ebf9ff734c0398e6e54abe75829ddacc47e"
+      },
+      "supports": [
+        "verified site-basis summary",
+        "semantic acceptance scope",
+        "reference-only sheet categories"
+      ]
+    },
+    {
+      "id": "src-eugene-pids-2023",
+      "title": "2023 Public Improvement Design Standards Manual",
+      "authority": "City of Eugene",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eugene-or.gov/DocumentCenter/View/71912/2023-PIDS-Manual-With-Admin-Order-58-23-42",
+      "effective_date": "2023-11-22",
+      "lock": {
+        "kind": "url",
+        "status": "citation_only",
+        "sha256": null
+      },
+      "supports": [
+        "public storm main minimum 10 inches for this application",
+        "storm pipe minimum cover 4 feet",
+        "storm pipe minimum velocity 3 feet per second and target d/D 0.80",
+        "storm manhole maximum spacing 400 feet",
+        "shallow-pipe review trigger below 5 feet cover"
+      ]
+    },
+    {
+      "id": "src-eugene-construction-2024-a4",
+      "title": "2024 Oregon Specifications with Eugene Amendments 1-4",
+      "authority": "City of Eugene",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eugene-or.gov/444/Standard-Specifications-for-Construction",
+      "applies_after": "2026-03-12",
+      "lock": {
+        "kind": "url",
+        "status": "citation_only",
+        "sha256": null
+      },
+      "supports": [
+        "future materials and trench specification extraction only"
+      ]
+    },
+    {
+      "id": "src-eugene-stormwater-manual-2025",
+      "title": "2025 Stormwater Management Manual",
+      "authority": "City of Eugene",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eugene-or.gov/DocumentCenter/View/79289",
+      "lock": {
+        "kind": "url",
+        "status": "checksum_locked",
+        "sha256": "69aa0e9a98c649dd4b5d88522d5027a024091dae969cb9f38f59ceda8abf3c7b"
+      },
+      "supports": [
+        "1.4-inch 24-hour water quality design storm",
+        "4.46-inch 24-hour 10-year flood-control design storm for drainage basins smaller than 40 acres",
+        "facility hierarchy prioritizing infiltration, extended filtration, then offsite treatment",
+        "site-specific infiltration testing and groundwater separation are required before infiltration credit",
+        "SBUH or continuous simulation is preferred for stormwater planters; Rational Method is limited to flow-rate facility sizing"
+      ]
+    },
+    {
+      "id": "src-eweb-water-standards-2017",
+      "title": "EWEB Water Distribution Design and Construction Standards",
+      "authority": "Eugene Water & Electric Board",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eweb.org/documents/Policies%20and%20Procedures/contractor-developer/eweb-water-design-and-construction-standards%280%29.pdf",
+      "effective_date": "2017-04-25",
+      "lock": {
+        "kind": "url",
+        "status": "checksum_locked",
+        "sha256": "1bf602447f69bacd4b3c6b9bb66be4547008dc6d03824b9ec9442e22d1950541"
+      },
+      "supports": [
+        "36-inch minimum service cover",
+        "service cover applies in residential streets, minor collectors, easements, and planter strips",
+        "12-inch minimum vertical clearance and 2-foot horizontal clearance from storm and non-sanitary utilities",
+        "sanitary separation rules and pothole/field-survey coordination requirements",
+        "1-inch minimum water service and master-meter basis for multiple housing on one parcel",
+        "fire sprinkler backflow protection within 10 feet of EWEB point of connection",
+        "fire-line point of connection at right-of-way or property line",
+        "pressure and fire-flow information must be obtained from EWEB and hydraulic analysis may be required"
+      ]
+    },
+    {
+      "id": "src-oha-water-sewer",
+      "title": "OAR 333-061-0050",
+      "authority": "Oregon Health Authority",
+      "provenance_status": "confirmed",
+      "citation": "OAR 333-061-0050",
+      "lock": {
+        "kind": "legal_citation",
+        "status": "citation_only",
+        "sha256": null
+      },
+      "supports": [
+        "future water and sewer separation rule extraction only"
+      ]
+    },
+    {
+      "id": "src-deq-div52-appendix-a",
+      "title": "Division 52 Appendix A — Minimum Requirements for Sewer Pipelines",
+      "authority": "Oregon Department of Environmental Quality",
+      "provenance_status": "confirmed",
+      "citation": "https://www.oregon.gov/deq/FilterRulemakingDocs/div52appxa.pdf",
+      "lock": {
+        "kind": "url",
+        "status": "citation_only",
+        "sha256": null
+      },
+      "supports": [
+        "state guidance reference; stricter local criteria may control"
+      ]
+    },
+    {
+      "id": "src-eugene-wastewater-gis",
+      "title": "City Wastewater GIS extract for public main UNIQUE_ID 4589 and endpoint manholes 13262/2039",
+      "authority": "City of Eugene Geographic Information Services",
+      "provenance_status": "reference-derived",
+      "citation": "source-data/city-wastewater-4589.json",
+      "citation_scope": "project_bundle",
+      "upstream_citations": [
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/Wastewater/MapServer/4/query?where=UNIQUE_ID%3D4589&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/Wastewater/MapServer/2/query?where=STRUCT_1%20IN%20(13262,2039)&outFields=*&returnGeometry=true&outSR=6823&f=geojson"
+      ],
+      "retrieved_date": "2026-08-21",
+      "lock": {
+        "kind": "local_file",
+        "status": "checksum_locked",
+        "sha256": "7f8a018fe6b79821fba0a3cd4a0c55562e9743421c715133e3ce8b739e1685a1"
+      },
+      "supports": [
+        "reference-derived 8-inch public sanitary alignment",
+        "NAVD88 public-main endpoint inverts and manhole rims",
+        "source asset and structure identifiers"
+      ],
+      "authority_note": "Reference-derived only; not project survey control, capacity approval, or connection authorization. Supersede with owner-accepted survey/as-built information."
+    },
+    {
+      "id": "src-eugene-storm-gis",
+      "title": "City Storm GIS extract for public main UNIQUE_ID 4183 and endpoint structures 51800/51759",
+      "authority": "City of Eugene Geographic Information Services",
+      "provenance_status": "reference-derived",
+      "citation": "source-data/city-storm-4183.json",
+      "citation_scope": "project_bundle",
+      "upstream_citations": [
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWW/StormGeoNetwork/MapServer/2/query?where=UNIQUE_ID%3D4183&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWW/StormGeoNetwork/MapServer/0/query?where=STRUCT_1%20IN%20(51800,51759)&outFields=*&returnGeometry=true&outSR=6823&f=geojson"
+      ],
+      "retrieved_date": "2026-08-21",
+      "lock": {
+        "kind": "local_file",
+        "status": "checksum_locked",
+        "sha256": "ed8400ccf650006b33b4beb88f5f0315cab22c9d65d01513da218a1c1b454562"
+      },
+      "supports": [
+        "reference-derived 21-inch public storm alignment",
+        "NAVD88 public-main endpoint inverts and upstream structure rim",
+        "source asset and structure identifiers"
+      ],
+      "authority_note": "reference-derived only; not project survey control, public-system capacity, approved outfall, HGL analysis, or connection authorization. Supersede with owner-accepted survey/as-built and agency review information."
+    },
+    {
+      "id": "src-eweb-water-gis",
+      "title": "City GIS extract of EWEB East 34th Avenue water main, valve, and nearby public hydrant context",
+      "authority": "City of Eugene Geographic Information Services / EWEB reference data",
+      "provenance_status": "reference-derived",
+      "citation": "source-data/eweb-water-context.json",
+      "citation_scope": "project_bundle",
+      "upstream_citations": [
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/MiscInfra/MapServer/38/query?where=WAM_ID%20IN%20(%27DMN008152%27,%27DMN019519%27)&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/MiscInfra/MapServer/37/query?where=FACILITYID%3D%277921%27&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+        "https://gis.eugene-or.gov/arcgis/rest/services/PWE/MiscInfra/MapServer/3/query?where=OBJECTID%3D445&outFields=*&returnGeometry=true&outSR=6823&f=geojson"
+      ],
+      "retrieved_date": "2026-08-21",
+      "lock": {
+        "kind": "local_file",
+        "status": "checksum_locked",
+        "sha256": "79c46aee505a8f19ad75581b58fc1513cdcf5e12c19260a9eba221c59ac38590"
+      },
+      "supports": [
+        "reference-derived active 8-inch cast-iron EWEB distribution main along East 34th Avenue",
+        "reference valve FACILITYID 7921",
+        "nearby public hydrant ELOG ID 92016 without flow-test data"
+      ],
+      "authority_note": "reference-derived context; not pressure, flow, capacity, or tie authority, not hydrant-test evidence, and not project survey control. Supersede with EWEB-accepted records, design direction, and field survey."
+    },
+    {
+      "id": "src-eweb-electric-trench-2014",
+      "title": "GC5-2.0400 Typical Trench in Planting Strip",
+      "authority": "Eugene Water & Electric Board",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eweb.org/documents/contractor-developer/electric-standards/GC520400.pdf",
+      "effective_date": "2014-05-05",
+      "retrieved_date": "2026-08-21",
+      "lock": {"kind": "url", "status": "checksum_locked", "sha256": "ecf23516d181a8c59c347e888ea41d1e09420d250877fa7c0826a023e3957712"},
+      "supports": [
+        "EWEB owns the electric design and inspection gate",
+        "electric and communication conduit may occupy a coordinated trench section",
+        "owner inspection is required before backfill"
+      ],
+      "authority_note": "Standard geometry does not establish this parcel's point of service, transformer size, conduit count, load capacity, exact route, or approval."
+    },
+    {
+      "id": "src-eweb-electric-service-2020",
+      "title": "EC5-B.1000 Underground Electric Service Conduit and Conductor Requirements",
+      "authority": "Eugene Water & Electric Board",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eweb.org/documents/contractor-developer/electric-standards/EC5B1000.pdf",
+      "effective_date": "2020-07-07",
+      "retrieved_date": "2026-08-21",
+      "lock": {"kind": "url", "status": "checksum_locked", "sha256": "4e5c0cb96c773a1bd93e58c44b3ab31ef589bf420f138e101f4d7e4a6401e98f"},
+      "supports": ["underground electric service conduit requirements", "EWEB engineering approval for deviations and larger or three-phase services"],
+      "authority_note": "The fictional apartment load is unresolved; no conductor, transformer, or service capacity is established."
+    },
+    {
+      "id": "src-nw-natural-builder-guidance-2026",
+      "title": "Services and mains guidelines for builders and developers",
+      "authority": "NW Natural",
+      "provenance_status": "confirmed",
+      "citation": "https://www.nwnatural.com/business/builders-hvac/builder-and-developer-services/services-mains-guidelines",
+      "retrieved_date": "2026-08-21",
+      "lock": {"kind": "url", "status": "checksum_locked", "sha256": "dfb07c043d219cee37194eef07f9b2a3125996481813c112fd11e394ec73ee50"},
+      "supports": ["NW Natural serves Eugene", "builder/developer gas-service coordination", "gas is not assumed to share a trench with wet utilities"],
+      "authority_note": "Does not confirm gas availability, a main at the parcel, service size, meter location, pressure, capacity, route, or approval."
+    },
+    {
+      "id": "src-eugene-telecom-providers-2023",
+      "title": "Currently Registered Eugene Telecommunications and Communications Providers",
+      "authority": "City of Eugene",
+      "provenance_status": "confirmed",
+      "citation": "https://www.eugene-or.gov/DocumentCenter/View/70144/Currently-Registered-Eugene-Telecommunications-and-Communications-Providers-Per-Ordinance-20083",
+      "effective_date": "2023-06-19",
+      "lock": {"kind": "url", "status": "citation_only", "sha256": null},
+      "supports": ["multiple registered wireline providers operate in Eugene"],
+    "authority_note": "The registry does not identify the provider serving this parcel, a facility location, capacity, point of connection, or approved route."
+  },
+  {
+    "id": "src-eugene-contours-vdatum",
+    "title": "Hilyard parcel extract of Eugene two-foot contours with explicit NGVD29-to-NAVD88 conversion record",
+    "authority": "City of Eugene Geographic Information Services / NOAA National Geodetic Survey VDatum",
+    "provenance_status": "reference-derived",
+    "citation": "source-data/eugene-grading-basis.json",
+    "citation_scope": "project_bundle",
+    "upstream_citations": [
+      "https://gis.eugene-or.gov/arcgis/rest/services/CatalogOfEugeneLayers/Eug_2ft_Contours_FC/MapServer/0",
+      "https://vdatum.noaa.gov/vdatumweb/api/convert",
+      "https://geodesy.noaa.gov/VERTCON3/index.shtml"
+    ],
+    "retrieved_date": "2026-08-21",
+    "lock": {
+      "kind": "local_file",
+      "status": "checksum_locked",
+      "sha256": "a322a560544e01b24c43cb333fe978ce0384df52ab0a7cc22e786dcee8575006"
+    },
+    "supports": [
+      "reference-scale two-foot contour geometry clipped to the official GIS parcel envelope",
+      "original NGVD29 contour elevations",
+      "NOAA VDatum VERTCON 3.0 conversion of +3.698 feet to the project NAVD88 model at the parcel centroid",
+      "0.165-foot reported transformation uncertainty and 0.004-foot parcel shift range"
+    ],
+    "authority_note": "The contours derive from 1999 orthophotos and are not a current topographic survey. The datum conversion is explicit but does not create project vertical control. Supersede with current survey before any real design, earthwork, staking, bidding, permitting, or construction use."
+  }
+]
+}

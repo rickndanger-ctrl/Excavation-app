@@ -1,4 +1,5 @@
 import importlib.util
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -6,8 +7,14 @@ import shutil
 import tempfile
 import unittest
 
+from civil_plan_factory.custom_authoring import authored_bundle_sha256
 from civil_plan_factory.studio import StudioWorkspace
-from civil_plan_factory.validation import DISCLAIMER
+from civil_plan_factory.validation import (
+    CUSTOM_AUTHORING_MODE,
+    CUSTOM_SEMANTIC_AUTHORING_CONTRACT,
+    DISCLAIMER,
+    custom_geometry_membership,
+)
 
 
 REPOSITORY = Path(__file__).resolve().parents[1]
@@ -52,6 +59,350 @@ class ModelStudioModuleTests(unittest.TestCase):
             self.assertEqual(DISCLAIMER, project["project"]["disclaimer"])
             self.assertEqual([], project["features"]["points"])
             self.assertEqual([], project["contract_coverage"])
+
+    def test_invalid_custom_profile_does_not_poison_the_slug_before_retry(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            valid_profile = workspace.authoring_profiles()[0]["profile_id"]
+
+            invalid_requests = (
+                (
+                    "missing-profile",
+                    {"authoring_mode": CUSTOM_AUTHORING_MODE},
+                    "profile_id",
+                ),
+                (
+                    "unknown-profile",
+                    {
+                        "authoring_mode": CUSTOM_AUTHORING_MODE,
+                        "profile_id": "not-registered",
+                    },
+                    "Unknown custom-plan",
+                ),
+                (
+                    "unknown-mode",
+                    {"authoring_mode": "found_plan_as_design"},
+                    "Unknown project authoring mode",
+                ),
+            )
+            for slug, options, message in invalid_requests:
+                with self.subTest(slug=slug):
+                    with self.assertRaisesRegex(ValueError, message):
+                        workspace.create_project(
+                            "Invalid Original", slug, **options
+                        )
+                    self.assertFalse((root / "projects" / slug).exists())
+
+            created = workspace.create_project(
+                "Retryable Original",
+                "unknown-profile",
+                authoring_mode=CUSTOM_AUTHORING_MODE,
+                profile_id=valid_profile,
+            )
+            self.assertEqual("unknown-profile", created["slug"])
+
+    def test_arbitrary_custom_mode_project_without_profile_is_fail_closed(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            workspace.create_project("Unbound Custom", "unbound-custom")
+            project_path = root / "projects/unbound-custom/project.json"
+            project = json.loads(project_path.read_text())
+            project["project"]["authoring_mode"] = CUSTOM_AUTHORING_MODE
+            project["authoring_contract"] = dict(CUSTOM_SEMANTIC_AUTHORING_CONTRACT)
+            project_path.write_text(json.dumps(project, indent=2, sort_keys=True) + "\n")
+
+            status = workspace.custom_authoring("unbound-custom")
+
+            self.assertEqual("blocked", status["status"])
+            self.assertEqual("profile_required", status["integrity_status"])
+            with self.assertRaisesRegex(ValueError, "integrity-verified original custom plan"):
+                workspace.run_project("unbound-custom")
+
+    def test_any_custom_marker_keeps_a_project_in_the_fail_closed_custom_lane(self):
+        marker_cases = {
+            "authoring-contract": {
+                "authoring_contract": dict(CUSTOM_SEMANTIC_AUTHORING_CONTRACT)
+            },
+            "profile": {"custom_plan_profile": {}},
+            "geometry-receipt": {"geometry_origin_receipt": {}},
+            "compiled-marker": {"custom_authoring": {}},
+            "studio-marker": {"custom_plan_authoring": {}},
+        }
+        for case_name, marker in marker_cases.items():
+            with self.subTest(marker=case_name), tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+                root = Path(repository)
+                (root / "projects").mkdir()
+                workspace = StudioWorkspace(root, state_root=Path(state))
+                workspace.create_project("Claimed Custom", "claimed-custom")
+                project_path = root / "projects/claimed-custom/project.json"
+                project = json.loads(project_path.read_text())
+                project.update(marker)
+                project_path.write_text(
+                    json.dumps(project, indent=2, sort_keys=True) + "\n"
+                )
+
+                status = workspace.custom_authoring("claimed-custom")
+
+                self.assertNotEqual("not_custom_mode", status["integrity_status"])
+                with self.assertRaisesRegex(
+                    ValueError, "integrity-verified original custom plan"
+                ):
+                    workspace.run_project("claimed-custom")
+                with self.assertRaisesRegex(ValueError, "custom-plan"):
+                    workspace.author_reviewed_model("claimed-custom")
+
+    def test_deleting_custom_mode_cannot_downgrade_an_authored_project_to_reviewed(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            profile = workspace.authoring_profiles()[0]
+            workspace.create_project(
+                "Mode Downgrade Guard",
+                "mode-downgrade",
+                authoring_mode=CUSTOM_AUTHORING_MODE,
+                profile_id=profile["profile_id"],
+            )
+            workspace.save_design_brief("mode-downgrade", profile["default_brief"])
+            workspace.author_custom_model("mode-downgrade")
+            project_path = root / "projects/mode-downgrade/project.json"
+            project = json.loads(project_path.read_text())
+            del project["project"]["authoring_mode"]
+            project_path.write_text(
+                json.dumps(project, indent=2, sort_keys=True) + "\n"
+            )
+
+            status = workspace.custom_authoring("mode-downgrade")
+
+            self.assertEqual("drifted", status["status"])
+            with self.assertRaisesRegex(
+                ValueError, "integrity-verified original custom plan"
+            ):
+                workspace.run_project("mode-downgrade")
+
+    def test_self_signed_geometry_copy_does_not_match_the_trusted_profile_compilation(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            profile = workspace.authoring_profiles()[0]
+            workspace.create_project(
+                "Trusted Geometry",
+                "trusted-geometry",
+                authoring_mode=CUSTOM_AUTHORING_MODE,
+                profile_id=profile["profile_id"],
+            )
+            workspace.save_design_brief("trusted-geometry", profile["default_brief"])
+            workspace.author_custom_model("trusted-geometry")
+            project_dir = root / "projects/trusted-geometry"
+            project_path = project_dir / "project.json"
+            project = json.loads(project_path.read_text())
+            sources = json.loads((project_dir / "sources.lock.json").read_text())
+            decisions = json.loads((project_dir / "decisions.json").read_text())
+            reference = next(
+                row
+                for row in project["features"]["lines"]
+                if row["phase_id"] == "phase-01-existing-control-erosion"
+                and row["provenance"]["status"] == "reference-derived"
+            )
+            proposed = next(
+                row
+                for row in project["features"]["lines"]
+                if row["phase_id"] != "phase-01-existing-control-erosion"
+                and row["provenance"]["status"] == "reviewed_assumption"
+            )
+            proposed["coordinates"] = copy.deepcopy(reference["coordinates"])
+            proposed["provenance"]["source_ids"] = copy.deepcopy(
+                reference["provenance"]["source_ids"]
+            )
+            membership = custom_geometry_membership(
+                project,
+                project["geometry_origin_receipt"]["reference_context_phase_ids"],
+            )
+            project["geometry_origin_receipt"].update(membership)
+            project["custom_plan_authoring"]["authored_bundle_sha256"] = (
+                authored_bundle_sha256(project, sources, decisions)
+            )
+            project_path.write_text(
+                json.dumps(project, indent=2, sort_keys=True) + "\n"
+            )
+
+            status = workspace.custom_authoring("trusted-geometry")
+
+            self.assertEqual("drifted", status["status"])
+            with self.assertRaisesRegex(
+                ValueError, "integrity-verified original custom plan"
+            ):
+                workspace.run_project("trusted-geometry")
+
+    def test_self_signed_source_or_decision_edits_do_not_match_trusted_compilation(self):
+        mutations = {
+            "recipe-source": lambda project, sources, decisions: sources["sources"][0].update(
+                {"title": "Attacker-rewritten source title"}
+            ),
+            "design-decision": lambda project, sources, decisions: decisions["decisions"][0].update(
+                {"rationale": "Attacker-rewritten design rationale"}
+            ),
+            "whole-project": lambda project, sources, decisions: project["project"].update(
+                {"revision": "attacker-revision"}
+            ),
+        }
+        for mutation_name, mutate in mutations.items():
+            with self.subTest(mutation=mutation_name), tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+                root = Path(repository)
+                (root / "projects").mkdir()
+                workspace = StudioWorkspace(root, state_root=Path(state))
+                profile = workspace.authoring_profiles()[0]
+                workspace.create_project(
+                    "Trusted Bundle",
+                    "trusted-bundle",
+                    authoring_mode=CUSTOM_AUTHORING_MODE,
+                    profile_id=profile["profile_id"],
+                )
+                workspace.save_design_brief(
+                    "trusted-bundle", profile["default_brief"]
+                )
+                workspace.author_custom_model("trusted-bundle")
+                project_dir = root / "projects/trusted-bundle"
+                project_path = project_dir / "project.json"
+                sources_path = project_dir / "sources.lock.json"
+                decisions_path = project_dir / "decisions.json"
+                project = json.loads(project_path.read_text())
+                sources = json.loads(sources_path.read_text())
+                decisions = json.loads(decisions_path.read_text())
+                mutate(project, sources, decisions)
+                project["custom_plan_authoring"]["authored_bundle_sha256"] = (
+                    authored_bundle_sha256(project, sources, decisions)
+                )
+                project_path.write_text(
+                    json.dumps(project, indent=2, sort_keys=True) + "\n"
+                )
+                sources_path.write_text(
+                    json.dumps(sources, indent=2, sort_keys=True) + "\n"
+                )
+                decisions_path.write_text(
+                    json.dumps(decisions, indent=2, sort_keys=True) + "\n"
+                )
+
+                status = workspace.custom_authoring("trusted-bundle")
+
+                self.assertEqual("drifted", status["status"])
+
+    def test_repository_hilyard_uses_the_normal_verified_profile_path(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            shutil.copytree(REPOSITORY / "projects/hilyard", root / "projects/hilyard")
+            workspace = StudioWorkspace(root, state_root=Path(state))
+
+            verified = workspace.custom_authoring("hilyard")
+            self.assertEqual("complete", verified["status"])
+            self.assertEqual("verified", verified["integrity_status"])
+
+            project_path = root / "projects/hilyard/project.json"
+            project = json.loads(project_path.read_text())
+            self.assertEqual(
+                "hilyard_golden_apartment_v1",
+                project["custom_plan_profile"]["profile_id"],
+            )
+            self.assertEqual(
+                "complete", project["custom_plan_authoring"]["status"]
+            )
+            self.assertTrue((root / "projects/hilyard/design-brief.json").is_file())
+
+    def test_custom_authoring_preserves_and_integrity_locks_optional_plan_bytes(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            profile = workspace.authoring_profiles()[0]
+            workspace.create_project(
+                "Original With Reference",
+                "original-with-reference",
+                authoring_mode=CUSTOM_AUTHORING_MODE,
+                profile_id=profile["profile_id"],
+            )
+            plan_bytes = b"%PDF-1.7\noptional context only\n%%EOF\n"
+            input_record = workspace.add_input(
+                "original-with-reference", "context plan.pdf", plan_bytes
+            )
+            workspace.save_design_brief(
+                "original-with-reference", profile["default_brief"]
+            )
+
+            authored = workspace.author_custom_model("original-with-reference")
+            project_dir = root / "projects/original-with-reference"
+            project = json.loads((project_dir / "project.json").read_text())
+            ledger = json.loads((project_dir / "sources.lock.json").read_text())
+            preserved = next(
+                row for row in ledger["sources"] if row["id"] == input_record["id"]
+            )
+
+            self.assertEqual("complete", authored["status"])
+            self.assertEqual("unknown", preserved["provenance_status"])
+            self.assertEqual([], preserved["supports"])
+            self.assertEqual(
+                plan_bytes, (project_dir / preserved["citation"]).read_bytes()
+            )
+            authored_model = json.loads((project_dir / "project.json").read_text())
+            self.assertFalse(
+                any(
+                    preserved["id"]
+                    in feature.get("provenance", {}).get("source_ids", [])
+                    for group in ("points", "lines", "polygons", "surfaces")
+                    for feature in authored_model["features"][group]
+                )
+            )
+            self.assertRegex(
+                project["custom_plan_authoring"]["optional_input_bytes_sha256"],
+                r"^[0-9a-f]{64}$",
+            )
+            self.assertEqual("complete", workspace.custom_authoring("original-with-reference")["status"])
+
+            (project_dir / preserved["citation"]).write_bytes(
+                b"%PDF-1.7\ntampered context\n%%EOF\n"
+            )
+            drifted = workspace.custom_authoring("original-with-reference")
+            self.assertEqual("drifted", drifted["status"])
+            with self.assertRaisesRegex(ValueError, "integrity-verified original custom plan"):
+                workspace.run_project("original-with-reference")
+
+    def test_custom_authoring_rejects_ambiguous_optional_input_citations(self):
+        with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:
+            root = Path(repository)
+            (root / "projects").mkdir()
+            workspace = StudioWorkspace(root, state_root=Path(state))
+            profile = workspace.authoring_profiles()[0]
+            workspace.create_project(
+                "Collision Guard",
+                "collision-guard",
+                authoring_mode=CUSTOM_AUTHORING_MODE,
+                profile_id=profile["profile_id"],
+            )
+            workspace.add_input(
+                "collision-guard",
+                "context.pdf",
+                b"%PDF-1.7\ncollision fixture\n%%EOF\n",
+            )
+            ledger_path = root / "projects/collision-guard/sources.lock.json"
+            ledger = json.loads(ledger_path.read_text())
+            duplicate = dict(ledger["sources"][0])
+            duplicate["id"] = "input-ambiguous-duplicate"
+            ledger["sources"].append(duplicate)
+            ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n")
+            workspace.save_design_brief("collision-guard", profile["default_brief"])
+            project_path = root / "projects/collision-guard/project.json"
+            before_project = project_path.read_bytes()
+            before_ledger = ledger_path.read_bytes()
+
+            with self.assertRaisesRegex(ValueError, "collision"):
+                workspace.author_custom_model("collision-guard")
+            self.assertEqual(before_project, project_path.read_bytes())
+            self.assertEqual(before_ledger, ledger_path.read_bytes())
 
     def test_intake_checksum_locks_plan_bytes_and_never_claims_their_content(self):
         with tempfile.TemporaryDirectory() as repository, tempfile.TemporaryDirectory() as state:

@@ -15,6 +15,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from civil_plan_factory.studio import StudioWorkspace
+from civil_plan_factory.io import load_project_bundle
 from civil_plan_factory.reviewed_sources import adapter_for_checksum
 from civil_plan_factory.validation import DISCLAIMER
 from civil_plan_factory.web import create_server
@@ -94,13 +95,17 @@ class ModelStudioWebTests(unittest.TestCase):
 
         self.assertEqual(200, status)
         self.assertIn(DISCLAIMER, html)
-        self.assertIn("Publication readiness", html)
+        self.assertIn("Send it to the field app", html)
+        self.assertIn("Original custom plan", html)
+        self.assertIn("Add the company’s project plans", html)
+        self.assertIn("cannot become proposed geometry", html)
         self.assertIn('id="readiness-groups"', html)
-        self.assertIn("Run canonical pipeline", html)
-        self.assertIn("Author reviewed model", html)
+        self.assertIn("Build and check layers", html)
+        self.assertIn("Run source-extraction benchmark", javascript)
         self.assertIn('id="author-reviewed-model"', html)
         self.assertIn("data:image/svg+xml", html)
         self.assertIn("/api/projects", javascript)
+        self.assertIn("authoring_mode", javascript)
         self.assertIn("readiness_inventory", javascript)
         self.assertIn("current_run", javascript)
         self.assertIn("workflow_observation", javascript)
@@ -109,12 +114,21 @@ class ModelStudioWebTests(unittest.TestCase):
         self.assertIn('id="evidence-list"', html)
         self.assertIn("/touches", javascript)
         self.assertIn("/author", javascript)
+        self.assertIn("/design-brief", javascript)
+        self.assertIn('name="profile_id"', html)
+        self.assertIn('id="design-brief-form"', html)
+        self.assertIn('pattern="[a-z][a-z0-9\\-]*"', html)
+        self.assertIn(
+            "#design-brief-form{display:grid;grid-template-columns:minmax(0,1fr)",
+            stylesheet,
+        )
+        self.assertIn("#design-brief-form textarea{display:block;width:100%;min-height:96px", stylesheet)
         self.assertIn("offline_import_file", javascript)
         self.assertIn("function setProjectOperationBusy", javascript)
         self.assertIn("function reviewedAuthoringAllowsRun", javascript)
-        self.assertIn("const authoringReady=reviewedAuthoringAllowsRun()", javascript)
+        self.assertIn("const authoringReady=authoringAllowsRun()", javascript)
         self.assertIn("disabled=busy||!authoringReady", javascript)
-        self.assertIn("if(!reviewedAuthoringAllowsRun())", javascript)
+        self.assertIn("if(!authoringAllowsRun())", javascript)
         self.assertIn("if(state.operation)", javascript)
         self.assertNotIn(
             "event.currentTarget.reset()",
@@ -123,6 +137,167 @@ class ModelStudioWebTests(unittest.TestCase):
         )
         self.assertIn("--danger", stylesheet)
         self.assertIn("[hidden]", stylesheet)
+
+    def test_original_hilyard_recipe_authors_without_a_found_plan(self):
+        profile_status, profiles = self.request("/api/authoring-profiles")
+        profile = next(
+            row
+            for row in profiles
+            if row["profile_id"] == "hilyard_golden_apartment_v1"
+        )
+        create_status, created = self.request(
+            "/api/projects",
+            method="POST",
+            payload={
+                "name": "Hilyard Studio Original",
+                "slug": "hilyard-studio-original",
+                "authoring_mode": "custom_semantic_design",
+                "profile_id": profile["profile_id"],
+            },
+        )
+        brief_status, brief_state = self.request(
+            "/api/projects/hilyard-studio-original/design-brief"
+        )
+        brief = profile["default_brief"]
+        brief["goal"] = (
+            "Show field employees the finished job first, with every work layer "
+            "located in relation to that end product."
+        )
+        save_status, saved = self.request(
+            "/api/projects/hilyard-studio-original/design-brief",
+            method="POST",
+            payload=brief,
+        )
+        _, ready_to_author = self.request(
+            "/api/projects/hilyard-studio-original"
+        )
+        author_status, operation = self.request(
+            "/api/projects/hilyard-studio-original/author",
+            method="POST",
+            payload={},
+        )
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            _, progress = self.request(
+                f"/api/operations/{operation['operation_id']}"
+            )
+            if progress["status"] in {"complete", "failed"}:
+                break
+            time.sleep(0.02)
+        else:
+            self.fail("custom-plan authoring operation did not finish")
+        _, authored = self.request("/api/projects/hilyard-studio-original")
+        model = load_project_bundle(
+            Path(authored["project_file"])
+        )
+        proposed = [
+            feature
+            for group in ("points", "lines", "polygons", "surfaces")
+            for feature in model["features"][group]
+            if feature["phase_id"] != "phase-01-existing-control-erosion"
+        ]
+
+        self.assertEqual(200, profile_status)
+        self.assertEqual(201, create_status)
+        self.assertEqual(200, brief_status)
+        self.assertIsNone(brief_state["brief"])
+        self.assertEqual(201, save_status)
+        self.assertEqual(saved["brief_sha256"], ready_to_author["custom_authoring"]["brief_sha256"])
+        self.assertEqual("available", ready_to_author["custom_authoring"]["status"])
+        self.assertEqual(202, author_status)
+        self.assertEqual("custom_plan_authoring", operation["kind"])
+        self.assertEqual("complete", progress["status"])
+        self.assertEqual("custom_plan_authored", progress["stage"])
+        self.assertEqual("complete", authored["custom_authoring"]["status"])
+        self.assertEqual("valid", authored["validation_status"])
+        self.assertEqual(0, authored["input_count"])
+        self.assertNotIn("reviewed_source_adapter", model)
+        self.assertEqual("hilyard-studio-original", model["project"]["id"])
+        self.assertEqual("Hilyard Studio Original", model["project"]["name"])
+        self.assertEqual("custom_semantic_design", model["authoring_contract"]["mode"])
+        self.assertEqual(7, len(model["phases"]))
+        self.assertGreater(len(proposed), 100)
+        self.assertNotIn(
+            "reference-derived",
+            {feature["provenance"]["status"] for feature in proposed},
+        )
+
+        changed_goal = json.loads(json.dumps(brief))
+        changed_goal["goal"] += " The revised goal must also make authorship drift visible."
+        self.request(
+            "/api/projects/hilyard-studio-original/design-brief",
+            method="POST",
+            payload=changed_goal,
+        )
+        _, drifted = self.request("/api/projects/hilyard-studio-original")
+        _, blocked_run = self.request(
+            "/api/projects/hilyard-studio-original/runs",
+            method="POST",
+            payload={},
+        )
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            _, blocked_progress = self.request(
+                f"/api/operations/{blocked_run['operation_id']}"
+            )
+            if blocked_progress["status"] in {"complete", "failed"}:
+                break
+            time.sleep(0.02)
+        else:
+            self.fail("drifted custom-plan run gate did not finish")
+        self.assertEqual("drifted", drifted["custom_authoring"]["status"])
+        self.assertEqual("failed", blocked_progress["status"])
+        self.assertIn("integrity-verified original custom plan", blocked_progress["error"])
+
+    def test_unsupported_custom_brief_change_fails_without_mutating_the_draft(self):
+        _, profiles = self.request("/api/authoring-profiles")
+        profile = next(
+            row
+            for row in profiles
+            if row["profile_id"] == "hilyard_golden_apartment_v1"
+        )
+        self.request(
+            "/api/projects",
+            method="POST",
+            payload={
+                "name": "Strict Brief",
+                "slug": "strict-brief",
+                "authoring_mode": "custom_semantic_design",
+                "profile_id": profile["profile_id"],
+            },
+        )
+        valid = profile["default_brief"]
+        self.request(
+            "/api/projects/strict-brief/design-brief",
+            method="POST",
+            payload=valid,
+        )
+        self.workspace.author_model("strict-brief")
+        brief_path = (
+            self.workspace.repository / "projects/strict-brief/design-brief.json"
+        )
+        project_path = (
+            self.workspace.repository / "projects/strict-brief/project.json"
+        )
+        before = brief_path.read_bytes()
+        before_project = project_path.read_bytes()
+        unsupported = json.loads(json.dumps(valid))
+        unsupported["site_program"]["building_width_ft"] = 60.0
+
+        with self.assertRaises(HTTPError) as rejected:
+            self.request(
+                "/api/projects/strict-brief/design-brief",
+                method="POST",
+                payload=unsupported,
+            )
+
+        self.assertEqual(400, rejected.exception.code)
+        self.assertIn("unsupported", json.loads(rejected.exception.read())["error"].lower())
+        self.assertEqual(before, brief_path.read_bytes())
+        self.assertEqual(before_project, project_path.read_bytes())
+        self.assertEqual(
+            "complete", self.workspace.custom_authoring("strict-brief")["status"]
+        )
 
     def test_health_endpoint_proves_the_real_workspace_is_ready(self):
         status, health = self.request("/api/health")

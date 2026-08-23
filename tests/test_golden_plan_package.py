@@ -5,7 +5,11 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-from civil_plan_factory.build import create_vector_plan, geometry_digest
+from civil_plan_factory.build import (
+    create_vector_plan,
+    field_contract_digest,
+    geometry_digest,
+)
 from civil_plan_factory.export import build_semantic_manifest
 from civil_plan_factory.golden_pdf import declutter_callout_positions
 from civil_plan_factory.io import load_project_bundle
@@ -52,6 +56,45 @@ class GoldenPlanPackageTests(unittest.TestCase):
         self.assertEqual("phase-06-water-dry-utilities", by_id["dry-shared-trench-corridor-01"]["phase_id"])
         self.assertEqual("phase-07-finish-site", by_id["building-apartment-1"]["phase_id"])
         self.assertEqual("phase-07-finish-site", by_id["sidewalk-south-entry"]["phase_id"])
+
+    def test_golden_apartment_is_an_original_custom_plan_package(self):
+        expected = {
+            "mode": "custom_semantic_design",
+            "canonical_authority": "semantic_model",
+            "deliverable_origin": "generated_from_canonical_model",
+            "reference_material_policy": "context_and_conventions_only",
+        }
+
+        self.assertEqual("custom_semantic_design", self.model["project"]["authoring_mode"])
+        self.assertEqual(expected, self.model["authoring_contract"])
+        self.assertNotIn("reviewed_source_adapter", self.model)
+
+        designed_features = [
+            feature
+            for group in ("points", "lines", "polygons", "surfaces")
+            for feature in self.model["features"][group]
+            if feature["phase_id"] != "phase-01-existing-control-erosion"
+        ]
+        self.assertGreater(len(designed_features), 100)
+        self.assertNotIn(
+            "reference-derived",
+            {feature["provenance"]["status"] for feature in designed_features},
+        )
+
+        semantic = build_semantic_manifest(self.model)
+        self.assertEqual(expected, semantic["authoringContract"])
+        self.assertEqual("generated_vector_pdf", semantic["plan"]["availability"])
+        self.assertEqual("hilyard-site-layout.pdf", semantic["plan"]["imageUrl"])
+
+        changed = dict(self.model)
+        changed["authoring_contract"] = {
+            **expected,
+            "reference_material_policy": "geometry_source",
+        }
+        self.assertNotEqual(
+            field_contract_digest(self.model),
+            field_contract_digest(changed),
+        )
 
     def test_every_golden_sheet_and_semantic_package_carries_full_safety_notice(self):
         semantic = build_semantic_manifest(self.model)

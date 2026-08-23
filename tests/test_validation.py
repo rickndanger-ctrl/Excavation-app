@@ -21,6 +21,62 @@ class ValidationTests(unittest.TestCase):
     def test_frozen_hilyard_foundation_satisfies_contract(self):
         self.assertEqual([], self.errors_for(self.model))
 
+    def test_custom_plan_authoring_contract_is_required_and_exact(self):
+        expected = {
+            "mode": "custom_semantic_design",
+            "canonical_authority": "semantic_model",
+            "deliverable_origin": "generated_from_canonical_model",
+            "reference_material_policy": "context_and_conventions_only",
+        }
+
+        missing = copy.deepcopy(self.model)
+        missing.pop("authoring_contract", None)
+        self.assertIn("authoring.custom_contract_missing", self.errors_for(missing))
+
+        mutations = {
+            "mode": "source_plan_adaptation",
+            "canonical_authority": "source_plan",
+            "deliverable_origin": "adapted_from_downloaded_plan",
+            "reference_material_policy": "geometry_source",
+        }
+        for field, invalid_value in mutations.items():
+            with self.subTest(field=field):
+                broken = copy.deepcopy(self.model)
+                broken["authoring_contract"] = dict(expected)
+                broken["authoring_contract"][field] = invalid_value
+                self.assertIn(
+                    "authoring.custom_contract_invalid",
+                    self.errors_for(broken),
+                )
+
+        adapted = copy.deepcopy(self.model)
+        adapted["authoring_contract"] = dict(expected)
+        adapted["reviewed_source_adapter"] = {
+            "adapter_id": "downloaded-plan-adapter"
+        }
+        self.assertIn(
+            "authoring.custom_contract_invalid",
+            self.errors_for(adapted),
+        )
+
+    def test_custom_plan_rejects_reference_derived_proposed_geometry(self):
+        broken = copy.deepcopy(self.model)
+        proposed = next(
+            feature
+            for group in ("points", "lines", "polygons", "surfaces")
+            for feature in broken["features"][group]
+            if feature["phase_id"] != "phase-01-existing-control-erosion"
+        )
+        proposed["provenance"] = {
+            "status": "reference-derived",
+            "source_ids": ["src-project-brief"],
+        }
+
+        self.assertIn(
+            "authoring.proposed_geometry_reference_derived",
+            self.errors_for(broken),
+        )
+
     def test_rejects_missing_disclaimer_crs_units_and_datum(self):
         broken = copy.deepcopy(self.model)
         del broken["project"]["disclaimer"]

@@ -14,6 +14,12 @@ sections, schedules, detail cards, layered vector GeoPDF, GeoPackage, DXF, and
 the Excavation Field Map adapter will derive from that model. Sheet count is a
 readability outcome, never a fixed acceptance target.
 
+The primary mission is to author our own original civil-plan package from a
+custom semantic job design. Found or uploaded plan sets are optional reference
+material: they can establish existing context, constraints, drafting
+conventions, or extraction-test cases, but they never supply proposed geometry
+and are never repackaged as the deliverable.
+
 ## Reproducible commands
 
 ```bash
@@ -45,9 +51,11 @@ model-studio serve --repository "$PWD"
 
 Open `http://127.0.0.1:8777`. The console provides one fail-closed workflow:
 
-1. select an existing project or create an explicitly incomplete intake draft;
-2. add PDF plan sets, which are copied into the project intake folder and
-   SHA-256 locked with `unknown` provenance and no supported model claims;
+1. select an original custom-plan project or create an explicitly incomplete
+   design draft;
+2. optionally attach PDF reference material, which is copied into the project
+   intake folder, SHA-256 locked, and prohibited from defining proposed
+   geometry or generated deliverables;
 3. run the canonical validation/build/parity pipeline and watch its current
    stage;
 4. review active issues and record recovery notes without clearing or
@@ -231,18 +239,21 @@ The next implementation slice begins only after this foundation is committed:
 
 ## Planned closed-loop proof
 
-Model Studio will eventually provide one workflow to create/open a project,
-ingest plans, extract geometry and rules, review uncertainty, validate, generate
-coordinated plans and semantic packages, and publish to Excavation Field Map.
-The proof loop is:
+Model Studio's primary workflow will create/open a project, capture the site
+basis and program, author an original semantic layout and elevations, review
+uncertainty, validate, generate coordinated plans and semantic packages, and
+publish to Excavation Field Map. The proof loop is:
 
 1. create the reviewed Hilyard canonical model;
 2. generate vector plans strictly from its values;
-3. ingest those generated plans through the extraction path;
-4. rebuild a second semantic model;
-5. compare coordinates, topology, elevations, materials, and object details to
+3. publish that original custom model to the field app and prove its complete
+   plan extent and layer overlays;
+4. separately ingest the factory's own generated sheets through the extraction
+   benchmark path;
+5. rebuild a second semantic model only as a regression check;
+6. compare coordinates, topology, elevations, materials, and object details to
    the canonical model; and
-6. require human review before uncertain fields can be accepted or published.
+7. require human review before uncertain fields can be accepted or published.
 
 Automation percentages will not be claimed until this loop produces measured,
 repeatable results.

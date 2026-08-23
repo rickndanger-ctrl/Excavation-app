@@ -1,0 +1,31 @@
+{
+  "goal": "Show field employees the complete finished job first, then place every work layer over that shared visual reference.",
+  "presentation": {
+    "base_view": "finished_site_first",
+    "layer_relationship": "work_layers_over_finished_job",
+    "phone_recovery_control": "fit_full_plan",
+    "plan_scale": "1 inch = 20 feet"
+  },
+  "site_program": {
+    "archetype": "apartment_complex",
+    "building_length_ft": 90.0,
+    "building_width_ft": 45.0,
+    "finished_site_scope": [
+      "building",
+      "entries",
+      "parking",
+      "drive_aisle",
+      "curbs",
+      "sidewalks",
+      "landscape"
+    ],
+    "parking_stall_count": 5
+  },
+  "vertical_design": {
+    "building_subgrade_elevation_ft": 443.5,
+    "finished_floor_elevation_ft": 445.0,
+    "status": "reviewed_assumption_not_for_staking",
+    "units": "feet",
+    "vertical_datum": "NAVD88"
+  }
+}

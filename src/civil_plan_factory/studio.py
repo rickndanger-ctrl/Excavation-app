@@ -28,8 +28,22 @@ from .io import (
     resolve_local_source_citation,
     resolve_model_source_citations,
 )
-from .validation import DISCLAIMER, validate_model
+from .validation import (
+    CUSTOM_AUTHORING_MODE,
+    CUSTOM_SEMANTIC_AUTHORING_CONTRACT,
+    DISCLAIMER,
+    has_custom_authoring_claim,
+    validate_model,
+)
 from .reviewed_sources import adapter_for_checksum
+from .custom_authoring import (
+    authored_bundle_sha256 as custom_authored_bundle_sha256,
+    brief_sha256,
+    compile_profile,
+    list_profiles,
+    recipe_sha256,
+    validate_design_brief,
+)
 
 
 HANDOFF_SCHEMA = "civil-plan-factory.field-map-handoff/v0.1.0"
@@ -102,6 +116,134 @@ def _authored_bundle_sha256(
         payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _verified_optional_input_sources(
+    project_dir: Path, source_ledger: dict[str, Any]
+) -> tuple[list[dict[str, Any]], str]:
+    """Return honest optional PDF references and a digest that binds their bytes."""
+
+    records: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    seen_citations: set[str] = set()
+    digest = hashlib.sha256()
+    for source in source_ledger.get("sources", []):
+        source_id = source.get("id")
+        if not isinstance(source_id, str) or not source_id.startswith("input-"):
+            continue
+        citation = source.get("citation")
+        if source_id in seen_ids:
+            raise ValueError(
+                f"Optional input collision: duplicate source id {source_id}"
+            )
+        if not isinstance(citation, str) or citation in seen_citations:
+            raise ValueError(
+                f"Optional input collision: duplicate or invalid citation for {source_id}"
+            )
+        seen_ids.add(source_id)
+        seen_citations.add(citation)
+        citation_path = Path(citation)
+        if (
+            citation_path.is_absolute()
+            or not citation_path.parts
+            or citation_path.parts[0] != "inputs"
+            or citation_path.suffix.lower() != ".pdf"
+        ):
+            raise ValueError(
+                f"Optional input {source_id} must cite a bundle-local inputs/*.pdf file"
+            )
+        if (
+            source.get("provenance_status") != "unknown"
+            or source.get("supports") != []
+        ):
+            raise ValueError(
+                f"Optional input {source_id} must remain unknown and support no claims"
+            )
+        lock = source.get("lock", {})
+        if (
+            source.get("citation_scope") != PROJECT_BUNDLE_CITATION_SCOPE
+            or lock.get("kind") != "local_file"
+            or lock.get("status") != "checksum_locked"
+            or not isinstance(lock.get("sha256"), str)
+        ):
+            raise ValueError(
+                f"Optional input {source_id} must be bundle checksum locked"
+            )
+        resolved = resolve_local_source_citation(
+            project_dir, citation, require_project_bundle=True
+        )
+        payload = resolved.read_bytes()
+        if not payload.startswith(b"%PDF-"):
+            raise ValueError(f"Optional input {source_id} is not a PDF")
+        if hashlib.sha256(payload).hexdigest() != lock["sha256"]:
+            raise ValueError(f"Optional input {source_id} checksum drift")
+        identity = f"{source_id}\0{citation_path.as_posix()}".encode("utf-8")
+        digest.update(len(identity).to_bytes(8, "big"))
+        digest.update(identity)
+        digest.update(len(payload).to_bytes(8, "big"))
+        digest.update(payload)
+        records.append(copy.deepcopy(source))
+    return sorted(records, key=lambda row: row["id"]), digest.hexdigest()
+
+
+def _merge_optional_input_sources(
+    compiled_sources: dict[str, Any], optional_sources: list[dict[str, Any]]
+) -> dict[str, Any]:
+    merged = copy.deepcopy(compiled_sources)
+    existing_ids = {row.get("id") for row in merged.get("sources", [])}
+    existing_citations = {
+        row.get("citation")
+        for row in merged.get("sources", [])
+        if isinstance(row.get("citation"), str)
+    }
+    for source in optional_sources:
+        if (
+            source["id"] in existing_ids
+            or source["citation"] in existing_citations
+        ):
+            raise ValueError(
+                f"Optional input collision with recipe source: {source['id']}"
+            )
+        existing_ids.add(source["id"])
+        existing_citations.add(source["citation"])
+        merged.setdefault("sources", []).append(copy.deepcopy(source))
+    merged["sources"] = sorted(
+        merged.get("sources", []), key=lambda row: row["id"]
+    )
+    return merged
+
+
+def _compile_studio_custom_bundle(
+    profile: dict[str, Any],
+    profile_dir: Path,
+    target_project: dict[str, str],
+    brief: dict[str, Any],
+    optional_sources: list[dict[str, Any]],
+    optional_input_bytes_sha256: str,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Build the one trusted bundle accepted for a profile and reviewed brief."""
+
+    project, sources, decisions = compile_profile(
+        profile_dir, target_project, brief
+    )
+    sources = _merge_optional_input_sources(sources, optional_sources)
+    project["custom_plan_profile"] = {
+        "profile_id": profile["profile_id"],
+        "profile_version": profile["profile_version"],
+    }
+    marker = {
+        "status": "complete",
+        "profile_id": profile["profile_id"],
+        "profile_version": profile["profile_version"],
+        "brief_sha256": brief_sha256(brief),
+        "recipe_sha256": recipe_sha256(profile_dir),
+        "optional_input_bytes_sha256": optional_input_bytes_sha256,
+    }
+    project["custom_plan_authoring"] = marker
+    marker["authored_bundle_sha256"] = custom_authored_bundle_sha256(
+        project, sources, decisions
+    )
+    return project, sources, decisions
 
 
 def _project_locked(method):
@@ -186,11 +328,18 @@ class StudioWorkspace:
         *,
         state_root: Path | None = None,
         qgis_app: Path = DEFAULT_QGIS_APP,
+        profiles_root: Path | None = None,
     ) -> None:
         self.repository = Path(repository).resolve()
         self.projects_root = self.repository / "projects"
         self.state_root = Path(state_root or self.repository / ".model-studio").resolve()
         self.qgis_app = Path(qgis_app).resolve()
+        bundled_profiles = Path(__file__).resolve().parents[2] / "profiles"
+        repository_profiles = self.repository / "profiles"
+        self.profiles_root = Path(
+            profiles_root
+            or (repository_profiles if repository_profiles.is_dir() else bundled_profiles)
+        ).resolve()
         self._project_locks_guard = threading.Lock()
         self._project_locks: dict[str, Any] = {}
         self.projects_root.mkdir(parents=True, exist_ok=True)
@@ -537,6 +686,195 @@ class StudioWorkspace:
             for slug in sorted(slugs)
         ]
 
+    def authoring_profiles(self) -> list[dict[str, Any]]:
+        return list_profiles(self.profiles_root)
+
+    def _authoring_profile(self, profile_id: str) -> tuple[dict[str, Any], Path]:
+        profile = next(
+            (
+                row
+                for row in self.authoring_profiles()
+                if row.get("profile_id") == profile_id
+            ),
+            None,
+        )
+        if profile is None:
+            raise ValueError(f"Unknown custom-plan authoring profile: {profile_id}")
+        profile_dir = (self.profiles_root / profile_id).resolve()
+        if profile_dir.parent != self.profiles_root or not profile_dir.is_dir():
+            raise ValueError("Custom-plan profile path is unavailable")
+        return profile, profile_dir
+
+    def _design_brief_file(self, slug: str) -> Path:
+        return self._project_dir(slug) / "design-brief.json"
+
+    def design_brief(self, slug: str) -> dict[str, Any]:
+        project = _read_json(self._project_file(slug))
+        selection = project.get("custom_plan_profile")
+        if not isinstance(selection, dict):
+            raise ValueError("Project does not use a Studio custom-plan profile")
+        profile, _ = self._authoring_profile(str(selection.get("profile_id", "")))
+        path = self._design_brief_file(slug)
+        brief = _read_json(path) if path.is_file() else None
+        return {
+            "project_slug": slug,
+            "profile": profile,
+            "brief": brief,
+            "custom_authoring": self.custom_authoring(slug),
+        }
+
+    def custom_authoring(self, slug: str) -> dict[str, Any]:
+        project_file = self._project_file(slug)
+        project = _read_json(project_file)
+        if not has_custom_authoring_claim(project):
+            return {
+                "status": "unavailable",
+                "integrity_status": "not_custom_mode",
+                "reason": "Project is not configured for original custom-plan authoring.",
+            }
+        selection = project.get("custom_plan_profile")
+        if not isinstance(selection, dict):
+            return {
+                "status": "blocked",
+                "integrity_status": "profile_required",
+                "profile_id": None,
+                "reason": (
+                    "Original custom plans require a registered profile and a "
+                    "deterministic authored receipt."
+                ),
+            }
+        profile_id = str(selection.get("profile_id", ""))
+        try:
+            profile, profile_dir = self._authoring_profile(profile_id)
+        except ValueError as error:
+            return {
+                "status": "unavailable",
+                "integrity_status": "profile_unavailable",
+                "profile_id": profile_id,
+                "reason": str(error),
+            }
+        brief_path = self._design_brief_file(slug)
+        if not brief_path.is_file():
+            return {
+                "status": "brief_required",
+                "integrity_status": "brief_missing",
+                "profile_id": profile_id,
+                "profile_version": profile.get("profile_version"),
+                "reason": "Save the goal-first design brief before authoring the original plan.",
+            }
+        try:
+            brief = _read_json(brief_path)
+            validate_design_brief(brief, profile)
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as error:
+            return {
+                "status": "blocked",
+                "integrity_status": "brief_invalid",
+                "profile_id": profile_id,
+                "reason": str(error),
+            }
+        current_brief_sha = brief_sha256(brief)
+        current_recipe_sha = recipe_sha256(profile_dir)
+        authored = project.get("custom_plan_authoring")
+        if not isinstance(authored, dict):
+            return {
+                "status": "available",
+                "integrity_status": "not_authored",
+                "profile_id": profile_id,
+                "profile_version": profile.get("profile_version"),
+                "brief_sha256": current_brief_sha,
+                "recipe_sha256": current_recipe_sha,
+                "reason": "The reviewed brief is ready to compile into an original semantic plan.",
+            }
+        try:
+            sources = _read_json(
+                project_file.parent / project.get("source_ledger", "sources.lock.json")
+            )
+            decisions = _read_json(
+                project_file.parent / project.get("decision_ledger", "decisions.json")
+            )
+            optional_sources, current_input_bytes_sha = _verified_optional_input_sources(
+                project_file.parent, sources
+            )
+            current_bundle_sha = custom_authored_bundle_sha256(
+                project, sources, decisions
+            )
+            expected_project, expected_sources, expected_decisions = (
+                _compile_studio_custom_bundle(
+                    profile,
+                    profile_dir,
+                    {
+                        "id": project["project"]["id"],
+                        "name": project["project"]["name"],
+                    },
+                    brief,
+                    optional_sources,
+                    current_input_bytes_sha,
+                )
+            )
+            expected_bundle_sha = custom_authored_bundle_sha256(
+                expected_project, expected_sources, expected_decisions
+            )
+            _, validation_issues = self._validation(slug)
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as error:
+            return {
+                "status": "drifted",
+                "integrity_status": "optional_input_or_bundle_drift",
+                "profile_id": profile_id,
+                "reason": str(error),
+            }
+        matches = (
+            authored.get("status") == "complete"
+            and authored.get("profile_id") == profile_id
+            and authored.get("profile_version") == profile.get("profile_version")
+            and authored.get("brief_sha256") == current_brief_sha
+            and authored.get("recipe_sha256") == current_recipe_sha
+            and authored.get("optional_input_bytes_sha256")
+            == current_input_bytes_sha
+            and authored.get("authored_bundle_sha256") == expected_bundle_sha
+            and current_bundle_sha == expected_bundle_sha
+            and not any(
+                issue.get("severity") == "error" for issue in validation_issues
+            )
+        )
+        feature_counts = Counter(
+            feature.get("layer_id", "unknown")
+            for group in ("points", "lines", "polygons", "surfaces")
+            for feature in project.get("features", {}).get(group, [])
+        )
+        return {
+            "status": "complete" if matches else "drifted",
+            "integrity_status": "verified" if matches else "drifted",
+            "profile_id": profile_id,
+            "profile_version": profile.get("profile_version"),
+            "brief_sha256": current_brief_sha,
+            "recipe_sha256": current_recipe_sha,
+            "authored_bundle_sha256": authored.get("authored_bundle_sha256"),
+            "trusted_bundle_sha256": expected_bundle_sha,
+            "authored_feature_count": sum(feature_counts.values()),
+            "layer_feature_counts": dict(sorted(feature_counts.items())),
+            "reason": (
+                "Original semantic plan matches its reviewed brief and locked recipe."
+                if matches
+                else "The brief, recipe, or canonical bundle changed; reauthor before running."
+            ),
+        }
+
+    @_project_locked
+    def save_design_brief(self, slug: str, brief: dict[str, Any]) -> dict[str, Any]:
+        project = _read_json(self._project_file(slug))
+        selection = project.get("custom_plan_profile")
+        if not isinstance(selection, dict):
+            raise ValueError("Project does not use a Studio custom-plan profile")
+        profile, _ = self._authoring_profile(str(selection.get("profile_id", "")))
+        normalized = validate_design_brief(copy.deepcopy(brief), profile)
+        _write_json(self._design_brief_file(slug), normalized)
+        return {
+            "project_slug": slug,
+            "profile_id": profile["profile_id"],
+            "brief": normalized,
+            "brief_sha256": brief_sha256(normalized),
+        }
+
     @_project_locked
     def project_detail(self, slug: str, *, include_issues: bool = True) -> dict[str, Any]:
         self._project_file(slug)
@@ -567,6 +905,7 @@ class StudioWorkspace:
         touches = self._operator_touches(slug)
         latest_publication = self._latest_publication(slug)
         reviewed_authoring = self.reviewed_authoring(slug)
+        custom_authoring = self.custom_authoring(slug)
         source_evidence = []
         for source in (model or {}).get("sources", []):
             lock = source.get("lock", {})
@@ -596,6 +935,15 @@ class StudioWorkspace:
         elif runs:
             stage = "authoritative_inputs_changed"
             current_action = "Review changed inputs and revision metadata, then rerun the canonical pipeline."
+        elif custom_authoring["status"] == "complete":
+            stage = "canonical_execution"
+            current_action = "Run the original semantic design through validation, artifact generation, and parity checks."
+        elif custom_authoring["status"] == "available":
+            stage = "custom_plan_authoring"
+            current_action = "Compile the reviewed goal-first brief into the original canonical plan."
+        elif custom_authoring["status"] == "brief_required":
+            stage = "design_brief"
+            current_action = "State the field-user goal first, review the fixed v1 site program, and save the design brief."
         elif reviewed_authoring["status"] == "complete":
             stage = "canonical_execution"
             current_action = "Run canonical validation, semantic artifact build, and parity checks."
@@ -636,7 +984,14 @@ class StudioWorkspace:
             "provenance": self._provenance_summary(model),
             "input_count": input_count,
             "project_file": str(directory / "project.json"),
+            "authoring_mode": (
+                CUSTOM_AUTHORING_MODE
+                if has_custom_authoring_claim(model or {})
+                else project.get("authoring_mode")
+            ),
+            "authoring_contract": copy.deepcopy((model or {}).get("authoring_contract")),
             "reviewed_authoring": reviewed_authoring,
+            "custom_authoring": custom_authoring,
             "cleared_reviews": cleared_reviews,
             "runs": runs,
             "current_run": current_run,
@@ -687,7 +1042,14 @@ class StudioWorkspace:
             result["sources"] = (model or {}).get("sources", [])
         return result
 
-    def create_project(self, name: str, slug: str | None = None) -> dict[str, Any]:
+    def create_project(
+        self,
+        name: str,
+        slug: str | None = None,
+        *,
+        authoring_mode: str | None = None,
+        profile_id: str | None = None,
+    ) -> dict[str, Any]:
         clean_name = name.strip()
         if not clean_name:
             raise ValueError("Project name is required")
@@ -695,6 +1057,13 @@ class StudioWorkspace:
         directory = self._project_dir(project_slug)
         if directory.exists():
             raise FileExistsError(f"Project already exists: {project_slug}")
+        custom_profile = None
+        if authoring_mode == CUSTOM_AUTHORING_MODE:
+            if not profile_id:
+                raise ValueError("Original custom-plan projects require a profile_id")
+            custom_profile, _ = self._authoring_profile(profile_id)
+        elif authoring_mode not in {None, "source_extraction_benchmark"}:
+            raise ValueError("Unknown project authoring mode")
         directory.mkdir(parents=True)
         project = {
             "schema_version": "civil-plan-factory.project/v0.1.0",
@@ -726,6 +1095,19 @@ class StudioWorkspace:
                 "Intake draft only. CRS, datum, control, geometry, engineering basis, and approvals are unknown."
             ],
         }
+        if custom_profile is not None:
+            project["project"]["revision"] = "custom-design-draft-0"
+            project["project"]["authoring_mode"] = CUSTOM_AUTHORING_MODE
+            project["authoring_contract"] = copy.deepcopy(
+                CUSTOM_SEMANTIC_AUTHORING_CONTRACT
+            )
+            project["custom_plan_profile"] = {
+                "profile_id": custom_profile["profile_id"],
+                "profile_version": custom_profile["profile_version"],
+            }
+            project["limitations"] = [
+                "Original custom-plan draft only. Save the goal-first design brief and author the registered semantic recipe before running or publishing."
+            ]
         _write_json(directory / "project.json", project)
         _write_json(directory / "sources.lock.json", {"disclaimer": DISCLAIMER, "sources": []})
         _write_json(directory / "decisions.json", {"disclaimer": DISCLAIMER, "decisions": []})
@@ -736,7 +1118,11 @@ class StudioWorkspace:
         if not filename.lower().endswith(".pdf") or not content.startswith(b"%PDF-"):
             raise ValueError("Plan-set intake currently accepts PDF files only")
         project_dir = self._project_dir(slug)
-        self._project_file(slug)
+        project = _read_json(self._project_file(slug))
+        refresh_verified_custom_bundle = (
+            has_custom_authoring_claim(project)
+            and self.custom_authoring(slug).get("status") == "complete"
+        )
         digest = hashlib.sha256(content).hexdigest()
         stem = _slugify(Path(filename).stem)
         source_id = f"input-{stem}-{digest[:12]}"
@@ -779,6 +1165,8 @@ class StudioWorkspace:
         ledger["sources"] = sorted(ledger["sources"], key=lambda row: row["id"])
         ledger["disclaimer"] = DISCLAIMER
         _write_json(ledger_path, ledger)
+        if refresh_verified_custom_bundle:
+            self.author_custom_model(slug)
         return {
             "id": source_id,
             "filename": stored_name,
@@ -932,6 +1320,24 @@ class StudioWorkspace:
             f"{operation} requires a complete, integrity-verified reviewed-source model"
         )
 
+    def _require_verified_authority(self, slug: str, operation: str) -> None:
+        project = _read_json(self._project_file(slug))
+        if has_custom_authoring_claim(project):
+            authoring = self.custom_authoring(slug)
+            if authoring.get("status") == "complete":
+                return
+            change_reason = (
+                " refused because authoritative inputs changed;"
+                if authoring.get("status") == "drifted"
+                else ""
+            )
+            raise ValueError(
+                f"{operation}{change_reason} requires a complete, "
+                "integrity-verified original custom plan; "
+                f"current status is {authoring.get('status', 'unknown')}"
+            )
+        self._require_verified_reviewed_authority(slug, operation)
+
     def _replace_project_bundle(
         self,
         slug: str,
@@ -939,6 +1345,7 @@ class StudioWorkspace:
         project: dict[str, Any],
         sources: dict[str, Any],
         decisions: dict[str, Any],
+        source_data: Path | None = None,
     ) -> None:
         """Promote all authoritative JSON files as one rollback-safe transaction."""
 
@@ -953,6 +1360,11 @@ class StudioWorkspace:
             _write_json(staged / "project.json", project)
             _write_json(staged / "sources.lock.json", sources)
             _write_json(staged / "decisions.json", decisions)
+            if source_data is not None:
+                destination = staged / "source-data"
+                if destination.exists():
+                    shutil.rmtree(destination)
+                shutil.copytree(source_data, destination)
             project_dir.replace(backup)
             try:
                 staged.replace(project_dir)
@@ -965,7 +1377,91 @@ class StudioWorkspace:
                 shutil.rmtree(transaction_root)
 
     @_project_locked
+    def author_custom_model(self, slug: str) -> dict[str, Any]:
+        project_path = self._project_file(slug)
+        draft = _read_json(project_path)
+        selection = draft.get("custom_plan_profile")
+        if not isinstance(selection, dict):
+            raise ValueError("Project does not use a Studio custom-plan profile")
+        profile, profile_dir = self._authoring_profile(
+            str(selection.get("profile_id", ""))
+        )
+        brief_path = self._design_brief_file(slug)
+        if not brief_path.is_file():
+            raise ValueError("Save the goal-first design brief before authoring")
+        brief = validate_design_brief(_read_json(brief_path), profile)
+        intake_sources = _read_json(
+            project_path.parent / draft.get("source_ledger", "sources.lock.json")
+        )
+        optional_sources, optional_input_bytes_sha = _verified_optional_input_sources(
+            project_path.parent, intake_sources
+        )
+        project, sources, decisions = _compile_studio_custom_bundle(
+            profile,
+            profile_dir,
+            {
+                "id": draft["project"]["id"],
+                "name": draft["project"]["name"],
+            },
+            brief,
+            optional_sources,
+            optional_input_bytes_sha,
+        )
+        model = copy.deepcopy(project)
+        model.pop("source_ledger", None)
+        model.pop("decision_ledger", None)
+        model["sources"] = copy.deepcopy(sources["sources"])
+        model["decisions"] = copy.deepcopy(decisions["decisions"])
+        for source in model["sources"]:
+            if source.get("lock", {}).get("kind") != "local_file":
+                continue
+            source_root = (
+                project_path.parent
+                if str(source.get("id", "")).startswith("input-")
+                else profile_dir / "recipe"
+            )
+            source["citation"] = str(
+                resolve_local_source_citation(
+                    source_root,
+                    source["citation"],
+                    require_project_bundle=True,
+                )
+            )
+        issues = [issue for issue in validate_model(model) if issue.severity == "error"]
+        if issues:
+            summary = "; ".join(
+                f"{issue.code}: {issue.message}" for issue in issues[:5]
+            )
+            raise ValueError(
+                f"Custom semantic recipe output failed canonical validation: {summary}"
+            )
+        self._replace_project_bundle(
+            slug,
+            project=project,
+            sources=sources,
+            decisions=decisions,
+            source_data=profile_dir / "recipe" / "source-data",
+        )
+        completed = self.custom_authoring(slug)
+        if completed.get("status") != "complete":
+            raise ValueError(
+                "Custom semantic recipe was written but failed its integrity check"
+            )
+        return {**completed, "changed": True}
+
+    def author_model(self, slug: str) -> dict[str, Any]:
+        project = _read_json(self._project_file(slug))
+        if has_custom_authoring_claim(project):
+            return self.author_custom_model(slug)
+        return self.author_reviewed_model(slug)
+
+    @_project_locked
     def author_reviewed_model(self, slug: str) -> dict[str, Any]:
+        project_claim = _read_json(self._project_file(slug))
+        if has_custom_authoring_claim(project_claim):
+            raise ValueError(
+                "A custom-plan authorship claim cannot enter the reviewed-source authoring workflow"
+            )
         availability = self.reviewed_authoring(slug)
         if availability["status"] == "unavailable":
             raise ValueError("No reviewed-source adapter matches the verified checksum-locked input")
@@ -1136,7 +1632,7 @@ class StudioWorkspace:
 
     @_project_locked
     def run_project(self, slug: str) -> dict[str, Any]:
-        self._require_verified_reviewed_authority(slug, "Run")
+        self._require_verified_authority(slug, "Run")
         project_file = self._project_file(slug)
         fingerprint = self._fingerprint(slug)
         model, issues = self._validation(slug)
@@ -1225,7 +1721,7 @@ class StudioWorkspace:
         expected_root = (self.state_root / "runs" / slug).resolve()
         if run_path.parent != expected_root or not (run_path / "run.json").is_file():
             raise ValueError("Publication requires an existing validated run")
-        self._require_verified_reviewed_authority(slug, "Publication")
+        self._require_verified_authority(slug, "Publication")
         run = _read_json(run_path / "run.json")
         if run.get("project_fingerprint") != self._fingerprint(slug):
             raise ValueError("Publication refused because authoritative inputs changed; rerun first")

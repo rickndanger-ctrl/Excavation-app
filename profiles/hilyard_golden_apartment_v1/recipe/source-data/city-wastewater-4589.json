@@ -1,0 +1,27 @@
+{
+  "retrieved_date": "2026-08-21",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "authority": "City of Eugene Geographic Information Services",
+  "source_crs": "EPSG:2914",
+  "requested_output_crs": "EPSG:6823",
+  "point_query": "https://gis.eugene-or.gov/arcgis/rest/services/PWE/Wastewater/MapServer/2/query?where=STRUCT_1%20IN%20(13262,2039)&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+  "line_query": "https://gis.eugene-or.gov/arcgis/rest/services/PWE/Wastewater/MapServer/4/query?where=UNIQUE_ID%3D4589&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+  "authority_note": "Reference-derived City GIS extract. It is not project survey control, a capacity determination, or tie-in approval and must be superseded by owner-accepted survey/as-built information.",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [186204.3303484077, 98606.53612011911]},
+      "properties": {"OBJECTID": 14825, "STRUCT_1": 13262, "MANHOLE_TYPE": "WMH", "MANHOLE_DEPTH": 5.0, "OWNER": "EUGENE", "SURVEY_STATUS": " ", "RIM_ELEV88": 443.87, "RIM_ELEV29": 440.0, "BASIN_ID": "DA-22"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [186419.23203282736, 98610.94800503107]},
+      "properties": {"OBJECTID": 14828, "STRUCT_1": 2039, "MANHOLE_TYPE": "WMH", "MANHOLE_DEPTH": 15.71, "OWNER": "EUGENE", "SURVEY_STATUS": "Yes", "RIM_ELEV88": 444.27, "RIM_ELEV29": 440.4, "BASIN_ID": "DA-12"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "LineString", "coordinates": [[186204.3303484077, 98606.53612011911], [186207.56306755057, 98606.60231816645], [186230.1548380436, 98607.0661049634], [186419.23203282736, 98610.94800503107]]},
+      "properties": {"OBJECTID": 3203, "UNIQUE_ID": 4589, "STRUCT_1": 13262, "STRUCT_2": 2039, "STRUCT_TYPE": "WLINE", "OWNER": "EUGENE", "DIAMETER": 8, "STRUCT_LENGTH": 237.0, "PIPE_MATERIAL": "FOLDED FORM LINER", "YRCONST": 1951, "YRRECONST": 2000, "REHAB_TYPE": "LINER", "UPSTREAM_ELEV88": 438.87, "DOWNSTREAM_ELEV88": 437.47, "UPSTREAM_ELEV29": 435.0, "DOWNSTREAM_ELEV29": 433.6, "SLOPE": 0.5910000205039978}
+    }
+  ]
+}

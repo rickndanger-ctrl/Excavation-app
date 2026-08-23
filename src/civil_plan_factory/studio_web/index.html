@@ -22,77 +22,83 @@
     </aside>
     <main>
       <section id="empty-state" class="empty-state">
-        <div class="empty-mark">⌖</div><h1>Choose a project</h1><p>Open an existing semantic civil job or create an explicit intake draft.</p>
+        <div class="empty-mark">⌖</div><h1>Choose a project</h1><p>Open an original semantic civil design or create an explicit incomplete draft.</p>
       </section>
       <div id="workspace" hidden>
         <section class="project-heading">
           <div><span class="eyebrow">Active project</span><h1 id="project-name"></h1><p id="project-meta"></p></div>
           <div id="validation-chip" class="chip"></div>
         </section>
-        <nav class="workflow" aria-label="Model Studio workflow">
-          <span class="active">1 · Intake</span><span>2 · Author</span><span>3 · Validate & build</span><span>4 · Publish handoff</span>
+        <p class="workspace-purpose">Build the finished job once, place every work layer over it, then send the same visual package to the field.</p>
+        <nav id="operator-steps" class="operator-steps" aria-label="Model Studio workflow">
+          <a href="#step-job" data-flow-step="job"><b>1</b><span><strong>Add plans & set goal</strong><small>Company plan package</small></span></a>
+          <a href="#step-layout" data-flow-step="layout"><b>2</b><span><strong>Build the 2D model</strong><small>Finished-job layout</small></span></a>
+          <a href="#step-layers" data-flow-step="layers"><b>3</b><span><strong>Review layers</strong><small>Work over finished job</small></span></a>
+          <a href="#step-publish" data-flow-step="publish"><b>4</b><span><strong>Send to the app</strong><small>Field-ready package</small></span></a>
         </nav>
         <div id="notice" class="notice" hidden></div>
-        <section class="card factory-window">
-          <div class="card-heading"><div><span class="eyebrow">Factory window</span><h2>Observable dry run</h2></div><span id="observation-stage" class="chip blocked">Intake</span></div>
-          <div class="current-action"><span>Current action</span><strong id="current-action"></strong></div>
-          <div class="observation-metrics">
-            <div><span>Revision</span><strong id="observation-revision">—</strong></div><div><span>Source locks</span><strong id="source-lock-count">0 / 0</strong></div><div><span>Human review</span><strong id="human-review-count">0</strong></div><div><span>Automated time</span><strong id="automated-time">0s</strong></div><div><span>Operator time</span><strong id="manual-time">0s</strong></div><div><span>Result class</span><strong id="result-classification">not assessed</strong></div>
-          </div>
-          <div class="observation-detail-grid">
-            <div><h3>Input and checksum evidence</h3><div id="evidence-list" class="evidence-list"></div></div><div><h3>Outputs and handoff</h3><div id="output-list" class="evidence-list"></div></div><div><h3>Operator decisions</h3><div id="touch-list" class="evidence-list"></div></div>
-          </div>
-          <form id="operator-touch-form" class="touch-form">
-            <label>Activity<select name="activity" required><option value="source_intake">Source intake</option><option value="metadata_review">Metadata / revision review</option><option value="canonical_authoring">Canonical model authoring</option><option value="human_review">Human review</option><option value="phone_check">Phone / layer check</option><option value="source_phone_comparison">Source-to-phone comparison</option><option value="repair">Repair and regression</option><option value="rollback_cleanup">Rollback / cleanup</option></select></label>
-            <label>Minutes<input name="minutes" type="number" min="0.1" step="0.1" required></label>
-            <label>Result classification<select name="result_classification"><option value="not_assessed">Not assessed</option><option value="passed_verifiable_gates">Passed verifiable gates</option><option value="valid_fail_closed_incomplete_plans">Valid fail-closed: incomplete plans</option><option value="pipeline_defect">Pipeline defect</option></select></label>
-            <label class="touch-note">Evidence / decision note<input name="note" required placeholder="What was checked, decided, blocked, or repaired?"></label>
-            <button class="primary" type="submit">Record operator touch</button>
-          </form>
-          <p class="guardrail">Classification records operator judgment; it never clears a validation gate. “100%” means every verifiable in-scope criterion passed and every unknown is explicit—not fabricated certainty.</p>
+        <section id="next-action-card" class="next-action-card">
+          <div><span class="eyebrow">What happens next</span><h2 id="next-action-title">Set the goal for this job</h2><p id="next-action-copy">Tell Model Studio what field employees need to understand from the finished job.</p></div>
+          <button id="next-action-button" class="primary">Continue</button>
         </section>
-        <div class="dashboard-grid">
-          <section class="card intake-card">
-            <div class="card-heading"><div><span class="eyebrow">Source intake</span><h2>Plan-set inputs</h2></div><span id="input-count" class="metric"></span></div>
-            <label id="dropzone" class="dropzone">
-              <input id="plan-input" type="file" accept="application/pdf,.pdf">
-              <span class="upload-icon">⇧</span><strong>Drop a PDF plan set here</strong><small>or choose a file · bytes are SHA-256 locked on intake</small>
-            </label>
-            <p class="guardrail">New inputs remain <code>unknown</code> and support no model claims until reviewed into the canonical bundle.</p>
+        <div class="operator-flow">
+          <section id="step-job" class="operator-step card">
+            <div class="step-number">1</div>
+            <div class="step-body"><div class="card-heading"><div><span class="eyebrow">Job setup</span><h2>Set up the job</h2><p>Add the company’s project plans, then state what employees must understand from the finished-job view.</p></div><span class="step-status chip blocked" data-step-status="job">Not started</span></div>
+              <section id="design-brief-card" class="authoring-card" hidden>
+                <form id="design-brief-form" class="touch-form">
+                  <label class="touch-note">Field-user goal<textarea name="goal" rows="4" required placeholder="Example: Show the finished apartment site first, then show every utility in relation to it."></textarea></label>
+                  <div id="brief-profile-summary" class="publication-result"></div>
+                  <button class="primary" type="submit">Save job goal</button>
+                </form>
+                <span id="brief-badge" class="visually-hidden">Required</span>
+              </section>
+              <section class="company-plan-intake">
+                <div class="intake-heading"><div><strong>Add the company’s project plans</strong><p>Upload the complete PDF plan package supplied for this job.</p></div><span id="input-count" class="metric"></span></div>
+                <label id="dropzone" class="dropzone">
+                  <input id="plan-input" type="file" accept="application/pdf,.pdf">
+                  <span class="upload-icon">⇧</span><strong>Drop the company plan PDF here</strong><small>or click to choose the plan package</small>
+                </label>
+                <p class="intake-truth"><strong>Current capability:</strong> the uploaded file is stored and checksum-locked. General conversion of an arbitrary company plan into our custom semantic 2D model is the next pipeline stage—not something this screen silently claims is finished.</p>
+              </section>
+            </div>
           </section>
-          <section class="card pipeline-card">
-            <div class="card-heading"><div><span class="eyebrow">Canonical execution</span><h2>Pipeline run</h2></div><button id="run-pipeline" class="primary">Run canonical pipeline</button></div>
-            <div class="progress-track"><span id="progress-bar"></span></div>
-            <div class="stage-row"><strong id="run-stage">Not started</strong><span id="run-detail">Validation → artifacts → parity</span></div>
-            <div id="artifact-list" class="artifact-list"></div>
+          <section id="step-layout" class="operator-step card">
+            <div class="step-number">2</div>
+            <div class="step-body"><div class="card-heading"><div><span class="eyebrow">Finished product</span><h2>Build the finished-job 2D model</h2><p>Create the easy site view: building, parking, sidewalks, curbs, landscape, entries, and measurement tips.</p></div><span class="step-status chip blocked" data-step-status="layout">Waiting</span></div>
+              <div class="step-action-row"><div><strong id="authoring-title">Original custom plan</strong><p id="authoring-copy">The semantic model authors the proposed layout. Reference plans do not.</p><div id="authoring-result" class="publication-result"></div></div><button id="author-reviewed-model" class="primary" disabled>Build finished-job model</button></div>
+              <span id="authoring-eyebrow" class="visually-hidden">Design authority</span><span id="authoring-badge" class="visually-hidden">Unavailable</span>
+            </div>
           </section>
-          <section class="card authoring-card">
-            <div class="card-heading"><div><span class="eyebrow">Reviewed source adapter</span><h2>Canonical authoring</h2></div><span id="authoring-badge" class="chip blocked">Unavailable</span></div>
-            <p id="authoring-copy">A checksum-matched reviewed source is required.</p>
-            <button id="author-reviewed-model" class="primary" disabled>Author reviewed model</button>
-            <div id="authoring-result" class="publication-result"></div>
+          <section id="step-layers" class="operator-step card">
+            <div class="step-number">3</div>
+            <div class="step-body"><div class="card-heading"><div><span class="eyebrow">Construction information</span><h2>Review the work layers</h2><p>Generate grading, sanitary, storm, water, and dry-utility layers over the finished-job layout.</p></div><span class="step-status chip blocked" data-step-status="layers">Waiting</span></div>
+              <div class="layer-strip"><span>Finished job</span><span>Grading</span><span>Sanitary</span><span>Storm</span><span>Water</span><span>Dry utilities</span></div>
+              <div class="step-action-row"><div><strong id="run-stage">Not started</strong><p id="run-detail">Build and verify every layer before publishing.</p><div class="progress-track"><span id="progress-bar"></span></div><div id="artifact-list" class="artifact-list"></div></div><button id="run-pipeline" class="primary">Build and check layers</button></div>
+            </div>
           </section>
-          <section class="card provenance-card">
-            <div class="card-heading"><div><span class="eyebrow">Evidence basis</span><h2>Provenance</h2></div></div>
-            <div id="provenance" class="provenance"></div>
-          </section>
-          <section class="card readiness-card">
-            <div class="card-heading"><div><span class="eyebrow">Field Map handoff</span><h2>Publication readiness</h2></div><span id="readiness-badge" class="chip blocked">Blocked</span></div>
-            <p id="readiness-copy">A passing canonical validation and artifact parity report are required.</p>
-            <div id="readiness-groups" class="readiness-groups"></div>
-            <button id="publish" class="publish" disabled>Publish immutable package</button>
-            <div id="publication-result" class="publication-result"></div>
+          <section id="step-publish" class="operator-step card">
+            <div class="step-number">4</div>
+            <div class="step-body"><div class="card-heading"><div><span class="eyebrow">Company handoff</span><h2>Send it to the field app</h2><p>Package the finished-job model and its layers so workers can open the same job on their phones.</p></div><span id="readiness-badge" class="step-status chip blocked" data-step-status="publish">Blocked</span></div>
+              <p id="readiness-copy">Build and verify the layers before publishing.</p><div id="readiness-groups" class="readiness-groups"></div>
+              <div class="publish-actions"><button id="publish" class="publish" disabled>Publish to company app</button><a class="field-app-link" href="http://127.0.0.1:4175" target="_blank" rel="noreferrer">Open field app preview ↗</a></div>
+              <div id="publication-result" class="publication-result"></div>
+            </div>
           </section>
         </div>
-        <section class="card issues-card">
-          <div class="card-heading"><div><span class="eyebrow">Fail-closed review queue</span><h2>Validation outcomes</h2></div><span id="issue-count" class="metric"></span></div>
-          <p>Review notes are audit records only. An issue clears only after the authoritative model is corrected and the validator passes.</p>
-          <div id="issues" class="issues"></div>
-        </section>
+        <details class="advanced-panel">
+          <summary><span><strong>Technical details</strong><small>Validation, provenance, receipts, and run logs</small></span><span>Show details</span></summary>
+          <div class="advanced-grid">
+            <section class="card intake-card"><div class="card-heading"><div><span class="eyebrow">Plan intake safeguards</span><h2>Original files stay traceable</h2></div></div><p>The source plan package remains checksum-locked and separate from the generated 2D model. Uploaded geometry cannot become proposed geometry without an explicit reviewed authoring stage, so the system can show exactly what came from the company and what our model authored.</p></section>
+            <section class="card provenance-card"><div class="card-heading"><div><span class="eyebrow">Evidence basis</span><h2>Provenance</h2></div></div><div id="provenance" class="provenance"></div></section>
+            <section class="card factory-window"><div class="card-heading"><div><span class="eyebrow">Run log</span><h2>Pipeline evidence</h2></div><span id="observation-stage" class="chip blocked">Intake</span></div><div class="current-action"><span>Current action</span><strong id="current-action"></strong></div><div class="observation-metrics"><div><span>Revision</span><strong id="observation-revision">—</strong></div><div><span>Source locks</span><strong id="source-lock-count">0 / 0</strong></div><div><span>Human review</span><strong id="human-review-count">0</strong></div><div><span>Automated time</span><strong id="automated-time">0s</strong></div><div><span>Operator time</span><strong id="manual-time">0s</strong></div><div><span>Result class</span><strong id="result-classification">not assessed</strong></div></div><div class="observation-detail-grid"><div><h3>Inputs</h3><div id="evidence-list" class="evidence-list"></div></div><div><h3>Outputs</h3><div id="output-list" class="evidence-list"></div></div><div><h3>Decisions</h3><div id="touch-list" class="evidence-list"></div></div></div><form id="operator-touch-form" class="touch-form"><label>Activity<select name="activity" required><option value="source_intake">Source intake</option><option value="metadata_review">Metadata / revision review</option><option value="canonical_authoring">Canonical model authoring</option><option value="human_review">Human review</option><option value="phone_check">Phone / layer check</option><option value="source_phone_comparison">Source-to-phone comparison</option><option value="repair">Repair and regression</option><option value="rollback_cleanup">Rollback / cleanup</option></select></label><label>Minutes<input name="minutes" type="number" min="0.1" step="0.1" required></label><label>Result classification<select name="result_classification"><option value="not_assessed">Not assessed</option><option value="passed_verifiable_gates">Passed verifiable gates</option><option value="valid_fail_closed_incomplete_plans">Valid fail-closed: incomplete plans</option><option value="pipeline_defect">Pipeline defect</option></select></label><label class="touch-note">Evidence / decision note<input name="note" required placeholder="What was checked, decided, blocked, or repaired?"></label><button class="primary" type="submit">Record operator touch</button></form></section>
+            <section class="card issues-card"><div class="card-heading"><div><span class="eyebrow">Fail-closed review queue</span><h2>Validation outcomes</h2></div><span id="issue-count" class="metric"></span></div><div id="issues" class="issues"></div></section>
+          </div>
+        </details>
       </div>
     </main>
   </div>
-  <dialog id="project-dialog"><form id="project-form" method="dialog"><h2>Create intake project</h2><p>No coordinates, engineering inputs, or approvals will be invented.</p><label>Project name<input name="name" required placeholder="Oak Street Intake"></label><label>Slug<input name="slug" pattern="[a-z][a-z0-9-]*" placeholder="oak-street"></label><div class="dialog-actions"><button value="cancel">Cancel</button><button class="primary" value="default">Create project</button></div></form></dialog>
+  <dialog id="project-dialog"><form id="project-form" method="dialog"><h2>Create original custom plan</h2><p>Start with the job goal and our versioned semantic recipe. No found plan supplies the proposed layout.</p><label>Project name<input name="name" required placeholder="Hilyard Apartment Custom Plan"></label><label>Slug<input name="slug" pattern="[a-z][a-z0-9\-]*" placeholder="hilyard-custom"></label><label>Workflow<select name="authoring_mode"><option value="custom_semantic_design">Original custom plan</option><option value="source_extraction_benchmark">Separate source-extraction benchmark</option></select></label><label>Original design profile<select name="profile_id"><option value="hilyard_golden_apartment_v1">Hilyard apartment v1 — complete semantic recipe</option></select></label><div class="dialog-actions"><button value="cancel">Cancel</button><button class="primary" value="default">Create design draft</button></div></form></dialog>
   <dialog id="review-dialog"><form id="review-form" method="dialog"><h2>Record recovery note</h2><p id="review-issue"></p><input name="issue_key" type="hidden"><label>Reviewer<input name="reviewer" required></label><label>Recovery / resolution note<textarea name="note" rows="4" required></textarea></label><p class="guardrail">This note does not bypass or downgrade the validation gate.</p><div class="dialog-actions"><button value="cancel">Cancel</button><button class="primary" value="default">Record review</button></div></form></dialog>
   <script src="/app.js"></script>
 </body>

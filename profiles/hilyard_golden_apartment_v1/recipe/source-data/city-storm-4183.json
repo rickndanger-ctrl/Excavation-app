@@ -1,0 +1,27 @@
+{
+  "retrieved_date": "2026-08-21",
+  "disclaimer": "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION",
+  "authority": "City of Eugene Geographic Information Services",
+  "source_crs": "EPSG:2914",
+  "requested_output_crs": "EPSG:6823",
+  "point_query": "https://gis.eugene-or.gov/arcgis/rest/services/PWW/StormGeoNetwork/MapServer/0/query?where=STRUCT_1%20IN%20(51800,51759)&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+  "line_query": "https://gis.eugene-or.gov/arcgis/rest/services/PWW/StormGeoNetwork/MapServer/2/query?where=UNIQUE_ID%3D4183&outFields=*&returnGeometry=true&outSR=6823&f=geojson",
+  "authority_note": "Reference-derived City GIS extract. It is not project survey control, a downstream HGL or capacity determination, an approved outfall, or connection authorization and must be superseded by owner-accepted survey/as-built information.",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [186405.13368722968, 98611.68495728051]},
+      "properties": {"OBJECTID": 6392, "STRUCT_1": 51800, "MANHOLE_TYPE": "DMH", "OWNER": "EUGENE", "SURVEY_STATUS": " ", "BASIN_CODE": "AMUP-180", "RIM_ELEV88": 444.87, "MANHOLE_DEPTH": 10.54, "TO_OUTFALL": "51759", "RIM_ELEV29": 441.0}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [186393.9129717884, 98752.56221835488]},
+      "properties": {"OBJECTID": 4728, "STRUCT_1": 51759, "MANHOLE_TYPE": "DTAP", "OWNER": "EUGENE", "SURVEY_STATUS": " ", "BASIN_CODE": "AMUP-180", "RIM_ELEV88": 0.0, "MANHOLE_DEPTH": 0.0, "TO_OUTFALL": "51730", "RIM_ELEV29": 0.0}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "LineString", "coordinates": [[186405.13368722968, 98611.68495728051], [186393.9129717884, 98752.56221835488]]},
+      "properties": {"OBJECTID": 24610, "UNIQUE_ID": 4183, "STRUCT_1": 51800, "STRUCT_2": 51759, "STRUCT_TYPE": "DTOTAP", "DIAMETER": 21, "STRUCT_LENGTH": 100.0, "UPSTREAM_ELEV88": 434.33, "DOWNSTREAM_EVEL88": 433.67, "PIPE_MATERIAL": "CONCRETE-SEALED_JOINT", "YRCONST": 1957, "OWNER": "EUGENE", "DOWNSTREAM_ELEV29": 429.8, "UPSTREAM_ELEV29": 430.46, "Shape_Length": 141.32197346861184}
+    }
+  ]
+}

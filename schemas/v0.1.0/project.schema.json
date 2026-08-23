@@ -6,7 +6,37 @@
   "required": ["schema_version", "project", "spatial_reference", "features", "networks", "deliverables", "contract_coverage"],
   "properties": {
     "schema_version": {"const": "civil-plan-factory.project/v0.1.0"},
-    "project": {"type": "object", "required": ["id", "name", "revision", "jurisdiction", "disclaimer"]},
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "revision", "jurisdiction", "disclaimer"],
+      "properties": {
+        "authoring_mode": {"const": "custom_semantic_design"}
+      }
+    },
+    "authoring_contract": {
+      "type": "object",
+      "required": ["mode", "canonical_authority", "deliverable_origin", "reference_material_policy"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"const": "custom_semantic_design"},
+        "canonical_authority": {"const": "semantic_model"},
+        "deliverable_origin": {"const": "generated_from_canonical_model"},
+        "reference_material_policy": {"const": "context_and_conventions_only"}
+      }
+    },
+    "geometry_origin_receipt": {
+      "type": "object",
+      "required": ["schema_version", "origin", "recipe_sha256", "reference_context_phase_ids", "authored_feature_count", "authored_geometry_membership_sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {"const": "civil-plan-factory.geometry-origin-receipt/v0.1.0"},
+        "origin": {"const": "registered_semantic_recipe"},
+        "recipe_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "reference_context_phase_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+        "authored_feature_count": {"type": "integer", "minimum": 1},
+        "authored_geometry_membership_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
     "artifact_contract": {
       "type": "object",
       "required": ["basename"],

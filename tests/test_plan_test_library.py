@@ -42,6 +42,14 @@ class CivilPlanTestLibraryTests(unittest.TestCase):
             self.assertEqual(row["archetype"], model["fixture_profile"]["archetype"])
             self.assertTrue(model["fixture_profile"]["variation_summary"])
             self.assertEqual(SAFETY_NOTICE, build_semantic_manifest(model)["safetyNotice"])
+            if row["slug"] != "hilyard":
+                self.assertNotEqual(
+                    "custom_semantic_design",
+                    model["project"].get("authoring_mode"),
+                    "paused transformed fixtures must not inherit original-plan authority",
+                )
+                self.assertNotIn("authoring_contract", model)
+                self.assertNotIn("geometry_origin_receipt", model)
 
         project_ids = {model["project"]["id"] for model in models}
         self.assertEqual(10, len(project_ids))

@@ -1961,6 +1961,9 @@ def _canonical_semantic_contract(model: dict[str, Any]) -> dict[str, Any]:
             "id": model["project"]["id"],
             "project_name": model["project"]["name"],
             "disclaimer": DISCLAIMER,
+            "authoring_contract": model.get("authoring_contract"),
+            "custom_authoring": model.get("custom_authoring"),
+            "geometry_origin_receipt": model.get("geometry_origin_receipt"),
             "plan": {
                 "availability": artifact.get(
                     "plan_availability", "generated_vector_pdf"
@@ -2114,6 +2117,9 @@ def _semantic_contract_from_artifact(
             "id": semantic.get("id"),
             "project_name": semantic.get("projectName"),
             "disclaimer": semantic.get("disclaimer"),
+            "authoring_contract": semantic.get("authoringContract"),
+            "custom_authoring": semantic.get("customAuthoring"),
+            "geometry_origin_receipt": semantic.get("geometryOriginReceipt"),
             "plan": {
                 "availability": plan.get("availability"),
                 "image_url": plan.get("imageUrl"),

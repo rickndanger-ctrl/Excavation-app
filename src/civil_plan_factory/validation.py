@@ -1,5 +1,6 @@
 from dataclasses import asdict, dataclass
 import hashlib
+import json
 import math
 from pathlib import Path
 import re
@@ -9,6 +10,30 @@ from typing import Any, Iterable
 DISCLAIMER = "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"
 SAFETY_NOTICE = "FICTIONAL TEST DATA — NOT FOR CONSTRUCTION — NOT ENGINEERED OR PERMITTED"
 SEMANTIC_ONLY_DELIVERY_MODE = "semantic_only_ungeoreferenced"
+CUSTOM_AUTHORING_MODE = "custom_semantic_design"
+CUSTOM_SEMANTIC_AUTHORING_CONTRACT = {
+    "mode": CUSTOM_AUTHORING_MODE,
+    "canonical_authority": "semantic_model",
+    "deliverable_origin": "generated_from_canonical_model",
+    "reference_material_policy": "context_and_conventions_only",
+}
+CUSTOM_GEOMETRY_ORIGIN_RECEIPT_SCHEMA = (
+    "civil-plan-factory.geometry-origin-receipt/v0.1.0"
+)
+CUSTOM_GEOMETRY_ORIGIN = "registered_semantic_recipe"
+CUSTOM_AUTHORING_MARKERS = frozenset({
+    "authoring_contract",
+    "custom_authoring",
+    "custom_plan_authoring",
+    "custom_plan_profile",
+    "geometry_origin_receipt",
+})
+FORBIDDEN_PROPOSED_GEOMETRY_ORIGINS = {
+    "input_plan",
+    "reference_plan",
+    "reference_source",
+    "source_plan",
+}
 SEMANTIC_REVIEW_GRID_BASIS = (
     "UNREFERENCED_REVIEW_GRID — uncalibrated source-sheet display coordinates; "
     "not field feet or staking control."
@@ -161,6 +186,72 @@ def _validate_provenance(path: str, entity: dict[str, Any]) -> list[ValidationIs
     return issues
 
 
+def custom_geometry_membership(
+    model: dict[str, Any], reference_context_phase_ids: list[str]
+) -> dict[str, Any]:
+    """Digest the identity, geometry, and provenance of custom-authored features.
+
+    Reference/context phases are deliberately outside this receipt. Their GIS or
+    source geometry remains usable as visibly non-authoritative context, while
+    every other feature is locked to the registered semantic recipe.
+    """
+
+    if (
+        not isinstance(reference_context_phase_ids, list)
+        or not reference_context_phase_ids
+        or any(
+            not isinstance(phase_id, str) or not phase_id
+            for phase_id in reference_context_phase_ids
+        )
+        or len(set(reference_context_phase_ids)) != len(reference_context_phase_ids)
+    ):
+        raise ValueError("Reference-context phase IDs must be a unique non-empty list")
+    reference_phases = set(reference_context_phase_ids)
+    members: list[dict[str, Any]] = []
+    for group in ("points", "lines", "polygons", "surfaces"):
+        geometry_key = "boundary" if group == "surfaces" else "coordinates"
+        for feature in model.get("features", {}).get(group, []):
+            if feature.get("phase_id") in reference_phases:
+                continue
+            members.append({
+                "collection": group,
+                "id": feature.get("id"),
+                "feature_type": feature.get("feature_type"),
+                "system": feature.get("system"),
+                "layer_id": feature.get("layer_id"),
+                "phase_id": feature.get("phase_id"),
+                "geometry": feature.get(geometry_key),
+                "provenance": feature.get("provenance"),
+            })
+    members.sort(key=lambda row: (str(row["collection"]), str(row["id"])))
+    encoded = json.dumps(
+        members,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return {
+        "authored_feature_count": len(members),
+        "authored_geometry_membership_sha256": hashlib.sha256(encoded).hexdigest(),
+    }
+
+
+def has_custom_authoring_claim(model: dict[str, Any]) -> bool:
+    """Keep every custom authorship claim in the fail-closed custom lane.
+
+    The explicit mode is only one part of the authority record.  Deleting it
+    must not let a profile, receipt, contract, or authored marker fall through
+    to the more permissive reviewed-source workflow.
+    """
+
+    project = model.get("project")
+    return (
+        isinstance(project, dict)
+        and project.get("authoring_mode") == CUSTOM_AUTHORING_MODE
+    ) or any(marker in model for marker in CUSTOM_AUTHORING_MARKERS)
+
+
 def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     project = model.get("project", {})
@@ -173,6 +264,122 @@ def validate_model(model: dict[str, Any]) -> list[ValidationIssue]:
         issues.append(_issue("units.missing", "spatial_reference.horizontal_units", "Horizontal units are required"))
     if not spatial.get("vertical_datum"):
         issues.append(_issue("datum.missing", "spatial_reference.vertical_datum", "Vertical datum is required"))
+
+    if has_custom_authoring_claim(model):
+        if project.get("authoring_mode") != CUSTOM_AUTHORING_MODE:
+            issues.append(_issue(
+                "authoring.custom_mode_missing",
+                "project.authoring_mode",
+                "Custom authorship markers require the explicit custom semantic design mode",
+            ))
+        authoring_contract = model.get("authoring_contract")
+        if authoring_contract is None:
+            issues.append(_issue(
+                "authoring.custom_contract_missing",
+                "authoring_contract",
+                "Original custom plans require an explicit semantic-authoring contract",
+            ))
+        elif (
+            authoring_contract != CUSTOM_SEMANTIC_AUTHORING_CONTRACT
+            or "reviewed_source_adapter" in model
+        ):
+            issues.append(_issue(
+                "authoring.custom_contract_invalid",
+                "authoring_contract",
+                "Custom plans must originate in the semantic model; references may provide context and conventions only",
+            ))
+
+        receipt = model.get("geometry_origin_receipt")
+        reference_context_phase_ids = ["phase-01-existing-control-erosion"]
+        if not isinstance(receipt, dict):
+            issues.append(_issue(
+                "authoring.geometry_origin_receipt_missing",
+                "geometry_origin_receipt",
+                "Custom proposed geometry requires a registered semantic-recipe receipt",
+            ))
+        else:
+            receipt_shape_valid = (
+                receipt.get("schema_version") == CUSTOM_GEOMETRY_ORIGIN_RECEIPT_SCHEMA
+                and receipt.get("origin") == CUSTOM_GEOMETRY_ORIGIN
+                and isinstance(receipt.get("recipe_sha256"), str)
+                and re.fullmatch(r"[0-9a-f]{64}", receipt.get("recipe_sha256", "")) is not None
+                and isinstance(receipt.get("reference_context_phase_ids"), list)
+                and isinstance(receipt.get("authored_feature_count"), int)
+                and not isinstance(receipt.get("authored_feature_count"), bool)
+                and isinstance(receipt.get("authored_geometry_membership_sha256"), str)
+                and re.fullmatch(
+                    r"[0-9a-f]{64}",
+                    receipt.get("authored_geometry_membership_sha256", ""),
+                ) is not None
+            )
+            if not receipt_shape_valid:
+                issues.append(_issue(
+                    "authoring.geometry_origin_receipt_invalid",
+                    "geometry_origin_receipt",
+                    "Custom geometry receipt is incomplete or uses an unsupported origin",
+                ))
+            else:
+                candidate_reference_phase_ids = receipt[
+                    "reference_context_phase_ids"
+                ]
+                try:
+                    actual_membership = custom_geometry_membership(
+                        model, candidate_reference_phase_ids
+                    )
+                except (TypeError, ValueError):
+                    issues.append(_issue(
+                        "authoring.geometry_origin_receipt_invalid",
+                        "geometry_origin_receipt.reference_context_phase_ids",
+                        "Custom geometry receipt has invalid reference-context membership",
+                    ))
+                else:
+                    reference_context_phase_ids = candidate_reference_phase_ids
+                    declared_membership = {
+                        "authored_feature_count": receipt["authored_feature_count"],
+                        "authored_geometry_membership_sha256": receipt[
+                            "authored_geometry_membership_sha256"
+                        ],
+                    }
+                    if declared_membership != actual_membership:
+                        issues.append(_issue(
+                            "authoring.geometry_origin_receipt_mismatch",
+                            "geometry_origin_receipt.authored_geometry_membership_sha256",
+                            "Custom proposed geometry differs from its registered semantic recipe",
+                        ))
+                custom_authoring = model.get("custom_authoring")
+                if (
+                    isinstance(custom_authoring, dict)
+                    and custom_authoring.get("recipe_sha256")
+                    != receipt.get("recipe_sha256")
+                ):
+                    issues.append(_issue(
+                        "authoring.geometry_origin_receipt_mismatch",
+                        "geometry_origin_receipt.recipe_sha256",
+                        "Custom geometry receipt is not bound to the authored recipe digest",
+                    ))
+
+        reference_phases = set(reference_context_phase_ids)
+        for group in ("points", "lines", "polygons", "surfaces"):
+            for index, feature in enumerate(model.get("features", {}).get(group, [])):
+                if (
+                    feature.get("phase_id") not in reference_phases
+                    and feature.get("provenance", {}).get("status") == "reference-derived"
+                ):
+                    issues.append(_issue(
+                        "authoring.proposed_geometry_reference_derived",
+                        f"features.{group}[{index}].provenance.status",
+                        "Proposed custom-plan geometry cannot be derived from reference material",
+                    ))
+                claimed_origin = feature.get("provenance", {}).get("geometry_origin")
+                if (
+                    feature.get("phase_id") not in reference_phases
+                    and claimed_origin in FORBIDDEN_PROPOSED_GEOMETRY_ORIGINS
+                ):
+                    issues.append(_issue(
+                        "authoring.proposed_geometry_input_origin",
+                        f"features.{group}[{index}].provenance.geometry_origin",
+                        "Proposed custom-plan geometry cannot claim an input or reference plan as its origin",
+                    ))
 
     artifact = model.get("artifact_contract", {})
     if artifact.get("delivery_mode") == SEMANTIC_ONLY_DELIVERY_MODE:

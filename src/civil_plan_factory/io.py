@@ -37,16 +37,26 @@ def resolve_local_source_citation(
 
 
 def resolve_model_source_citations(
-    model: dict[str, Any], project_directory: Path
+    model: dict[str, Any],
+    project_directory: Path,
+    *,
+    trusted_resolved_citations: set[tuple[str, str]] | None = None,
 ) -> dict[str, Any]:
     """Return an in-memory model with local citations resolved for validation."""
 
     resolved_model = copy.deepcopy(model)
+    trusted = trusted_resolved_citations or set()
     for source in resolved_model.get("sources", []):
         lock = source.get("lock", {})
         if lock.get("kind") != "local_file":
             continue
         citation = source.get("citation")
+        if (
+            isinstance(citation, str)
+            and Path(citation).is_absolute()
+            and (str(source.get("id")), citation) in trusted
+        ):
+            continue
         require_project_bundle = (
             source.get("citation_scope") == PROJECT_BUNDLE_CITATION_SCOPE
         )
@@ -183,6 +193,19 @@ def _apply_fixture_transform(model: dict[str, Any], fixture: dict[str, Any]) -> 
             gradient_x * sine + gradient_y * cosine, 12
         )
 
+    # These mechanically transformed library fixtures are regression samples,
+    # not independently authored custom plans. Never let them inherit the
+    # registered recipe's authorship claim or its now-invalid geometry receipt.
+    model.get("project", {}).pop("authoring_mode", None)
+    for key in (
+        "authoring_contract",
+        "custom_authoring",
+        "custom_plan_authoring",
+        "custom_plan_profile",
+        "geometry_origin_receipt",
+    ):
+        model.pop(key, None)
+
 
 def _add_fixture_building_copies(model: dict[str, Any], count: int) -> None:
     if count <= 0:
@@ -227,8 +250,16 @@ def load_project_bundle(project_path: Path) -> dict[str, Any]:
     project_path = Path(project_path).resolve()
     raw = json.loads(project_path.read_text(encoding="utf-8"))
     base_reference = raw.pop("base_project", None)
+    trusted_base_citations: set[tuple[str, str]] = set()
     if base_reference:
         model = load_project_bundle(project_path.parent / base_reference)
+        trusted_base_citations = {
+            (str(source.get("id")), str(source.get("citation")))
+            for source in model.get("sources", [])
+            if source.get("lock", {}).get("kind") == "local_file"
+            and isinstance(source.get("citation"), str)
+            and Path(source["citation"]).is_absolute()
+        }
         _deep_update(model, raw)
     else:
         model = raw
@@ -246,4 +277,8 @@ def load_project_bundle(project_path: Path) -> dict[str, Any]:
         _apply_fixture_transform(model, fixture_transform)
     building_copies = int(model.pop("fixture_building_copies", 0))
     _add_fixture_building_copies(model, building_copies)
-    return resolve_model_source_citations(model, project_path.parent)
+    return resolve_model_source_citations(
+        model,
+        project_path.parent,
+        trusted_resolved_citations=trusted_base_citations,
+    )

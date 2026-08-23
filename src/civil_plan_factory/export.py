@@ -120,6 +120,11 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         "projectName": model["project"]["name"],
         "disclaimer": DISCLAIMER,
         "safetyNotice": SAFETY_NOTICE,
+        "authoringContract": copy.deepcopy(model.get("authoring_contract")),
+        "customAuthoring": copy.deepcopy(model.get("custom_authoring")),
+        "geometryOriginReceipt": copy.deepcopy(
+            model.get("geometry_origin_receipt")
+        ),
         "plan": {
             "availability": artifact.get("plan_availability", "generated_vector_pdf"),
             "imageUrl": artifact.get(

@@ -1,0 +1,121 @@
+{
+  "schema_version": "civil-plan-factory.design-slice/v0.1.0",
+  "project_revision": "sanitary-0.3.0",
+  "feature_updates": {
+    "points": [
+      {
+        "id": "penetration-sanitary",
+        "label": "Sanitary building terminal - provisional invert",
+        "provenance": {
+          "status": "reviewed_assumption",
+          "source_ids": ["src-project-brief", "src-design-constraints"],
+          "decision_ids": ["decision-building-interfaces", "decision-sanitary-alignment", "decision-sanitary-vertical-basis"]
+        },
+        "field_detail": {
+          "terminal_only": false,
+          "invert_ft": 439.70,
+          "vertical_datum": "NAVD88",
+          "invert_status": "reviewed_assumption",
+          "diameter_in": 6,
+          "material": "PVC",
+          "sdr": 35,
+          "connected_edge_id": "san-edge-service-01",
+          "unavailable": {
+            "$replace": {
+              "owner_approval": "Building penetration and downstream tie remain unapproved.",
+              "capacity": "Public-system capacity has not been established."
+            }
+          }
+        }
+      }
+    ],
+    "polygons": [
+      {
+        "id": "building-apartment-1",
+        "field_detail": {
+          "finished_floor_elevation_ft": 445.0,
+          "finished_floor_elevation_status": "reviewed_assumption",
+          "finished_floor_elevation_provisional": true,
+          "finished_floor_elevation_decision_id": "decision-sanitary-vertical-basis",
+          "ffe_warning": "Provisional gravity-envelope input only; replace after surveyed topography and grading review."
+        }
+      }
+    ]
+  },
+  "features": {
+    "points": [
+      {
+        "id": "sanitary-cleanout-01", "feature_type": "sanitary_cleanout", "system": "sanitary", "layer_id": "sanitary", "phase_id": "proposed", "label": "CO-1 sanitary cleanout", "coordinates": [186327.0, 98552.0],
+        "provenance": {"status": "reviewed_assumption", "source_ids": ["src-design-constraints"], "decision_ids": ["decision-sanitary-alignment"]},
+        "field_detail": {"searchable": true, "map_target": "sanitary-cleanout-01", "structure_type": "two-way cleanout", "rim_elevation_ft": 444.45, "invert_in_ft": 439.62, "invert_out_ft": 439.62, "vertical_datum": "NAVD88", "vertical_status": "reviewed_assumption", "surface_id": "surface-proposed-grade", "owner_approval_status": "unknown", "warnings": ["Rim/grade is provisional; verify with surveyed grading."], "checklist": ["Verify coordinates and grade", "Confirm cleanout configuration", "Record as-built rim and inverts"]}
+      },
+      {
+        "id": "sanitary-tie-in-01", "feature_type": "sanitary_tie_in", "system": "sanitary", "layer_id": "sanitary", "phase_id": "proposed", "label": "TI-1 assumed connection to City UNIQUE_ID 4589", "coordinates": [186327.0, 98609.054501],
+        "provenance": {"status": "reviewed_assumption", "source_ids": ["src-eugene-wastewater-gis", "src-design-constraints"], "decision_ids": ["decision-sanitary-alignment"]},
+        "field_detail": {"searchable": true, "map_target": "sanitary-tie-in-01", "structure_type": "assumed wye/tap connection node", "incoming_invert_ft": 439.049455, "public_main_invert_ft": 438.070855, "connection_drop_ft": 0.9786, "vertical_datum": "NAVD88", "owner_approval_status": "unknown", "capacity_status": "unknown", "warnings": ["Tie location, fitting, invert, capacity, and owner acceptance are unresolved."], "checklist": ["Pothole and survey public main", "Obtain City connection approval", "Confirm capacity", "Replace assumed tie coordinates and elevations"]}
+      },
+      {
+        "id": "sanitary-public-mh-13262", "feature_type": "sanitary_manhole_existing", "system": "sanitary", "layer_id": "sanitary", "phase_id": "existing", "label": "Existing City MH STRUCT_1 13262", "coordinates": [186204.330348, 98606.53612],
+        "provenance": {"status": "reference-derived", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": []},
+        "field_detail": {"searchable": true, "map_target": "sanitary-public-mh-13262", "city_structure_id": 13262, "rim_elevation_navd88_ft": 443.87, "outgoing_invert_navd88_ft": 438.87, "gis_survey_status": "not_reported", "survey_authority": false, "capacity_status": "unknown", "replacement_note": "Supersede with owner-accepted survey/as-built data."}
+      },
+      {
+        "id": "sanitary-public-mh-2039", "feature_type": "sanitary_manhole_existing", "system": "sanitary", "layer_id": "sanitary", "phase_id": "existing", "label": "Existing City MH STRUCT_1 2039", "coordinates": [186419.232033, 98610.948005],
+        "provenance": {"status": "reference-derived", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": []},
+        "field_detail": {"searchable": true, "map_target": "sanitary-public-mh-2039", "city_structure_id": 2039, "rim_elevation_navd88_ft": 444.27, "incoming_invert_navd88_ft": 437.47, "gis_survey_status": "Yes", "survey_authority": false, "capacity_status": "unknown", "replacement_note": "GIS survey-status attribute is reference context, not project survey control; supersede with owner-accepted survey/as-built data."}
+      }
+    ],
+    "lines": [
+      {
+        "id": "sanitary-service-seg-01", "feature_type": "sanitary_service", "system": "sanitary", "layer_id": "sanitary", "phase_id": "proposed", "label": "SS-1 building terminal to CO-1", "coordinates": [[186335.0, 98552.0], [186327.0, 98552.0]],
+        "provenance": {"status": "generated", "source_ids": ["src-design-constraints"], "decision_ids": ["decision-sanitary-alignment", "decision-sanitary-vertical-basis"]},
+        "field_detail": {"searchable": true, "map_target": "sanitary-service-seg-01"}
+      },
+      {
+        "id": "sanitary-service-seg-02", "feature_type": "sanitary_service", "system": "sanitary", "layer_id": "sanitary", "phase_id": "proposed", "label": "SS-2 CO-1 to TI-1", "coordinates": [[186327.0, 98552.0], [186327.0, 98609.054501]],
+        "provenance": {"status": "generated", "source_ids": ["src-design-constraints", "src-eugene-wastewater-gis"], "decision_ids": ["decision-sanitary-alignment", "decision-sanitary-vertical-basis"]},
+        "field_detail": {"searchable": true, "map_target": "sanitary-service-seg-02"}
+      },
+      {
+        "id": "sanitary-public-main-4589-upstream", "feature_type": "sanitary_main_existing", "system": "sanitary", "layer_id": "sanitary", "phase_id": "existing", "label": "City 8-inch main UNIQUE_ID 4589 - upstream context", "coordinates": [[186204.330348, 98606.53612], [186207.563068, 98606.602318], [186230.154838, 98607.066105], [186327.0, 98609.054501]],
+        "provenance": {"status": "reference-derived", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": []},
+        "field_detail": {"searchable": true, "map_target": "sanitary-public-main-4589-upstream", "source_asset_id": 4589, "diameter_in": 8, "material": "FOLDED FORM LINER", "survey_authority": false, "capacity_status": "unknown"}
+      },
+      {
+        "id": "sanitary-public-main-4589-downstream", "feature_type": "sanitary_main_existing", "system": "sanitary", "layer_id": "sanitary", "phase_id": "existing", "label": "City 8-inch main UNIQUE_ID 4589 - downstream context", "coordinates": [[186327.0, 98609.054501], [186419.232033, 98610.948005]],
+        "provenance": {"status": "reference-derived", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": []},
+        "field_detail": {"searchable": true, "map_target": "sanitary-public-main-4589-downstream", "source_asset_id": 4589, "diameter_in": 8, "material": "FOLDED FORM LINER", "survey_authority": false, "capacity_status": "unknown"}
+      }
+    ],
+    "polygons": [],
+    "surfaces": [
+      {
+        "id": "surface-existing-sanitary-reference", "feature_type": "proposed_grade_profile_surface", "layer_id": "grading", "phase_id": "proposed", "label": "Coordinated proposed-grade envelope for sanitary profile", "boundary": [[186315.0, 98540.0], [186345.0, 98540.0], [186345.0, 98620.0], [186315.0, 98620.0], [186315.0, 98540.0]], "vertical_datum": "NAVD88",
+        "provenance": {"status": "generated", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": ["decision-sanitary-vertical-basis"]},
+        "field_detail": {"searchable": true, "map_target": "surface-existing-sanitary-reference", "fitness_for_use": "sanitary-envelope-only", "survey_authority": false, "method": "generated from the reviewed whole-job proposed-grade controls", "source_surface_id": "surface-proposed-grade", "profile_samples": [{"station_ft": 0.0, "elevation_ft": 444.57, "status": "reviewed_assumption"}, {"station_ft": 8.0, "elevation_ft": 444.45, "status": "reviewed_assumption"}, {"station_ft": 65.054501, "elevation_ft": 444.20, "status": "reviewed_assumption"}], "replacement_note": "Replace with surveyed proposed grades before real design use."}
+      }
+    ]
+  },
+  "network": {
+    "id": "network-sanitary", "system": "sanitary", "network_kind": "gravity",
+    "nodes": [
+      {"id": "san-node-building-terminal", "node_type": "building_terminal", "geometry_feature_id": "penetration-sanitary", "provenance": {"status": "reviewed_assumption", "source_ids": [], "decision_ids": ["decision-building-interfaces", "decision-sanitary-alignment"]}, "field_detail": {"invert_ft": 439.70, "vertical_datum": "NAVD88", "provisional": true}},
+      {"id": "san-node-cleanout-01", "node_type": "cleanout", "geometry_feature_id": "sanitary-cleanout-01", "provenance": {"status": "reviewed_assumption", "source_ids": ["src-design-constraints"], "decision_ids": ["decision-sanitary-alignment"]}, "field_detail": {"invert_in_ft": 439.62, "invert_out_ft": 439.62, "connection_drop_ft": 0.0, "structure_drop_rule_applies": false}},
+      {"id": "san-node-tie-in-01", "node_type": "tie_in", "geometry_feature_id": "sanitary-tie-in-01", "provenance": {"status": "reviewed_assumption", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": ["decision-sanitary-alignment"]}, "field_detail": {"incoming_invert_ft": 439.049455, "outgoing_invert_ft": 438.070855, "connection_drop_ft": 0.9786, "minimum_drop_ft": 0.1, "structure_drop_rule_applies": true, "owner_approval_status": "unknown", "capacity_status": "unknown"}},
+      {"id": "san-node-public-upstream", "node_type": "existing_manhole", "geometry_feature_id": "sanitary-public-mh-13262", "provenance": {"status": "reference-derived", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": []}, "field_detail": {"invert_out_ft": 438.87}},
+      {"id": "san-node-public-downstream", "node_type": "existing_manhole", "geometry_feature_id": "sanitary-public-mh-2039", "provenance": {"status": "reference-derived", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": []}, "field_detail": {"invert_in_ft": 437.47}}
+    ],
+    "edges": [
+      {"id": "san-edge-service-01", "edge_type": "building_service", "geometry_feature_id": "sanitary-service-seg-01", "from_node_id": "san-node-building-terminal", "to_node_id": "san-node-cleanout-01", "terminal_feature_id": "penetration-sanitary", "provenance": {"status": "generated", "source_ids": ["src-design-constraints"], "decision_ids": ["decision-sanitary-alignment", "decision-sanitary-vertical-basis", "decision-whole-job-vertical-coordination"]}, "field_detail": {"length_ft": 8.0, "upstream_invert_ft": 439.70, "downstream_invert_ft": 439.62, "slope_percent": 1.0, "minimum_slope_percent": 1.0, "diameter_in": 6, "material": "PVC", "sdr": 35, "velocity_fps": null, "design_depth_ratio": null, "hydraulic_status": "unknown_pending_design_flow", "surface_id": "surface-proposed-grade", "surface_samples_ft": [444.57, 444.45], "cover_samples_ft": [4.37, 4.33], "minimum_cover_ft": 4.0, "materials": {"bedding": "City trench bedding reference; final detail unresolved", "backfill": "City trench backfill reference; final section unresolved", "compaction": "90% minimum reference outside ROW; verify final location/specification"}, "warnings": ["Velocity and d/D cannot be verified until design flow/capacity inputs exist.", "Cover is below 5-foot desirable upstream target; shallow-condition review required.", "FFE, surface, and invert are provisional."], "checklist": ["Verify terminal elevation", "Stake line and grade", "Inspect bedding", "Test service", "Record as-built"]}},
+      {"id": "san-edge-service-02", "edge_type": "building_service", "geometry_feature_id": "sanitary-service-seg-02", "from_node_id": "san-node-cleanout-01", "to_node_id": "san-node-tie-in-01", "provenance": {"status": "generated", "source_ids": ["src-design-constraints", "src-eugene-wastewater-gis"], "decision_ids": ["decision-sanitary-alignment", "decision-sanitary-vertical-basis", "decision-whole-job-vertical-coordination"]}, "field_detail": {"length_ft": 57.054501, "upstream_invert_ft": 439.62, "downstream_invert_ft": 439.049455, "slope_percent": 1.0, "minimum_slope_percent": 1.0, "diameter_in": 6, "material": "PVC", "sdr": 35, "velocity_fps": null, "design_depth_ratio": null, "hydraulic_status": "unknown_pending_design_flow", "surface_id": "surface-proposed-grade", "surface_samples_ft": [444.45, 444.20], "cover_samples_ft": [4.33, 4.650545], "minimum_cover_ft": 4.0, "materials": {"bedding": "City trench bedding reference; final detail unresolved", "backfill": "City trench backfill reference; final section unresolved", "compaction": "90% minimum reference outside ROW; verify final location/specification"}, "warnings": ["Velocity and d/D cannot be verified until design flow/capacity inputs exist.", "Cover is below 5-foot desirable upstream target; shallow-condition review required.", "Tie-in approval and capacity are unknown."], "checklist": ["Pothole public main", "Confirm approved fitting and invert", "Stake line and grade", "Inspect bedding", "Test service", "Record as-built"]}},
+      {"id": "san-edge-public-upstream", "edge_type": "existing_public_main", "geometry_feature_id": "sanitary-public-main-4589-upstream", "from_node_id": "san-node-public-upstream", "to_node_id": "san-node-tie-in-01", "provenance": {"status": "reference-derived", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": []}, "field_detail": {"length_ft": 122.6955, "canonical_geometry_total_length_ft": 214.921, "source_reported_total_length_ft": 237.0, "source_reported_slope_percent": 0.59100002, "upstream_invert_ft": 438.87, "downstream_invert_ft": 438.070855, "slope_percent": 0.651324, "minimum_slope_percent": 0.4, "diameter_in": 8, "material": "FOLDED FORM LINER", "cover_samples_ft": [4.333333, 5.360805], "validation_scope": "reference_context", "capacity_status": "unknown", "warnings": ["City GIS reports 237 feet at 0.591%; canonical mapped geometry totals 214.921 feet and uses its own geometry-derived slope.", "City GIS reference only; not capacity approval or survey control."]}},
+      {"id": "san-edge-public-downstream", "edge_type": "existing_public_main", "geometry_feature_id": "sanitary-public-main-4589-downstream", "from_node_id": "san-node-tie-in-01", "to_node_id": "san-node-public-downstream", "provenance": {"status": "reference-derived", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": []}, "field_detail": {"length_ft": 92.2255, "canonical_geometry_total_length_ft": 214.921, "source_reported_total_length_ft": 237.0, "source_reported_slope_percent": 0.59100002, "upstream_invert_ft": 438.070855, "downstream_invert_ft": 437.47, "slope_percent": 0.651506, "minimum_slope_percent": 0.4, "diameter_in": 8, "material": "FOLDED FORM LINER", "cover_samples_ft": [5.360805, 6.133333], "validation_scope": "reference_context", "capacity_status": "unknown", "warnings": ["City GIS reports 237 feet at 0.591%; canonical mapped geometry totals 214.921 feet and uses its own geometry-derived slope.", "City GIS reference only; not capacity approval or survey control."]}}
+    ]
+  },
+  "deliverables": {
+    "plans": [{"id": "plan-sanitary-service", "title": "Hilyard sanitary sewer plan", "asset_ids": ["penetration-sanitary", "sanitary-cleanout-01", "sanitary-tie-in-01", "sanitary-service-seg-01", "sanitary-service-seg-02", "sanitary-public-main-4589-upstream", "sanitary-public-main-4589-downstream"], "scale": "1 in = 40 ft", "status": "generated_from_canonical_model"}],
+    "profiles": [{"id": "profile-sanitary-service", "title": "Hilyard sanitary sewer profile", "alignment_edge_ids": ["san-edge-service-01", "san-edge-service-02"], "vertical_datum": "NAVD88", "horizontal_scale": "1 in = 10 ft", "vertical_scale": "1 in = 2 ft", "surface_id": "surface-proposed-grade", "segments": [{"edge_id": "san-edge-service-01", "start_station_ft": 0.0, "end_station_ft": 8.0, "length_ft": 8.0, "upstream_invert_ft": 439.70, "downstream_invert_ft": 439.62}, {"edge_id": "san-edge-service-02", "start_station_ft": 8.0, "end_station_ft": 65.054501, "length_ft": 57.054501, "upstream_invert_ft": 439.62, "downstream_invert_ft": 439.049455}], "surface_samples": [{"station_ft": 0.0, "elevation_ft": 444.57}, {"station_ft": 8.0, "elevation_ft": 444.45}, {"station_ft": 65.054501, "elevation_ft": 444.20}], "provenance": {"status": "generated", "source_ids": ["src-eugene-wastewater-gis"], "decision_ids": ["decision-sanitary-vertical-basis", "decision-sanitary-alignment", "decision-whole-job-vertical-coordination"]}}],
+    "schedules": [{"id": "schedule-sanitary-assets", "schedule_type": "sanitary_nodes_edges_and_vertical_control", "asset_ids": ["san-node-building-terminal", "san-node-cleanout-01", "san-node-tie-in-01", "san-node-public-upstream", "san-node-public-downstream", "san-edge-service-01", "san-edge-service-02", "san-edge-public-upstream", "san-edge-public-downstream"]}]
+  },
+  "contract_coverage": {"system": "sanitary", "availability": "modeled", "provenance_status": "mixed", "reason": "Complete fictional building service and profile are modeled against reference-derived City GIS context. FFE, surface extrapolation, tie-in, capacity, owner acceptance, and project survey remain unresolved assumptions."}
+}
