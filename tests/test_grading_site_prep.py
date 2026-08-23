@@ -134,10 +134,10 @@ class GradingSitePrepBuildTests(unittest.TestCase):
             output = Path(directory)
             from pypdf import PdfReader
             reader = PdfReader(output / "hilyard-site-layout.pdf")
-            self.assertEqual(12, len(reader.pages))
+            self.assertEqual(9, len(reader.pages))
             page_text = [page.extract_text() or "" for page in reader.pages]
-            self.assertIn("GRADING / DRAINAGE PLAN", page_text[10])
-            self.assertIn("EARTHWORK / SITE PREPARATION PLAN", page_text[11])
+            self.assertIn("MASS EXCAVATION, BUILDING PAD, EARTHWORK, AND ROUGH GRADING", page_text[3])
+            self.assertIn("CLEARING, STRIPPING, TEMPORARY ACCESS, AND SITE PREPARATION", page_text[2])
             for text in page_text:
                 self.assertIn(DISCLAIMER, text)
             for page in reader.pages:
@@ -146,7 +146,7 @@ class GradingSitePrepBuildTests(unittest.TestCase):
             self.assertEqual("valid", parity["status"])
             self.assertEqual([], parity["mismatches"])
             self.assertEqual(0.0, parity["pdf_vs_geopackage"]["maximum_delta_ft"])
-            expected_counts = {"canonical_points": 50, "canonical_lines": 47, "canonical_polygons": 27, "canonical_surfaces": 5}
+            expected_counts = {"canonical_points": 50, "canonical_lines": 49, "canonical_polygons": 34, "canonical_surfaces": 5}
             for layer, expected in expected_counts.items():
                 result = subprocess.run([str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(output / "hilyard-site-layout.gpkg"), layer], text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)

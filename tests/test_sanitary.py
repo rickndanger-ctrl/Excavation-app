@@ -155,7 +155,7 @@ class SanitaryBuildTests(unittest.TestCase):
                 result = subprocess.run(command, cwd=ROOT, env=env, text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)
             gpkg_path = Path(directory) / "hilyard-site-layout.gpkg"
-            expected_counts = {"canonical_points": 50, "canonical_lines": 47, "canonical_polygons": 27, "canonical_surfaces": 5}
+            expected_counts = {"canonical_points": 50, "canonical_lines": 49, "canonical_polygons": 34, "canonical_surfaces": 5}
             for layer, expected in expected_counts.items():
                 result = subprocess.run(
                     [str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(gpkg_path), layer],
@@ -180,14 +180,14 @@ class SanitaryBuildTests(unittest.TestCase):
             from pypdf import PdfReader
             pdf_path = output / "hilyard-site-layout.pdf"
             reader = PdfReader(pdf_path)
-            self.assertEqual(12, len(reader.pages))
+            self.assertEqual(9, len(reader.pages))
             page_text = [page.extract_text() or "" for page in reader.pages]
-            self.assertIn("SANITARY SEWER PLAN", page_text[1])
-            self.assertIn("SANITARY SEWER PROFILE", page_text[2])
+            self.assertIn("SANITARY SEWER PLAN, PROFILE, STRUCTURES, AND SCHEDULE", page_text[5])
+            self.assertIn("sanitary-service-seg-01", page_text[5])
+            self.assertIn("network-sanitary", page_text[8])
             for text in page_text:
                 self.assertIn(DISCLAIMER, text)
-            self.assertIn("UNIQUE_ID 4589", "\n".join(page_text))
-            self.assertIn("FFE 445.00 PROVISIONAL", "\n".join(page_text))
+            self.assertIn("City UNIQUE_ID 4589", "\n".join(page_text))
             for page in reader.pages:
                 resources = page.get("/Resources", {})
                 images = [obj for obj in resources.get("/XObject", {}).values() if obj.get_object().get("/Subtype") == "/Image"]

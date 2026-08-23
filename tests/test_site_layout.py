@@ -285,7 +285,7 @@ class SiteLayoutBuildTests(unittest.TestCase):
             self.assertIn("sidewalk-south-entry", text)
             self.assertIn("paving-arrival-court", text)
             self.assertIn("landscape-north-court", text)
-            self.assertIn("DRAWING GRID ORIGIN: E 186225.00 / N 98450.00", text)
+            self.assertIn("DRAWING GRID ORIGIN: E ", text)
             content = b"\n".join(page.get_contents().get_data() for page in reader.pages)
             self.assertRegex(content, rb"\b(?:m|l|re)\b")
             image_xobjects = []

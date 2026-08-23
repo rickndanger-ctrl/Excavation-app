@@ -192,11 +192,10 @@ class StormBuildTests(unittest.TestCase):
             output = Path(directory)
             from pypdf import PdfReader
             reader = PdfReader(output / "hilyard-site-layout.pdf")
-            self.assertEqual(12, len(reader.pages))
+            self.assertEqual(9, len(reader.pages))
             page_text = [page.extract_text() or "" for page in reader.pages]
-            self.assertIn("STORM / ROOF DRAINAGE PLAN", page_text[3])
-            self.assertIn("STORM / ROOF DRAINAGE PROFILE", page_text[4])
-            self.assertIn("STORM ASSET SCHEDULE / TEST DETAILS", page_text[5])
+            self.assertIn("STORM AND ROOF DRAINAGE PLAN, PROFILE, STRUCTURES, AND SCHEDULE", page_text[4])
+            self.assertIn("storm-edge-roof-lateral-01", page_text[8])
             for text in page_text:
                 self.assertIn(DISCLAIMER, text)
             for page in reader.pages:
@@ -208,7 +207,7 @@ class StormBuildTests(unittest.TestCase):
             self.assertEqual("pdf_content_stream_geometry_markers_vs_gpkg", parity["pdf_vs_geopackage"]["method"])
             self.assertLessEqual(parity["pdf_vs_geopackage"]["maximum_delta_ft"], 0.01)
 
-            expected_counts = {"canonical_points": 50, "canonical_lines": 47, "canonical_polygons": 27, "canonical_surfaces": 5}
+            expected_counts = {"canonical_points": 50, "canonical_lines": 49, "canonical_polygons": 34, "canonical_surfaces": 5}
             for layer, expected in expected_counts.items():
                 result = subprocess.run([str(QGIS_BIN / "ogrinfo"), "-json", "-features", str(output / "hilyard-site-layout.gpkg"), layer], text=True, capture_output=True)
                 self.assertEqual(0, result.returncode, result.stderr)

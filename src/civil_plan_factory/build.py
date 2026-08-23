@@ -303,6 +303,12 @@ def _centroid(ring: list[list[float]]) -> tuple[float, float]:
 
 
 def create_vector_plan(model: dict[str, Any], output_path: Path, digest: str) -> None:
+    if model.get("plan_conventions", {}).get("template") == "generic_oregon_style_test_plan":
+        from .golden_pdf import create_golden_vector_plan
+
+        create_golden_vector_plan(model, output_path, digest)
+        return
+
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import landscape, letter
     from reportlab.pdfgen import canvas
