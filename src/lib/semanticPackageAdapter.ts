@@ -1,4 +1,12 @@
-import type { BlueprintObject, FeatureGeometry, JobsitePackage, PlanCalibrationSummary, Point } from '../types/jobsite';
+import type {
+  BlueprintObject,
+  FeatureGeometry,
+  JobsitePackage,
+  PlanCalibrationSummary,
+  Point,
+  VerticalDesignBasis,
+  VerticalProfile,
+} from '../types/jobsite';
 
 const SUPPORTED_SCHEMA = 'excavation-field-map.jobsite-package/v0.1.0';
 const REQUIRED_DISCLAIMER = 'NOT FOR CONSTRUCTION';
@@ -29,6 +37,7 @@ type UnknownRecord = Record<string, unknown> & {
   phases?: unknown[];
   plan?: { widthFt?: number; heightFt?: number };
   planCalibration?: unknown;
+  verticalDesignBasis?: unknown;
   unavailable?: Array<Record<string, unknown>>;
   userHeading?: number;
   geometryFeatureId?: string;
@@ -123,6 +132,126 @@ function provenance(source: UnknownRecord) {
 
 function formatValue(value: unknown): string | undefined {
   return typeof value === 'number' ? String(value) : typeof value === 'string' ? value : undefined;
+}
+
+function finiteNumber(source: UnknownRecord, key: string, context: string): number {
+  const value = source[key];
+  if (!Number.isFinite(value)) throw new Error(`${context} ${key} must be a finite number`);
+  return Number(value);
+}
+
+function requiredString(source: UnknownRecord, key: string, context: string): string {
+  const value = source[key];
+  if (typeof value !== 'string' || !value.trim()) throw new Error(`${context} ${key} is required`);
+  return value;
+}
+
+function parseVerticalDesignBasis(value: unknown): VerticalDesignBasis | undefined {
+  if (value == null) return undefined;
+  const basis = record(value, 'verticalDesignBasis');
+  if (basis.vertical_datum !== 'NAVD88') throw new Error('verticalDesignBasis vertical_datum must be NAVD88');
+  if (basis.units !== 'feet') throw new Error('verticalDesignBasis units must be feet');
+  if (basis.status !== 'reviewed_assumption') throw new Error('verticalDesignBasis status must be reviewed_assumption');
+  if (basis.benchmark_status !== 'unknown') throw new Error('verticalDesignBasis benchmark_status must be unknown');
+  if (basis.survey_authority !== false) throw new Error('verticalDesignBasis survey_authority must be false');
+
+  const finishedFloorElevationFt = finiteNumber(basis, 'finished_floor_elevation_ft', 'verticalDesignBasis');
+  const buildingSubgradeElevationFt = finiteNumber(basis, 'building_subgrade_elevation_ft', 'verticalDesignBasis');
+  const finishedFloorToSubgradeDepthFt = finiteNumber(basis, 'finished_floor_to_subgrade_depth_ft', 'verticalDesignBasis');
+  const exteriorLandingElevationFt = finiteNumber(basis, 'exterior_landing_elevation_ft', 'verticalDesignBasis');
+  if (finishedFloorElevationFt <= buildingSubgradeElevationFt
+    || Math.abs(finishedFloorElevationFt - buildingSubgradeElevationFt - finishedFloorToSubgradeDepthFt) > 0.0005) {
+    throw new Error('verticalDesignBasis finished floor, subgrade, and declared depth must agree');
+  }
+
+  const plane = record(basis.arrival_court_plane, 'verticalDesignBasis arrival_court_plane');
+  const originVertexIndex = finiteNumber(plane, 'origin_vertex_index', 'verticalDesignBasis arrival_court_plane');
+  if (!Number.isInteger(originVertexIndex) || originVertexIndex < 0) {
+    throw new Error('verticalDesignBasis arrival_court_plane origin_vertex_index must be a non-negative integer');
+  }
+  const gravityNetworkEdgeIds = array(basis.gravity_network_edge_ids, 'verticalDesignBasis gravity_network_edge_ids');
+  if (!gravityNetworkEdgeIds.every((id) => typeof id === 'string' && id.length > 0)) {
+    throw new Error('verticalDesignBasis gravity_network_edge_ids must contain feature IDs');
+  }
+
+  return {
+    verticalDatum: 'NAVD88',
+    units: 'feet',
+    status: 'reviewed_assumption',
+    benchmarkStatus: 'unknown',
+    surveyAuthority: false,
+    finishedFloorElevationFt,
+    buildingSubgradeElevationFt,
+    finishedFloorToSubgradeDepthFt,
+    exteriorLandingElevationFt,
+    arrivalCourtPlane: {
+      originFeatureId: requiredString(plane, 'origin_feature_id', 'verticalDesignBasis arrival_court_plane'),
+      originVertexIndex,
+      originElevationFt: finiteNumber(plane, 'origin_elevation_ft', 'verticalDesignBasis arrival_court_plane'),
+      risePerFootLocalX: finiteNumber(plane, 'rise_per_foot_local_x', 'verticalDesignBasis arrival_court_plane'),
+      risePerFootLocalY: finiteNumber(plane, 'rise_per_foot_local_y', 'verticalDesignBasis arrival_court_plane'),
+      drainageDirection: requiredString(plane, 'drainage_direction', 'verticalDesignBasis arrival_court_plane'),
+    },
+    gravityNetworkEdgeIds: gravityNetworkEdgeIds as string[],
+    pressureAndDryUtilityVerticalStatus: requiredString(
+      basis,
+      'pressure_and_dry_utility_vertical_status',
+      'verticalDesignBasis',
+    ),
+    decisionId: requiredString(basis, 'decision_id', 'verticalDesignBasis'),
+    replacementNote: requiredString(basis, 'replacement_note', 'verticalDesignBasis'),
+    warning: requiredString(basis, 'warning', 'verticalDesignBasis'),
+  };
+}
+
+function detailRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : undefined;
+}
+
+function formattedRange(values: number[]): string | undefined {
+  if (values.length === 0) return undefined;
+  return `${Math.min(...values).toFixed(2)}-${Math.max(...values).toFixed(2)}`;
+}
+
+function arrayRange(value: unknown): string | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return formattedRange(value.filter((item): item is number => Number.isFinite(item)));
+}
+
+function controlRange(detail: Record<string, unknown>, key: string): string | undefined {
+  if (!Array.isArray(detail.grade_controls)) return undefined;
+  const values = detail.grade_controls.flatMap((control) => {
+    const parsed = detailRecord(control);
+    return parsed && Number.isFinite(parsed[key]) ? [Number(parsed[key])] : [];
+  });
+  return formattedRange(values);
+}
+
+function parseVerticalProfile(value: unknown, featureId: string): VerticalProfile | undefined {
+  if (value === undefined) return undefined;
+  const profile = record(value, `${featureId} vertical_profile`);
+  const highElevation = finiteNumber(profile, 'high_elevation_ft', `${featureId} vertical_profile`);
+  const lowElevation = finiteNumber(profile, 'low_elevation_ft', `${featureId} vertical_profile`);
+  const run = finiteNumber(profile, 'run_ft', `${featureId} vertical_profile`);
+  const slopePercent = finiteNumber(profile, 'slope_percent', `${featureId} vertical_profile`);
+  if (run <= 0 || highElevation < lowElevation) throw new Error(`${featureId} vertical_profile has an invalid run or elevation order`);
+  return {
+    highElevation: String(highElevation),
+    lowElevation: String(lowElevation),
+    run: String(run),
+    slopePercent: String(slopePercent),
+    highLocation: formatValue(profile.high_location),
+    lowLocation: formatValue(profile.low_location),
+  };
+}
+
+function coverBasis(value: unknown): string | undefined {
+  const parsed = formatValue(value);
+  if (!parsed) return undefined;
+  const words = parsed.replaceAll('_', ' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 function consumerLayerId(source: UnknownRecord): string {
@@ -236,6 +365,19 @@ function validateGradingContract(
 function toObject(source: UnknownRecord, geometry: FeatureGeometry, center: Point, utility?: UnknownRecord): BlueprintObject {
   if (!source.id || !source.label || !source.layerId || !source.type) throw new Error('Every semantic feature requires id, label, layerId, and type');
   const detail = { ...(source.fieldDetail ?? {}), ...(utility?.fieldDetail ?? {}) };
+  const verticalProfile = parseVerticalProfile(detail.vertical_profile, source.id);
+  const profileFinishedGrade = verticalProfile
+    ? formattedRange([Number(verticalProfile.lowElevation), Number(verticalProfile.highElevation)])
+    : undefined;
+  const finishedGrade = formatValue(detail.finished_grade_elevation_ft ?? detail.finished_grade_ft)
+    ?? arrayRange(detail.finished_grade_range_ft)
+    ?? arrayRange(detail.non_entry_perimeter_grade_range_ft)
+    ?? profileFinishedGrade
+    ?? controlRange(detail, 'elevation_ft');
+  const topOfCurb = formatValue(detail.top_of_curb_elevation_ft)
+    ?? controlRange(detail, 'top_of_curb_elevation_ft');
+  const gutterElevation = formatValue(detail.gutter_elevation_ft)
+    ?? controlRange(detail, 'gutter_elevation_ft');
   const detailMaterials = detail.materials && typeof detail.materials === 'object' && !Array.isArray(detail.materials)
     ? detail.materials as Record<string, unknown> : {};
   const unavailable = detail.unavailable && typeof detail.unavailable === 'object' && !Array.isArray(detail.unavailable)
@@ -275,9 +417,25 @@ function toObject(source: UnknownRecord, geometry: FeatureGeometry, center: Poin
     },
     elevation: formatValue(detail.elevation_ft),
     verticalDatum: formatValue(source.verticalDatum ?? detail.vertical_datum ?? detail.model_vertical_datum),
-    rimElevation: formatValue(detail.rim_elevation_ft),
-    invertIn: formatValue(detail.invert_in_ft ?? detail.upstream_invert_ft),
-    invertOut: formatValue(detail.invert_out_ft ?? detail.downstream_invert_ft),
+    verticalStatus: formatValue(detail.vertical_status),
+    verticalCallout: formatValue(detail.vertical_callout),
+    verticalProfile,
+    finishedFloorElevation: formatValue(detail.finished_floor_elevation_ft),
+    finishedGrade,
+    subgradeElev: formatValue(detail.subgrade_elevation_ft ?? detail.building_subgrade_elevation_ft),
+    thresholdElevation: formatValue(detail.threshold_elevation_ft),
+    landingElevation: formatValue(detail.exterior_landing_elevation_ft),
+    topElevation: topOfCurb,
+    gutterElevation,
+    finishedSurfaceElevation: arrayRange(detail.surface_samples_ft),
+    pipeCenterlineElevation: arrayRange(detail.centerline_elevation_samples_ft),
+    utilityTopElevation: arrayRange(detail.utility_top_elevation_samples_ft),
+    coverBasis: coverBasis(detail.cover_reference),
+    curbReveal: detail.curb_reveal_ft != null ? `${detail.curb_reveal_ft} ft` : undefined,
+    rimElevation: formatValue(detail.rim_elevation_ft ?? detail.rim_elevation_navd88_ft),
+    invertElevation: formatValue(detail.invert_ft ?? detail.invert_elevation_ft),
+    invertIn: formatValue(detail.invert_in_ft ?? detail.incoming_invert_navd88_ft ?? detail.upstream_invert_ft),
+    invertOut: formatValue(detail.invert_out_ft ?? detail.outgoing_invert_navd88_ft ?? detail.downstream_invert_ft),
     pipeSlope: detail.slope_percent != null ? `${detail.slope_percent}%` : undefined,
     length: detail.length_ft != null ? `${detail.length_ft} ft` : undefined,
     notes: Object.keys(unavailable).length > 0 ? `Unavailable: ${Object.values(unavailable).join(' ')}` : undefined,
@@ -344,6 +502,7 @@ export function parseSemanticJobsiteManifest(input: unknown): JobsitePackage {
     canonicalModelVersion: source.canonical_model_version,
     disclaimer: source.disclaimer,
     planCalibration: planCalibration(source.planCalibration),
+    verticalDesignBasis: parseVerticalDesignBasis(source.verticalDesignBasis),
     unavailable: structuredClone(source.unavailable ?? []),
     phases: structuredClone(sourcePhases) as JobsitePackage['phases'],
     layers: consumerLayers(sourceLayers),

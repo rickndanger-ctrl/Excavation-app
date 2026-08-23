@@ -2,7 +2,14 @@ import { AlertTriangle, BookOpen, CheckSquare, ClipboardList, Lightbulb, MapPin,
 import { useState } from 'react';
 import { getDetailCards } from '../data/standardDetails';
 import type { GpsState } from '../hooks/useGps';
-import type { BlueprintObject, ChecklistItem, ControlPoint, ObjectStatus, SafetyFlag } from '../types/jobsite';
+import type {
+  BlueprintObject,
+  ChecklistItem,
+  ControlPoint,
+  ObjectStatus,
+  SafetyFlag,
+  VerticalDesignBasis,
+} from '../types/jobsite';
 import { formatFeet } from '../utils/distance';
 import { CalibrationPanel } from './CalibrationPanel';
 
@@ -19,6 +26,48 @@ const ALL_TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'checklist', label: 'Checklist',icon: <CheckSquare size={13} /> },
 ];
 
+const MAPPED_VERTICAL_DETAIL_KEYS = new Set([
+  'building_subgrade_elevation_ft',
+  'curb_reveal_ft',
+  'centerline_elevation_samples_ft',
+  'cover_reference',
+  'exterior_landing_elevation_ft',
+  'finished_floor_elevation_ft',
+  'finished_grade_elevation_ft',
+  'finished_grade_ft',
+  'finished_grade_range_ft',
+  'grade_controls',
+  'gutter_elevation_ft',
+  'incoming_invert_navd88_ft',
+  'invert_elevation_ft',
+  'invert_ft',
+  'invert_in_ft',
+  'invert_out_ft',
+  'model_vertical_datum',
+  'non_entry_perimeter_grade_range_ft',
+  'outgoing_invert_navd88_ft',
+  'rim_elevation_ft',
+  'rim_elevation_navd88_ft',
+  'subgrade_elevation_ft',
+  'surface_samples_ft',
+  'threshold_elevation_ft',
+  'top_of_curb_elevation_ft',
+  'utility_top_elevation_samples_ft',
+  'upstream_invert_ft',
+  'downstream_invert_ft',
+  'vertical_callout',
+  'vertical_datum',
+  'vertical_profile',
+  'vertical_status',
+]);
+
+function feet(value: string): string {
+  const trimmed = value.trim();
+  return /^-?\d+(?:\.\d+)?(?:\s*(?:-|→)\s*-?\d+(?:\.\d+)?)?$/.test(trimmed)
+    ? `${trimmed} ft`
+    : trimmed;
+}
+
 // ── Type labels ───────────────────────────────────────────────────────────────
 
 function typeLabel(type: BlueprintObject['type']): string {
@@ -26,6 +75,7 @@ function typeLabel(type: BlueprintObject['type']): string {
     manhole: 'Manhole',
     catch_basin: 'Catch Basin',
     curb: 'Curb Section',
+    curb_line: 'Curb Line',
     sidewalk: 'Sidewalk',
     grade_break: 'Grade Break',
     parking_lot: 'Parking / Pavement Zone',
@@ -72,7 +122,15 @@ const SAFETY_CONFIG: Record<NonNullable<SafetyFlag>, { label: string; className:
 // ── Foreman strip ─────────────────────────────────────────────────────────────
 
 function ForemanStrip({ object, distanceFt }: { object: BlueprintObject; distanceFt: number | null }) {
-  const keyElev = object.rimElevation ?? object.topElevation ?? object.finishedGrade ?? object.elevation ?? null;
+  const keyElev = object.rimElevation
+    ?? object.finishedFloorElevation
+    ?? object.thresholdElevation
+    ?? object.topElevation
+    ?? object.finishedGrade
+    ?? object.pipeCenterlineElevation
+    ?? object.utilityTopElevation
+    ?? object.elevation
+    ?? null;
   const warning = object.warnings?.[0] ?? null;
   return (
     <div className="foreman-strip">
@@ -87,7 +145,7 @@ function ForemanStrip({ object, distanceFt }: { object: BlueprintObject; distanc
         {keyElev && (
           <div className="foreman-strip__metric">
             <span className="foreman-strip__metric-label">Key Elev.</span>
-            <span className="foreman-strip__metric-val">{keyElev} ft</span>
+            <span className="foreman-strip__metric-val">{feet(keyElev)}</span>
           </div>
         )}
         {object.depth && (
@@ -121,7 +179,15 @@ function ForemanStrip({ object, distanceFt }: { object: BlueprintObject; distanc
 
 // ── Tab: Summary ──────────────────────────────────────────────────────────────
 
-function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceFt: number | null }) {
+function SummaryTab({
+  object,
+  distanceFt,
+  verticalDesignBasis,
+}: {
+  object: BlueprintObject;
+  distanceFt: number | null;
+  verticalDesignBasis?: VerticalDesignBasis;
+}) {
   const rawMeasurementTips = object.fieldDetail?.measurement_tips;
   const measurementTips = Array.isArray(rawMeasurementTips)
     ? rawMeasurementTips.filter((value): value is { id?: string; label: string; distance_ft: number } => (
@@ -132,7 +198,7 @@ function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceF
     ))
     : [];
   const semanticDetails = Object.entries(object.fieldDetail ?? {})
-    .filter(([key]) => key !== 'measurement_tips');
+    .filter(([key]) => key !== 'measurement_tips' && !MAPPED_VERTICAL_DETAIL_KEYS.has(key));
   return (
     <div className="tab-content">
       {measurementTips.length > 0 && (
@@ -146,6 +212,13 @@ function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceF
             ))}
           </ul>
           <p className="measurement-tips__basis">Plan-derived guidance · verify control before field use</p>
+        </div>
+      )}
+
+      {object.verticalCallout && (
+        <div className="vertical-callout" aria-label="Vertical Callout">
+          <span>Vertical Callout</span>
+          <strong>{object.verticalCallout}</strong>
         </div>
       )}
 
@@ -178,28 +251,46 @@ function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceF
       <div className="detail-section">
         <div className="detail-section__title">Elevations</div>
         <dl className="detail-list">
+          {object.finishedFloorElevation && (
+            <div className="detail-row detail-row--highlight">
+              <dt>Finished Floor</dt>
+              <dd>{feet(object.finishedFloorElevation)}</dd>
+            </div>
+          )}
           {object.rimElevation && (
             <div className="detail-row detail-row--highlight">
               <dt>Rim / Grate</dt>
-              <dd>{object.rimElevation} ft</dd>
+              <dd>{feet(object.rimElevation)}</dd>
             </div>
           )}
           {object.invertIn && (
             <div className="detail-row detail-row--highlight">
               <dt>Invert In</dt>
-              <dd>{object.invertIn}</dd>
+              <dd>{feet(object.invertIn)}</dd>
             </div>
           )}
           {object.invertOut && (
             <div className="detail-row detail-row--highlight">
               <dt>Invert Out</dt>
-              <dd>{object.invertOut}</dd>
+              <dd>{feet(object.invertOut)}</dd>
             </div>
           )}
           {object.invertElevation && !object.invertIn && !object.invertOut && (
             <div className="detail-row detail-row--highlight">
               <dt>Invert</dt>
-              <dd>{object.invertElevation}</dd>
+              <dd>{feet(object.invertElevation)}</dd>
+            </div>
+          )}
+          {object.thresholdElevation && (
+            <div className="detail-row detail-row--highlight">
+              <dt>Threshold</dt>
+              <dd>{feet(object.thresholdElevation)}</dd>
+            </div>
+          )}
+          {object.landingElevation && (
+            <div className="detail-row detail-row--highlight">
+              <dt>Exterior Landing</dt>
+              <dd>{feet(object.landingElevation)}</dd>
             </div>
           )}
           {object.dropAcross && (
@@ -210,14 +301,44 @@ function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceF
           )}
           {object.topElevation && (
             <div className="detail-row detail-row--highlight">
-              <dt>Top Elevation</dt>
-              <dd>{object.topElevation} ft</dd>
+              <dt>{object.type === 'curb' || object.type === 'curb_line' ? 'Top of Curb' : 'Top Elevation'}</dt>
+              <dd>{feet(object.topElevation)}</dd>
+            </div>
+          )}
+          {object.gutterElevation && (
+            <div className="detail-row detail-row--highlight">
+              <dt>Gutter</dt>
+              <dd>{feet(object.gutterElevation)}</dd>
             </div>
           )}
           {object.finishedGrade && (
             <div className="detail-row detail-row--highlight">
               <dt>Finished Grade</dt>
-              <dd>{object.finishedGrade} ft</dd>
+              <dd>{feet(object.finishedGrade)}</dd>
+            </div>
+          )}
+          {object.finishedSurfaceElevation && (
+            <div className="detail-row detail-row--highlight">
+              <dt>Finished Surface</dt>
+              <dd>{feet(object.finishedSurfaceElevation)}</dd>
+            </div>
+          )}
+          {object.pipeCenterlineElevation && (
+            <div className="detail-row detail-row--highlight">
+              <dt>Pipe Centerline</dt>
+              <dd>{feet(object.pipeCenterlineElevation)}</dd>
+            </div>
+          )}
+          {object.utilityTopElevation && (
+            <div className="detail-row detail-row--highlight">
+              <dt>Utility Top</dt>
+              <dd>{feet(object.utilityTopElevation)}</dd>
+            </div>
+          )}
+          {object.coverBasis && (
+            <div className="detail-row">
+              <dt>Cover Basis</dt>
+              <dd>{object.coverBasis}</dd>
             </div>
           )}
           {object.elevation && !object.rimElevation && !object.topElevation && (
@@ -259,11 +380,39 @@ function SummaryTab({ object, distanceFt }: { object: BlueprintObject; distanceF
           {object.subgradeElev && (
             <div className="detail-row">
               <dt>Subgrade</dt>
-              <dd>{object.subgradeElev} ft</dd>
+              <dd>{feet(object.subgradeElev)}</dd>
             </div>
+          )}
+          {object.verticalProfile && (
+            <>
+              <div className="detail-row"><dt>Profile High</dt><dd>{feet(object.verticalProfile.highElevation)}{object.verticalProfile.highLocation ? ` · ${object.verticalProfile.highLocation}` : ''}</dd></div>
+              <div className="detail-row"><dt>Profile Low</dt><dd>{feet(object.verticalProfile.lowElevation)}{object.verticalProfile.lowLocation ? ` · ${object.verticalProfile.lowLocation}` : ''}</dd></div>
+              <div className="detail-row"><dt>Profile Run</dt><dd>{feet(object.verticalProfile.run)}</dd></div>
+              <div className="detail-row"><dt>Profile Slope</dt><dd>{object.verticalProfile.slopePercent}%</dd></div>
+            </>
+          )}
+          {object.verticalDatum && (
+            <div className="detail-row"><dt>Vertical Datum</dt><dd>{object.verticalDatum}</dd></div>
+          )}
+          {object.verticalStatus && (
+            <div className="detail-row"><dt>Vertical Status</dt><dd>{object.verticalStatus.replaceAll('_', ' ')}</dd></div>
           )}
         </dl>
       </div>
+
+      {verticalDesignBasis && (
+        <div className="detail-section vertical-basis">
+          <div className="detail-section__title">Whole-job vertical basis</div>
+          <dl className="detail-list">
+            <div className="detail-row"><dt>Datum</dt><dd>{verticalDesignBasis.verticalDatum} · {verticalDesignBasis.units}</dd></div>
+            <div className="detail-row"><dt>Status</dt><dd>{verticalDesignBasis.status.replaceAll('_', ' ')}</dd></div>
+            <div className="detail-row"><dt>Benchmark</dt><dd>Benchmark {verticalDesignBasis.benchmarkStatus}</dd></div>
+            <div className="detail-row"><dt>Survey authority</dt><dd>No</dd></div>
+            <div className="detail-row"><dt>FFE / pad SG</dt><dd>{verticalDesignBasis.finishedFloorElevationFt.toFixed(2)} / {verticalDesignBasis.buildingSubgradeElevationFt.toFixed(2)} ft</dd></div>
+          </dl>
+          <p className="vertical-basis__warning">{verticalDesignBasis.warning}</p>
+        </div>
+      )}
 
       {object.provenance && (
         <div className="detail-section">
@@ -774,6 +923,7 @@ function ChecklistTab({
 
 type ObjectDetailsPanelProps = {
   object: BlueprintObject | null;
+  verticalDesignBasis?: VerticalDesignBasis;
   distanceFt: number | null;
   status: ObjectStatus;
   onSetStatus: (objectId: string, status: ObjectStatus) => void;
@@ -785,6 +935,7 @@ type ObjectDetailsPanelProps = {
 
 export function ObjectDetailsPanel({
   object,
+  verticalDesignBasis,
   distanceFt,
   status,
   onSetStatus,
@@ -864,7 +1015,7 @@ export function ObjectDetailsPanel({
 
       {/* Tab body */}
       <div className="detail-tab-body">
-        {activeTab === 'summary'   && <SummaryTab   object={object} distanceFt={distanceFt} />}
+        {activeTab === 'summary'   && <SummaryTab object={object} distanceFt={distanceFt} verticalDesignBasis={verticalDesignBasis} />}
         {activeTab === 'specs'     && <SpecsTab     object={object} />}
         {activeTab === 'safety'    && <SafetyTab    object={object} />}
         {activeTab === 'details'   && <DetailsTab   object={object} />}

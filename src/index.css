@@ -2196,6 +2196,39 @@ body {
   margin: 0.15rem 0;
 }
 
+.vertical-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0.35rem 0.2rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid rgba(249, 171, 0, 0.4);
+  border-radius: 7px;
+  background: var(--yellow-light);
+  line-height: 1.35;
+}
+
+.vertical-callout span {
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vertical-callout strong {
+  color: var(--yellow);
+  font-size: 0.86rem;
+}
+
+.vertical-basis__warning {
+  margin: 0.45rem 0.25rem 0;
+  color: var(--yellow);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    WARNING / INFO LISTS
 ═══════════════════════════════════════════════════════════════════════════ */

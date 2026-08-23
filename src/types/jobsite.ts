@@ -74,6 +74,16 @@ export type ObjectWorkflow = {
   asBuilt?: string[];
 };
 
+/** A feature's coordinated high-to-low vertical run from the semantic model. */
+export type VerticalProfile = {
+  highElevation: string;
+  lowElevation: string;
+  run: string;
+  slopePercent: string;
+  highLocation?: string;
+  lowLocation?: string;
+};
+
 /** Single checklist item — field crews check these off at install / inspection. */
 export type ChecklistItem = {
   id: string;
@@ -120,6 +130,17 @@ export type BlueprintObject = {
   // ── Basic elevations / geometry ──────────────────────────────────────────
   elevation?: string;
   verticalDatum?: string;
+  verticalStatus?: string;
+  verticalCallout?: string;
+  verticalProfile?: VerticalProfile;
+  finishedFloorElevation?: string;
+  thresholdElevation?: string;
+  landingElevation?: string;
+  gutterElevation?: string;
+  finishedSurfaceElevation?: string;
+  pipeCenterlineElevation?: string;
+  utilityTopElevation?: string;
+  coverBasis?: string;
   rimElevation?: string;
   invertElevation?: string;   // single invert (use invertIn/invertOut for structures)
   invertIn?: string;          // invert of incoming pipe
@@ -199,6 +220,31 @@ export type PlanCalibrationSummary = {
   authority: string;
 };
 
+export type VerticalDesignBasis = {
+  verticalDatum: 'NAVD88';
+  units: 'feet';
+  status: 'reviewed_assumption';
+  benchmarkStatus: 'unknown';
+  surveyAuthority: false;
+  finishedFloorElevationFt: number;
+  buildingSubgradeElevationFt: number;
+  finishedFloorToSubgradeDepthFt: number;
+  exteriorLandingElevationFt: number;
+  arrivalCourtPlane: {
+    originFeatureId: string;
+    originVertexIndex: number;
+    originElevationFt: number;
+    risePerFootLocalX: number;
+    risePerFootLocalY: number;
+    drainageDirection: string;
+  };
+  gravityNetworkEdgeIds: string[];
+  pressureAndDryUtilityVerticalStatus: string;
+  decisionId: string;
+  replacementNote: string;
+  warning: string;
+};
+
 /** Field-tracked completion state for a single blueprint object, set by the crew on site. */
 export type ObjectStatus = 'not_started' | 'in_progress' | 'done';
 
@@ -212,6 +258,7 @@ export type JobsitePackage = {
   canonicalModelVersion?: string;
   disclaimer?: string;
   planCalibration?: PlanCalibrationSummary;
+  verticalDesignBasis?: VerticalDesignBasis;
   unavailable?: Array<Record<string, unknown>>;
   phases: JobsitePhase[];
   downloadedAt?: string;

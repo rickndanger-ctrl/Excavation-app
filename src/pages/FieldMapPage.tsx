@@ -308,6 +308,7 @@ export function FieldMapPage() {
   }, []);
 
   const calibrationSummary = displayPackage.planCalibration;
+  const verticalDesignBasis = displayPackage.verticalDesignBasis;
 
   return (
     <div className="field-app">
@@ -391,6 +392,11 @@ export function FieldMapPage() {
               <span>Reference-scale product QA · not survey or staking control</span>
             </>
           )}
+          {verticalDesignBasis && (
+            <span>
+              Vertical basis · {verticalDesignBasis.verticalDatum} · benchmark {verticalDesignBasis.benchmarkStatus} · {verticalDesignBasis.status.replaceAll('_', ' ')}
+            </span>
+          )}
           <span>Source PDF excluded from offline package</span>
         </div>
       )}
@@ -404,6 +410,11 @@ export function FieldMapPage() {
               </span>
               <span>Reference-scale product QA · not survey or staking control</span>
             </>
+          )}
+          {verticalDesignBasis && (
+            <span>
+              Vertical basis · {verticalDesignBasis.verticalDatum} · benchmark {verticalDesignBasis.benchmarkStatus} · {verticalDesignBasis.status.replaceAll('_', ' ')}
+            </span>
           )}
           <span>Immutable semantic package · verify field conditions and survey control</span>
         </div>
@@ -547,6 +558,7 @@ export function FieldMapPage() {
         <div className="field-sheet__body">
           <ObjectDetailsPanel
             object={selectedObject}
+            verticalDesignBasis={verticalDesignBasis}
             distanceFt={distanceFt}
             status={selectedObject ? getStatus(selectedObject.id) : 'not_started'}
             onSetStatus={setStatus}
