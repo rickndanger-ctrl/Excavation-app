@@ -1,0 +1,8 @@
+{
+  "base_project": "../hilyard/project.json",
+  "project": {"id": "oak-grove-residential-test", "name": "Oak Grove Multi-Building Residential Civil Test", "revision": "residential-v1", "site_description": "Fictional multi-building residential scenario"},
+  "artifact_contract": {"basename": "oak-grove-residential", "image_url": "oak-grove-residential.pdf"},
+  "fixture_profile": {"archetype": "multi_building_residential", "program_label": "Residential building", "terrain_profile": "rolling_courtyard_site", "stormwater_profile": "distributed_courtyard_capture", "site_orientation_degrees": 235, "variation_summary": "Three-building residential fixture for testing shared drives, courtyard circulation, and multi-building layer relationships."},
+  "fixture_transform": {"rotate_degrees": 235, "translate_ft": [5950, 2680]},
+  "fixture_building_copies": 2
+}

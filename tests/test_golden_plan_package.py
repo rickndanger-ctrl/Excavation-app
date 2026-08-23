@@ -1,12 +1,18 @@
+import tempfile
 import unittest
 from pathlib import Path
 
+from pypdf import PdfReader
+
+from civil_plan_factory.build import create_vector_plan, geometry_digest
+from civil_plan_factory.export import build_semantic_manifest
 from civil_plan_factory.io import load_project_bundle
 
 
 ROOT = Path(__file__).parents[1]
 PROJECT = ROOT / "projects" / "hilyard" / "project.json"
 DISCLAIMER = "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"
+SAFETY_NOTICE = "FICTIONAL TEST DATA — NOT FOR CONSTRUCTION — NOT ENGINEERED OR PERMITTED"
 
 
 class GoldenPlanPackageTests(unittest.TestCase):
@@ -42,6 +48,22 @@ class GoldenPlanPackageTests(unittest.TestCase):
         self.assertEqual("phase-06-water-dry-utilities", by_id["domestic-water-meter-01"]["phase_id"])
         self.assertEqual("phase-07-finish-site", by_id["building-apartment-1"]["phase_id"])
         self.assertEqual("phase-07-finish-site", by_id["sidewalk-south-entry"]["phase_id"])
+
+    def test_every_golden_sheet_and_semantic_package_carries_full_safety_notice(self):
+        semantic = build_semantic_manifest(self.model)
+        self.assertEqual(SAFETY_NOTICE, semantic["safetyNotice"])
+
+        with tempfile.TemporaryDirectory() as output:
+            pdf_path = Path(output) / "golden-apartment.pdf"
+            create_vector_plan(self.model, pdf_path, geometry_digest(self.model))
+            pages = PdfReader(pdf_path).pages
+            self.assertGreater(len(pages), 1)
+            for page_number, page in enumerate(pages, start=1):
+                self.assertIn(
+                    SAFETY_NOTICE,
+                    page.extract_text(),
+                    f"full safety notice missing from page {page_number}",
+                )
 
     def test_golden_sheet_index_covers_every_phase_and_field_discipline(self):
         plans = self.model["deliverables"]["plans"]

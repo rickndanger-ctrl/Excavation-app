@@ -1,7 +1,7 @@
 import copy
 from typing import Any
 
-from .validation import DISCLAIMER
+from .validation import DISCLAIMER, SAFETY_NOTICE
 
 
 def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
@@ -118,6 +118,7 @@ def build_semantic_manifest(model: dict[str, Any]) -> dict[str, Any]:
         "id": model["project"]["id"],
         "projectName": model["project"]["name"],
         "disclaimer": DISCLAIMER,
+        "safetyNotice": SAFETY_NOTICE,
         "plan": {
             "availability": artifact.get("plan_availability", "generated_vector_pdf"),
             "imageUrl": artifact.get(

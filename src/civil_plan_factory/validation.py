@@ -7,6 +7,7 @@ from typing import Any, Iterable
 
 
 DISCLAIMER = "FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION"
+SAFETY_NOTICE = "FICTIONAL TEST DATA — NOT FOR CONSTRUCTION — NOT ENGINEERED OR PERMITTED"
 SEMANTIC_ONLY_DELIVERY_MODE = "semantic_only_ungeoreferenced"
 SEMANTIC_REVIEW_GRID_BASIS = (
     "UNREFERENCED_REVIEW_GRID — uncalibrated source-sheet display coordinates; "

@@ -1,0 +1,8 @@
+{
+  "base_project": "../hilyard/project.json",
+  "project": {"id": "greenway-stormwater-test", "name": "Greenway Stormwater Campus Civil Test", "revision": "stormwater-v1", "site_description": "Fictional flat site with extensive stormwater facilities"},
+  "artifact_contract": {"basename": "greenway-stormwater-campus", "image_url": "greenway-stormwater-campus.pdf"},
+  "fixture_profile": {"archetype": "flat_stormwater_site", "program_label": "Stormwater campus building", "terrain_profile": "very_flat_drainage_sensitive", "stormwater_profile": "extensive_surface_facilities", "site_orientation_degrees": 205, "variation_summary": "Very-flat fixture emphasizing storm structures, surface facilities, positive drainage, and visible confidence boundaries."},
+  "fixture_transform": {"rotate_degrees": 205, "mirror_x": true, "translate_ft": [5100, 2300]},
+  "fixture_building_copies": 1
+}

@@ -1,0 +1,8 @@
+{
+  "base_project": "../hilyard/project.json",
+  "project": {"id": "bridgeway-mixed-use-test", "name": "Bridgeway Mixed-Use Civil Test", "revision": "mixed-use-v1", "site_description": "Fictional mixed-use building scenario"},
+  "artifact_contract": {"basename": "bridgeway-mixed-use", "image_url": "bridgeway-mixed-use.pdf"},
+  "fixture_profile": {"archetype": "mixed_use_building", "program_label": "Mixed-use building", "terrain_profile": "urban_corner_transition", "stormwater_profile": "roof_and_courtyard_capture", "site_orientation_degrees": 55, "variation_summary": "Urban corner mixed-use fixture emphasizing public frontage, service access, and roof-drain coordination."},
+  "fixture_transform": {"rotate_degrees": 55, "mirror_x": true, "translate_ft": [1700, 780]},
+  "fixture_building_copies": 0
+}

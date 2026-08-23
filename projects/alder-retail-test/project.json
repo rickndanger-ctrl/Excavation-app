@@ -1,0 +1,8 @@
+{
+  "base_project": "../hilyard/project.json",
+  "project": {"id": "alder-retail-test", "name": "Alder Street Retail Center Civil Test", "revision": "retail-v1", "site_description": "Fictional small retail center scenario"},
+  "artifact_contract": {"basename": "alder-retail-center", "image_url": "alder-retail-center.pdf"},
+  "fixture_profile": {"archetype": "small_retail_center", "program_label": "Neighborhood retail center", "terrain_profile": "flat_commercial_pad", "stormwater_profile": "perimeter_planters", "site_orientation_degrees": 30, "variation_summary": "Angled neighborhood retail center with a service-side utility approach and perimeter stormwater planters."},
+  "fixture_transform": {"rotate_degrees": 30, "translate_ft": [850, 420]},
+  "fixture_building_copies": 0
+}

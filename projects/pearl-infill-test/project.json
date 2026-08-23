@@ -1,0 +1,8 @@
+{
+  "base_project": "../hilyard/project.json",
+  "project": {"id": "pearl-infill-test", "name": "Pearl Compact Infill Civil Test", "revision": "infill-v1", "site_description": "Fictional compact infill scenario"},
+  "artifact_contract": {"basename": "pearl-compact-infill", "image_url": "pearl-compact-infill.pdf"},
+  "fixture_profile": {"archetype": "compact_infill_site", "program_label": "Compact infill building", "terrain_profile": "constrained_urban_infill", "stormwater_profile": "roof_capture_with_tight_routes", "site_orientation_degrees": 275, "variation_summary": "Tight infill fixture emphasizing constrained staging, close utility conflicts, and dense but field-readable annotation."},
+  "fixture_transform": {"rotate_degrees": 275, "mirror_x": true, "translate_ft": [6800, 3060]},
+  "fixture_building_copies": 0
+}

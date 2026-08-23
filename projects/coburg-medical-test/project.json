@@ -1,0 +1,8 @@
+{
+  "base_project": "../hilyard/project.json",
+  "project": {"id": "coburg-medical-test", "name": "Coburg Medical Office Pad Civil Test", "revision": "medical-v1", "site_description": "Fictional medical office pad scenario"},
+  "artifact_contract": {"basename": "coburg-medical-office", "image_url": "coburg-medical-office.pdf"},
+  "fixture_profile": {"archetype": "medical_office_pad", "program_label": "Medical office building", "terrain_profile": "accessible_low_slope_pad", "stormwater_profile": "parking_basin_capture", "site_orientation_degrees": 90, "variation_summary": "Medical office pad fixture prioritizing accessible arrival, fire access, parking, and low-slope pedestrian routes."},
+  "fixture_transform": {"rotate_degrees": 90, "translate_ft": [2550, 1160]},
+  "fixture_building_copies": 0
+}

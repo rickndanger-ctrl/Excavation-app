@@ -2,6 +2,14 @@
   "schema_version": "civil-plan-factory.design-slice/v0.1.0",
   "project_revision": "golden-apartment-v1",
   "model_updates": {
+    "fixture_profile": {
+      "archetype": "apartment_complex",
+      "program_label": "Central apartment building",
+      "terrain_profile": "moderately_flat_urban_site",
+      "stormwater_profile": "distributed_planter_and_flow_control",
+      "site_orientation_degrees": 0,
+      "variation_summary": "Golden central-building apartment fixture with parking court, pedestrian entries, landscape, and complete wet/dry utility coordination."
+    },
     "phases": [
       {"id": "phase-01-existing-control-erosion", "name": "Existing conditions, control, and initial erosion protection", "summary": "Reference context, project limits, control, protected features, and first-stage erosion measures."},
       {"id": "phase-02-clearing-site-prep", "name": "Clearing, stripping, demolition, and site preparation", "summary": "Disturbance limits, clearing and stripping, temporary access, stockpile, and active erosion controls."},

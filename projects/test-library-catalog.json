@@ -1,0 +1,16 @@
+{
+  "schema_version": "civil-plan-factory.test-library/v0.1.0",
+  "safety_notice": "FICTIONAL TEST DATA — NOT FOR CONSTRUCTION — NOT ENGINEERED OR PERMITTED",
+  "packages": [
+    {"slug": "hilyard", "archetype": "apartment_complex"},
+    {"slug": "alder-retail-test", "archetype": "small_retail_center"},
+    {"slug": "bridgeway-mixed-use-test", "archetype": "mixed_use_building"},
+    {"slug": "coburg-medical-test", "archetype": "medical_office_pad"},
+    {"slug": "delta-flex-test", "archetype": "industrial_flex_site"},
+    {"slug": "fox-hollow-slope-test", "archetype": "sloped_retaining_site"},
+    {"slug": "greenway-stormwater-test", "archetype": "flat_stormwater_site"},
+    {"slug": "oak-grove-residential-test", "archetype": "multi_building_residential"},
+    {"slug": "pearl-infill-test", "archetype": "compact_infill_site"},
+    {"slug": "river-road-commercial-test", "archetype": "phased_commercial_site"}
+  ]
+}

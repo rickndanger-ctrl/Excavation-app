@@ -1,5 +1,6 @@
 import json
 import copy
+import math
 from pathlib import Path
 from typing import Any
 
@@ -114,9 +115,99 @@ def _apply_design_slice(model: dict[str, Any], design: dict[str, Any]) -> None:
             ]
 
 
+def _map_coordinate_tree(value: Any, transform) -> Any:
+    if (
+        isinstance(value, list)
+        and len(value) >= 2
+        and all(isinstance(item, (int, float)) for item in value[:2])
+    ):
+        x, y = transform(float(value[0]), float(value[1]))
+        return [round(x, 6), round(y, 6), *copy.deepcopy(value[2:])]
+    if isinstance(value, list):
+        return [_map_coordinate_tree(item, transform) for item in value]
+    return copy.deepcopy(value)
+
+
+def _apply_fixture_transform(model: dict[str, Any], fixture: dict[str, Any]) -> None:
+    """Apply a topology-preserving site orientation used by test-library variants."""
+
+    angle = math.radians(float(fixture.get("rotate_degrees", 0)))
+    mirror_x = bool(fixture.get("mirror_x", False))
+    translate_x, translate_y = fixture.get("translate_ft", [0, 0])
+    site = next(
+        row
+        for row in model["features"]["polygons"]
+        if row["id"] == "property-site-boundary"
+    )["coordinates"]
+    unique_site = site[:-1] if site and site[0] == site[-1] else site
+    origin_x = sum(row[0] for row in unique_site) / len(unique_site)
+    origin_y = sum(row[1] for row in unique_site) / len(unique_site)
+    cosine, sine = math.cos(angle), math.sin(angle)
+
+    def transform(x: float, y: float) -> tuple[float, float]:
+        local_x, local_y = x - origin_x, y - origin_y
+        if mirror_x:
+            local_x = -local_x
+        return (
+            origin_x + local_x * cosine - local_y * sine + float(translate_x),
+            origin_y + local_x * sine + local_y * cosine + float(translate_y),
+        )
+
+    for group in ("points", "lines", "polygons", "surfaces"):
+        for feature in model["features"][group]:
+            for key in ("coordinates", "boundary"):
+                if key in feature:
+                    feature[key] = _map_coordinate_tree(feature[key], transform)
+
+
+def _add_fixture_building_copies(model: dict[str, Any], count: int) -> None:
+    if count <= 0:
+        return
+    source = next(
+        row
+        for row in model["features"]["polygons"]
+        if row["id"] == "building-apartment-1"
+    )
+    orientation = math.radians(
+        float(model["fixture_profile"].get("site_orientation_degrees", 0))
+    )
+    local_offsets = [(24.0, 0.0), (24.0, 24.0), (0.0, 24.0)]
+    source_coordinates = source["coordinates"]
+    source_ring = (
+        source_coordinates[:-1]
+        if source_coordinates and source_coordinates[0] == source_coordinates[-1]
+        else source_coordinates
+    )
+    center_x = sum(row[0] for row in source_ring) / len(source_ring)
+    center_y = sum(row[1] for row in source_ring) / len(source_ring)
+    for index in range(count):
+        duplicate = copy.deepcopy(source)
+        duplicate["id"] = f"building-fixture-{index + 2}"
+        duplicate["label"] = f"{model['fixture_profile']['program_label']} — Building {index + 2}"
+        local_x, local_y = local_offsets[index % len(local_offsets)]
+        dx = local_x * math.cos(orientation) - local_y * math.sin(orientation)
+        dy = local_x * math.sin(orientation) + local_y * math.cos(orientation)
+        duplicate["coordinates"] = _map_coordinate_tree(
+            duplicate["coordinates"],
+            lambda x, y: (
+                center_x + (x - center_x) * 0.34 + dx,
+                center_y + (y - center_y) * 0.34 + dy,
+            ),
+        )
+        duplicate.setdefault("field_detail", {})["map_target"] = duplicate["id"]
+        duplicate["field_detail"]["fixture_role"] = "additional_program_building"
+        model["features"]["polygons"].append(duplicate)
+
+
 def load_project_bundle(project_path: Path) -> dict[str, Any]:
     project_path = Path(project_path).resolve()
-    model = json.loads(project_path.read_text(encoding="utf-8"))
+    raw = json.loads(project_path.read_text(encoding="utf-8"))
+    base_reference = raw.pop("base_project", None)
+    if base_reference:
+        model = load_project_bundle(project_path.parent / base_reference)
+        _deep_update(model, raw)
+    else:
+        model = raw
     for key, reference_key in (("sources", "source_ledger"), ("decisions", "decision_ledger")):
         reference = model.pop(reference_key, None)
         if reference:
@@ -126,4 +217,9 @@ def load_project_bundle(project_path: Path) -> dict[str, Any]:
     for reference in model.pop("design_slices", []):
         design_path = project_path.parent / reference
         _apply_design_slice(model, json.loads(design_path.read_text(encoding="utf-8")))
+    fixture_transform = model.pop("fixture_transform", None)
+    if fixture_transform:
+        _apply_fixture_transform(model, fixture_transform)
+    building_copies = int(model.pop("fixture_building_copies", 0))
+    _add_fixture_building_copies(model, building_copies)
     return resolve_model_source_citations(model, project_path.parent)

@@ -1,0 +1,8 @@
+{
+  "base_project": "../hilyard/project.json",
+  "project": {"id": "fox-hollow-slope-test", "name": "Fox Hollow Sloped Site Civil Test", "revision": "slope-v1", "site_description": "Fictional sloped site and retaining concept scenario"},
+  "artifact_contract": {"basename": "fox-hollow-sloped-site", "image_url": "fox-hollow-sloped-site.pdf"},
+  "fixture_profile": {"archetype": "sloped_retaining_site", "program_label": "Hillside residential building", "terrain_profile": "cross_slope_with_retaining_concept", "stormwater_profile": "terraced_capture_and_control", "site_orientation_degrees": 160, "variation_summary": "Cross-sloped fixture for testing cut/fill, retaining concepts, stepped access, and grade-aware utility display."},
+  "fixture_transform": {"rotate_degrees": 160, "translate_ft": [4250, 1920]},
+  "fixture_building_copies": 0
+}

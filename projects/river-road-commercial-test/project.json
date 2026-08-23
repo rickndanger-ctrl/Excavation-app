@@ -1,0 +1,8 @@
+{
+  "base_project": "../hilyard/project.json",
+  "project": {"id": "river-road-commercial-test", "name": "River Road Phased Commercial Civil Test", "revision": "commercial-v1", "site_description": "Fictional larger phased commercial scenario"},
+  "artifact_contract": {"basename": "river-road-phased-commercial", "image_url": "river-road-phased-commercial.pdf"},
+  "fixture_profile": {"archetype": "phased_commercial_site", "program_label": "Commercial phase building", "terrain_profile": "large_incremental_pad_site", "stormwater_profile": "phase_shared_trunk_and_facilities", "site_orientation_degrees": 320, "variation_summary": "Four-building commercial fixture for testing phased handoff, shared utility trunks, and independent field work areas."},
+  "fixture_transform": {"rotate_degrees": 320, "translate_ft": [7650, 3440]},
+  "fixture_building_copies": 3
+}

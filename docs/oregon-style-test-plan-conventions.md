@@ -1,6 +1,6 @@
 # Oregon-Style Civil Test-Plan Conventions
 
-> **FICTIONAL — TEST DATA — NOT FOR CONSTRUCTION**
+> **FICTIONAL TEST DATA — NOT FOR CONSTRUCTION — NOT ENGINEERED OR PERMITTED**
 >
 > This document translates public Oregon agency conventions into a generic product-test
 > template. It is not a design standard, code-compliance statement, permit checklist, or

@@ -1,0 +1,8 @@
+{
+  "base_project": "../hilyard/project.json",
+  "project": {"id": "delta-flex-test", "name": "Delta Industrial Flex Civil Test", "revision": "industrial-v1", "site_description": "Fictional industrial flex site scenario"},
+  "artifact_contract": {"basename": "delta-industrial-flex", "image_url": "delta-industrial-flex.pdf"},
+  "fixture_profile": {"archetype": "industrial_flex_site", "program_label": "Industrial flex building", "terrain_profile": "broad_service_yard", "stormwater_profile": "yard_inlets_and_flow_control", "site_orientation_degrees": 125, "variation_summary": "Two-building industrial flex fixture with truck/service orientation and separated public and utility approaches."},
+  "fixture_transform": {"rotate_degrees": 125, "mirror_x": true, "translate_ft": [3400, 1540]},
+  "fixture_building_copies": 1
+}
