@@ -44,7 +44,7 @@
     "default_by_current_phase": {"existing": "phase-01-existing-control-erosion", "temporary": "phase-02-clearing-site-prep", "proposed": "phase-07-finish-site"},
     "protected_current_phases": ["existing", "temporary"],
     "by_layer": {"construction-erosion": "phase-02-clearing-site-prep", "grading": "phase-03-earthwork-rough-grading", "site": "phase-07-finish-site"},
-    "by_system": {"grading": "phase-03-earthwork-rough-grading", "storm": "phase-04-storm", "roof_drainage": "phase-04-storm", "sanitary": "phase-05-sanitary", "domestic_water": "phase-06-water-dry-utilities", "fire_water": "phase-06-water-dry-utilities", "power": "phase-06-water-dry-utilities", "telecom_fiber": "phase-06-water-dry-utilities", "gas": "phase-06-water-dry-utilities", "site_lighting": "phase-06-water-dry-utilities"},
+    "by_system": {"grading": "phase-03-earthwork-rough-grading", "storm": "phase-04-storm", "roof_drainage": "phase-04-storm", "sanitary": "phase-05-sanitary", "domestic_water": "phase-06-water-dry-utilities", "fire_water": "phase-06-water-dry-utilities", "power": "phase-06-water-dry-utilities", "electric": "phase-06-water-dry-utilities", "telecom_fiber": "phase-06-water-dry-utilities", "gas": "phase-06-water-dry-utilities", "site_lighting": "phase-06-water-dry-utilities"},
     "by_feature_id": {"pad-apartment-1": "phase-03-earthwork-rough-grading", "building-apartment-1": "phase-07-finish-site"}
   },
   "deliverables": {

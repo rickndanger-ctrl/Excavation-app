@@ -46,6 +46,7 @@ class GoldenPlanPackageTests(unittest.TestCase):
         self.assertEqual("phase-04-storm", by_id["storm-site-drop-mh-01"]["phase_id"])
         self.assertEqual("phase-05-sanitary", by_id["sanitary-cleanout-01"]["phase_id"])
         self.assertEqual("phase-06-water-dry-utilities", by_id["domestic-water-meter-01"]["phase_id"])
+        self.assertEqual("phase-06-water-dry-utilities", by_id["penetration-electric"]["phase_id"])
         self.assertEqual("phase-07-finish-site", by_id["building-apartment-1"]["phase_id"])
         self.assertEqual("phase-07-finish-site", by_id["sidewalk-south-entry"]["phase_id"])
 
