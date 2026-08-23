@@ -23,6 +23,8 @@ type PlanCanvasProps = {
   onSelectObject: (id: string) => void;
   recenterToken: number;
   fitRequestToken: number;
+  phaseFitToken: number;
+  suppressOutOfPhaseLabels?: boolean;
   importedBasePlan?: ImportedBasePlan | null;
   showSemanticOverlaysWithBasePlan?: boolean;
 };
@@ -61,6 +63,7 @@ function ObjectIcon({
   color,
   status,
   labelLayout,
+  showLabel = true,
   renderScale,
   onClick,
 }: {
@@ -69,6 +72,7 @@ function ObjectIcon({
   color: string;
   status: ObjectStatus;
   labelLayout?: GradingLabelLayout;
+  showLabel?: boolean;
   renderScale: number;
   onClick: (e: React.MouseEvent) => void;
 }) {
@@ -355,7 +359,7 @@ function ObjectIcon({
       )}
       {icon}
       <StatusBadge x={x} y={y} status={status} />
-      {(selected || !labelLayout || !labelLayout.suppressed) && <text
+      {showLabel && (selected || !labelLayout || !labelLayout.suppressed) && <text
         className={isSemantic ? 'grading-map-label' : undefined}
         data-label-priority={obj.labelPriority ?? 0}
         x={labelLayout?.labelX ?? x}
@@ -432,6 +436,8 @@ export function PlanCanvas({
   onSelectObject,
   recenterToken,
   fitRequestToken,
+  phaseFitToken,
+  suppressOutOfPhaseLabels = false,
   importedBasePlan,
   showSemanticOverlaysWithBasePlan = false,
 }: PlanCanvasProps) {
@@ -508,6 +514,28 @@ export function PlanCanvas({
     };
   }, [importedBasePlan, objects, plan.heightFt, plan.widthFt, utilities]);
 
+  const phaseExtent = useMemo(() => {
+    const points: Point[] = [];
+    for (const object of objects) {
+      if (!isLayerVisible(object.layerId) || !isPhaseVisible(object.phase)) continue;
+      if (object.geometry?.type === 'Point') points.push(object.geometry.coordinates);
+      else if (object.geometry) points.push(...object.geometry.coordinates);
+      else points.push({ x: object.x, y: object.y });
+    }
+    for (const utility of utilities) {
+      if (!isLayerVisible(utility.layerId) || !isPhaseVisible(utility.phase)) continue;
+      points.push(...utility.points);
+    }
+    const finite = points.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+    if (finite.length === 0) return modelExtent;
+    return {
+      minX: Math.min(...finite.map((point) => point.x)),
+      minY: Math.min(...finite.map((point) => point.y)),
+      maxX: Math.max(...finite.map((point) => point.x)),
+      maxY: Math.max(...finite.map((point) => point.y)),
+    };
+  }, [isLayerVisible, isPhaseVisible, modelExtent, objects, utilities]);
+
   const handlePdfDocumentLoaded = useCallback((pageCount: number) => {
     setPdfPageCount(pageCount);
     setPdfPage((page) => Math.min(page, pageCount));
@@ -527,27 +555,33 @@ export function PlanCanvas({
     });
   }, [userLocation, plan.widthFt, plan.heightFt]);
 
-  const fitPlanToContainer = useCallback(() => {
+  const fitExtentToContainer = useCallback((
+    extent: typeof modelExtent,
+    padding = { left: 24, right: 24, top: 156, bottom: 24 },
+  ) => {
     const container = containerRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
     // Keep the fitted model clear of the persistent top bar and package-status card.
-    const padding = { left: 24, right: 24, top: 156, bottom: 24 };
     const availableWidth = Math.max(1, rect.width - padding.left - padding.right);
     const availableHeight = Math.max(1, rect.height - padding.top - padding.bottom);
-    const extentWidth = Math.max(1, modelExtent.maxX - modelExtent.minX);
-    const extentHeight = Math.max(1, modelExtent.maxY - modelExtent.minY);
+    const extentWidth = Math.max(1, extent.maxX - extent.minX);
+    const extentHeight = Math.max(1, extent.maxY - extent.minY);
     const fittedScale = Math.min(8, Math.max(0.02, Math.min(
       availableWidth / extentWidth,
       availableHeight / extentHeight,
     )));
     setScale(fittedScale);
     setOffset({
-      x: padding.left + (availableWidth - extentWidth * fittedScale) / 2 - modelExtent.minX * fittedScale,
-      y: padding.top + (availableHeight - extentHeight * fittedScale) / 2 - modelExtent.minY * fittedScale,
+      x: padding.left + (availableWidth - extentWidth * fittedScale) / 2 - extent.minX * fittedScale,
+      y: padding.top + (availableHeight - extentHeight * fittedScale) / 2 - extent.minY * fittedScale,
     });
-  }, [modelExtent]);
+  }, []);
+
+  const fitPlanToContainer = useCallback(() => {
+    fitExtentToContainer(modelExtent);
+  }, [fitExtentToContainer, modelExtent]);
 
   // Refit whenever the package extent or the actual map viewport changes.
   useEffect(() => {
@@ -561,6 +595,13 @@ export function PlanCanvas({
     observer.observe(container);
     return () => observer.disconnect();
   }, [fitPlanToContainer, fitRequestToken]);
+
+  useEffect(() => {
+    if (phaseFitToken <= 0) return;
+    manualCameraRef.current = false;
+    // Extra edge room keeps 44px gloved-finger hit targets inside the viewport.
+    fitExtentToContainer(phaseExtent, { left: 48, right: 48, top: 180, bottom: 48 });
+  }, [fitExtentToContainer, phaseExtent, phaseFitToken]);
 
   useEffect(() => {
     if (recenterToken > 0) recenterOnUser();
@@ -814,7 +855,7 @@ export function PlanCanvas({
                       strokeLinecap="round"
                     />
                   )}
-                  {line.label && line.layerId !== 'sanitary' && line.points[0] && (
+                  {(!suppressOutOfPhaseLabels || inPhase) && line.label && line.layerId !== 'sanitary' && line.points[0] && (
                     <text
                       x={line.points[0].x + 2}
                       y={line.points[0].y - 2}
@@ -870,17 +911,17 @@ export function PlanCanvas({
                 const style = semanticPolygonStyle(obj, color, selected);
                 return <g key={obj.id} className="semantic-feature semantic-feature--polygon" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="Polygon" data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'} opacity={opacity}>
                   <polygon points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill={style.fill} fillOpacity={style.fillOpacity} stroke={style.stroke} strokeWidth={style.strokeWidth} onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
-                  {showOverviewLabel(obj, selected, Boolean(labelLayout?.suppressed)) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y : labelLayout?.labelY ?? obj.y} textAnchor="middle" fontSize={obj.type === 'building_footprint' ? '3.7' : '3.2'} fontWeight={obj.type === 'building_footprint' ? '700' : undefined} fill={style.labelColor} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
+                  {(!suppressOutOfPhaseLabels || inPhase || obj.layerId === 'finished-site') && showOverviewLabel(obj, selected, Boolean(labelLayout?.suppressed)) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y : labelLayout?.labelY ?? obj.y} textAnchor="middle" fontSize={obj.type === 'building_footprint' ? '3.7' : '3.2'} fontWeight={obj.type === 'building_footprint' ? '700' : undefined} fill={style.labelColor} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
                 </g>;
               }
               if (geometry?.type === 'LineString') {
                 return <g key={obj.id} className="semantic-feature semantic-feature--line" data-object-id={obj.id} data-layer-id={obj.layerId} data-geometry-type="LineString" data-label-suppressed={labelLayout?.suppressed ? 'true' : 'false'} opacity={opacity}>
                   <polyline points={geometry.coordinates.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" stroke={selected ? '#ea4335' : color} strokeWidth={selected ? 2.2 : 1.4} strokeLinecap="round" onClick={(event) => { event.stopPropagation(); onSelectObject(obj.id); }} />
-                  {showOverviewLabel(obj, selected, Boolean(labelLayout?.suppressed)) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y - 2 : labelLayout?.labelY ?? obj.y - 2} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
+                  {(!suppressOutOfPhaseLabels || inPhase || obj.layerId === 'finished-site') && showOverviewLabel(obj, selected, Boolean(labelLayout?.suppressed)) && <text className="semantic-map-label" x={selected ? obj.x : labelLayout?.labelX ?? obj.x} y={selected ? obj.y - 2 : labelLayout?.labelY ?? obj.y - 2} textAnchor="middle" fontSize="3.2" fill={selected ? '#ea4335' : color} pointerEvents="none">{obj.workerLabel ?? obj.label}</text>}
                 </g>;
               }
               return <g key={obj.id} opacity={opacity} data-geometry-type="Point" style={{ pointerEvents: inPhase ? 'auto' : 'none' }}>
-                <ObjectIcon obj={obj} selected={selected} color={color} status={getObjectStatus(obj.id)} labelLayout={labelLayout} renderScale={scale} onClick={(e) => { e.stopPropagation(); onSelectObject(obj.id); }} />
+                <ObjectIcon obj={obj} selected={selected} color={color} status={getObjectStatus(obj.id)} labelLayout={labelLayout} showLabel={!suppressOutOfPhaseLabels || inPhase || obj.layerId === 'finished-site'} renderScale={scale} onClick={(e) => { e.stopPropagation(); onSelectObject(obj.id); }} />
               </g>;
             })}
 

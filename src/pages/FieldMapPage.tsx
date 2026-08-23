@@ -55,6 +55,7 @@ export function FieldMapPage() {
   const [selectedObjectId, setSelectedObjectId] = useState('');
   const [recenterToken, setRecenterToken] = useState(0);
   const [fitPlanToken, setFitPlanToken] = useState(0);
+  const [phaseFitToken, setPhaseFitToken] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSidebarUpload, setShowSidebarUpload] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -232,6 +233,7 @@ export function FieldMapPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setActivePhaseId(displayPackage.phases[0]?.id ?? OVERVIEW_PHASE_ID);
+    setPhaseFitToken(0);
   }, [displayPackage]);
 
   const availableLayers = useMemo(() => layersAvailableForPhase(
@@ -326,6 +328,8 @@ export function FieldMapPage() {
           }}
           recenterToken={recenterToken}
           fitRequestToken={fitPlanToken}
+          phaseFitToken={phaseFitToken}
+          suppressOutOfPhaseLabels={phaseFitToken > 0}
           importedBasePlan={importedBasePlan}
           showSemanticOverlaysWithBasePlan={Boolean(importedSemanticPackage || publishedPackage)}
         />
@@ -507,7 +511,11 @@ export function FieldMapPage() {
           <LeftSidebar
             phases={displayPackage.phases}
             activePhaseId={activePhaseId}
-            onSelectPhase={(id) => { setActivePhaseId(id); setDrawerOpen(false); }}
+            onSelectPhase={(id) => {
+              setActivePhaseId(id);
+              setPhaseFitToken((token) => token + 1);
+              setDrawerOpen(false);
+            }}
             phaseProgress={phaseProgress}
             layers={availableLayers}
             visibility={visibility}

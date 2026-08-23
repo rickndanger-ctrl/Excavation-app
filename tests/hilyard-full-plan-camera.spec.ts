@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const manifest = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-grading-site-prep/semantic-manifest.json';
+const manifest = '/Users/richardholguin/Documents/Codex/2026-08-20/civil-plan-factory/outputs/hilyard-golden-apartment/semantic-manifest.json';
 
 async function importHilyard(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: 'Menu' }).click();
@@ -70,4 +70,31 @@ test('fits the full Hilyard model on load and exposes a recovery control without
   expect(refit.top).toBeGreaterThanOrEqual(120);
   expect(refit.right).toBeLessThanOrEqual(374);
   expect(refit.bottom).toBeLessThanOrEqual(828);
+});
+
+test('frames a selected construction phase without changing Fit full plan recovery', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('http://127.0.0.1:4175');
+  await importHilyard(page);
+
+  const fullPlan = await finishedLayoutBounds(page);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByLabel('Select excavation phase').selectOption('phase-07-finish-site');
+
+  await expect(page.getByText('Fictional apartment building - reviewed assumption')).toBeVisible();
+  await expect(page.getByText('City 21-inch storm main UNIQUE_ID 4183')).toBeHidden();
+
+  const focused = await finishedLayoutBounds(page);
+  expect(focused.right - focused.left).toBeGreaterThan(230);
+  expect(focused.bottom - focused.top).toBeGreaterThan(250);
+  expect(focused.left).toBeGreaterThanOrEqual(16);
+  expect(focused.top).toBeGreaterThanOrEqual(120);
+  expect(focused.right).toBeLessThanOrEqual(374);
+  expect(focused.bottom).toBeLessThanOrEqual(828);
+
+  await page.getByRole('button', { name: 'Fit full plan' }).click();
+  const recovered = await finishedLayoutBounds(page);
+  expect(recovered.right - recovered.left).toBeLessThan(focused.right - focused.left);
+  expect(Math.abs(recovered.left - fullPlan.left)).toBeLessThan(12);
+  expect(Math.abs(recovered.top - fullPlan.top)).toBeLessThan(12);
 });
